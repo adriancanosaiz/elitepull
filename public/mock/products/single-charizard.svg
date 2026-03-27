@@ -1,0 +1,18 @@
+<svg width="750" height="1050" viewBox="0 0 750 1050" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="750" height="1050" rx="36" fill="#0A0F19"/>
+  <rect x="34" y="34" width="682" height="982" rx="30" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.18)"/>
+  <rect x="82" y="108" width="586" height="470" rx="28" fill="rgba(10,14,24,0.45)"/>
+  <circle cx="376" cy="330" r="130" fill="#F97316" fill-opacity="0.22"/>
+  <circle cx="432" cy="292" r="90" fill="#FACC15" fill-opacity="0.18"/>
+  <rect x="82" y="620" width="586" height="280" rx="24" fill="rgba(255,255,255,0.08)"/>
+  <text x="112" y="702" fill="white" font-family="Arial, sans-serif" font-size="40" font-weight="700">Charizard ex</text>
+  <text x="112" y="754" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="24">Special Illustration Rare</text>
+  <text x="112" y="152" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="26" font-weight="700">330 HP</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="34" y1="34" x2="716" y2="1016" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D4ED8"/>
+      <stop offset="0.46" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+</svg>

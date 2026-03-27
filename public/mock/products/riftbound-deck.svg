@@ -1,0 +1,16 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#091121"/>
+  <rect x="140" y="92" width="620" height="916" rx="38" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <rect x="206" y="176" width="488" height="708" rx="34" fill="rgba(6,10,24,0.42)"/>
+  <circle cx="450" cy="442" r="188" fill="#22D3EE" fill-opacity="0.18"/>
+  <circle cx="450" cy="442" r="92" fill="#A855F7" fill-opacity="0.18"/>
+  <text x="230" y="250" fill="#F5F3FF" font-family="Arial, sans-serif" font-size="30" font-weight="700">Commander Deck</text>
+  <text x="310" y="912" fill="white" font-family="Arial, sans-serif" font-size="40" font-weight="700">IGNITE</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="140" y1="92" x2="760" y2="1008" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="0.52" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#A855F7"/>
+    </linearGradient>
+  </defs>
+</svg>

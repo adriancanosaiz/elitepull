@@ -1,0 +1,14 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#061117"/>
+  <rect x="170" y="92" width="560" height="916" rx="40" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <circle cx="450" cy="434" r="214" fill="#34D399" fill-opacity="0.14"/>
+  <text x="272" y="270" fill="#ECFDF5" font-family="Arial, sans-serif" font-size="28" letter-spacing="5">PREMIUM DROP</text>
+  <text x="230" y="580" fill="white" font-family="Arial, sans-serif" font-size="84" font-weight="700">COLLECTOR</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="170" y1="92" x2="730" y2="1008" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5E9"/>
+      <stop offset="0.52" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+</svg>

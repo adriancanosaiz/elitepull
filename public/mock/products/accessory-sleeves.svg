@@ -1,0 +1,14 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#0B1017"/>
+  <rect x="150" y="110" width="600" height="880" rx="38" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <rect x="240" y="240" width="420" height="470" rx="32" fill="rgba(9,12,20,0.44)"/>
+  <rect x="270" y="272" width="360" height="406" rx="28" stroke="rgba(255,255,255,0.2)" stroke-width="12"/>
+  <text x="236" y="834" fill="white" font-family="Arial, sans-serif" font-size="44" font-weight="700">Matte Sleeves</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="150" y1="110" x2="750" y2="990" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#94A3B8"/>
+      <stop offset="0.48" stop-color="#FACC15"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+</svg>

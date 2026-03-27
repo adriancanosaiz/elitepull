@@ -1,0 +1,15 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#07131A"/>
+  <rect x="196" y="86" width="508" height="928" rx="38" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <circle cx="450" cy="398" r="156" fill="#34D399" fill-opacity="0.18"/>
+  <circle cx="492" cy="466" r="118" fill="#38BDF8" fill-opacity="0.18"/>
+  <text x="250" y="242" fill="#ECFDF5" font-family="Arial, sans-serif" font-size="30" font-weight="700">Play Booster</text>
+  <text x="286" y="556" fill="white" font-family="Arial, sans-serif" font-size="94" font-weight="700">MAGIC</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="196" y1="86" x2="704" y2="1014" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B981"/>
+      <stop offset="0.52" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#0F766E"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,15 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#110919"/>
+  <rect x="112" y="112" width="676" height="876" rx="42" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <rect x="180" y="184" width="540" height="86" rx="22" fill="rgba(255,255,255,0.12)"/>
+  <rect x="208" y="720" width="484" height="88" rx="22" fill="rgba(0,0,0,0.18)"/>
+  <text x="254" y="240" fill="#FFF7ED" font-family="Arial, sans-serif" font-size="34" font-weight="700">PREORDER</text>
+  <text x="252" y="780" fill="white" font-family="Arial, sans-serif" font-size="32" font-weight="700">Royal Blood</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="112" y1="112" x2="788" y2="988" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D946EF"/>
+      <stop offset="0.46" stop-color="#FB7185"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+</svg>

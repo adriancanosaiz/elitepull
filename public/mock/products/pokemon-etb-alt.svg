@@ -1,0 +1,16 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#07101D"/>
+  <rect x="60" y="60" width="780" height="980" rx="34" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.12)"/>
+  <rect x="148" y="156" width="604" height="748" rx="38" fill="rgba(5,10,24,0.48)"/>
+  <circle cx="330" cy="420" r="170" fill="#38BDF8" fill-opacity="0.18"/>
+  <circle cx="570" cy="590" r="170" fill="#FACC15" fill-opacity="0.18"/>
+  <text x="196" y="240" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="30" letter-spacing="4">PRISMATIC EVOLUTIONS</text>
+  <text x="236" y="548" fill="white" font-family="Arial, sans-serif" font-size="88" font-weight="700">Pokemon</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="60" y1="60" x2="840" y2="1040" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D4ED8"/>
+      <stop offset="0.52" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+</svg>

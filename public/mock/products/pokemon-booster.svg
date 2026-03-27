@@ -1,0 +1,14 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#091224"/>
+  <rect x="188" y="90" width="524" height="920" rx="36" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <circle cx="450" cy="420" r="160" fill="#FACC15" fill-opacity="0.2"/>
+  <circle cx="536" cy="356" r="120" fill="#38BDF8" fill-opacity="0.18"/>
+  <text x="250" y="250" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="30" font-weight="700">Booster Pack</text>
+  <text x="314" y="560" fill="white" font-family="Arial, sans-serif" font-size="96" font-weight="700">PACK</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="188" y1="90" x2="712" y2="1010" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FACC15"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+</svg>

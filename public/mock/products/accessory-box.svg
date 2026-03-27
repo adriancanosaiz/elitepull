@@ -1,0 +1,14 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#0C1018"/>
+  <rect x="136" y="120" width="628" height="860" rx="40" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <rect x="250" y="346" width="400" height="280" rx="26" fill="rgba(10,14,24,0.5)"/>
+  <rect x="284" y="312" width="332" height="82" rx="24" fill="rgba(255,255,255,0.08)"/>
+  <text x="246" y="842" fill="white" font-family="Arial, sans-serif" font-size="44" font-weight="700">Deck Box</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="136" y1="120" x2="764" y2="980" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#CBD5E1"/>
+      <stop offset="0.48" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+</svg>

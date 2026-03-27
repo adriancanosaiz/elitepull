@@ -1,0 +1,17 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#08101F"/>
+  <rect x="120" y="80" width="660" height="940" rx="38" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <rect x="186" y="172" width="528" height="662" rx="34" fill="rgba(8,12,28,0.44)"/>
+  <circle cx="306" cy="450" r="112" fill="#38BDF8" fill-opacity="0.18"/>
+  <circle cx="592" cy="450" r="112" fill="#FACC15" fill-opacity="0.18"/>
+  <circle cx="450" cy="450" r="112" fill="#A855F7" fill-opacity="0.18"/>
+  <text x="228" y="260" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="28" font-weight="700">3 Pack Blister</text>
+  <text x="328" y="914" fill="white" font-family="Arial, sans-serif" font-size="50" font-weight="700">151</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="120" y1="80" x2="780" y2="1020" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F472B6"/>
+      <stop offset="0.45" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+</svg>

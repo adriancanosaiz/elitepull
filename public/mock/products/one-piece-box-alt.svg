@@ -1,0 +1,14 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="42" fill="#140A16"/>
+  <rect x="120" y="110" width="660" height="880" rx="40" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.14)"/>
+  <circle cx="450" cy="456" r="220" fill="#FB7185" fill-opacity="0.12"/>
+  <text x="220" y="260" fill="#FFF7ED" font-family="Arial, sans-serif" font-size="26" letter-spacing="5">FOUR EMPERORS</text>
+  <text x="238" y="560" fill="white" font-family="Arial, sans-serif" font-size="72" font-weight="700">OP-09</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="120" y1="110" x2="780" y2="990" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="0.52" stop-color="#FB7185"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+</svg>
