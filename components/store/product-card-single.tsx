@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/store/cart-provider";
+import { StoreMediaImage } from "@/components/store/store-media-image";
 import { formatPrice } from "@/lib/catalog";
 import type { ProductCardItem } from "@/types/contracts";
 
@@ -19,8 +19,9 @@ export function ProductCardSingle({ product }: { product: ProductCardItem }) {
       <Link href={product.href} className="block p-4">
         <div className="relative overflow-hidden rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(9,12,19,0.9),rgba(16,20,30,0.4))] p-3">
           <div className="absolute inset-0 bg-[linear-gradient(130deg,transparent_18%,rgba(128,226,221,0.08)_46%,rgba(255,255,255,0.06)_58%,transparent_84%)] opacity-60" />
-          <Image
+          <StoreMediaImage
             src={product.image}
+            fallbackSrc="/mock/products/single-charizard.svg"
             alt={product.name}
             width={750}
             height={1050}

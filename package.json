@@ -10,9 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
-    "catalog:import": "node scripts/import-catalog.ts",
-    "catalog:media:upload": "node scripts/upload-product-media.ts",
-    "catalog:media:upload:overwrite": "node scripts/upload-product-media.ts --overwrite"
+    "catalog:import": "node --env-file=.env.local scripts/import-catalog.ts",
+    "catalog:media:upload": "node --env-file=.env.local scripts/upload-product-media.ts",
+    "catalog:media:upload:overwrite": "node --env-file=.env.local scripts/upload-product-media.ts --overwrite"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

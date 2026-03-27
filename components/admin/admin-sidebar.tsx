@@ -17,7 +17,7 @@ const adminNavItems = [
     icon: LayoutDashboard,
   },
   {
-    href: "/admin#productos",
+    href: "/admin/productos",
     label: "Productos",
     description: "Catalogo y stock",
     icon: Boxes,

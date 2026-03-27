@@ -24,6 +24,12 @@ type ProductImageRow = Pick<
 >;
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
+type SupabaseLikeError = {
+  code?: string;
+  message?: string;
+  details?: string | null;
+  hint?: string | null;
+};
 
 type AdminProductRecord = ProductRow & {
   category: CategoryRow | null;
@@ -111,6 +117,66 @@ const ADMIN_PRODUCT_SELECT = `
     sort_order
   )
 `;
+
+function sanitizeAdminProductSearch(search?: string) {
+  return search
+    ?.trim()
+    .replace(/[%]/g, "")
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getAdminProductErrorMessage(error: unknown, fallbackMessage: string) {
+  if (!error || typeof error !== "object") {
+    return fallbackMessage;
+  }
+
+  const supabaseError = error as SupabaseLikeError;
+  const fullMessage = [
+    supabaseError.message,
+    supabaseError.details,
+    supabaseError.hint,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (supabaseError.code === "23505") {
+    if (fullMessage.includes("products_slug_key") || fullMessage.includes("(slug)")) {
+      return "Ya existe otro producto con ese slug.";
+    }
+
+    if (fullMessage.includes("products_sku_key") || fullMessage.includes("(sku)")) {
+      return "Ya existe otro producto con ese SKU.";
+    }
+
+    if (
+      fullMessage.includes("product_images_product_id_storage_path_key") ||
+      (fullMessage.includes("product_images") && fullMessage.includes("storage_path"))
+    ) {
+      return "La galeria contiene rutas repetidas. Revisa los paths antes de guardar.";
+    }
+
+    if (fullMessage.includes("product_images_product_id_sort_order_key")) {
+      return "La galeria no se ha podido guardar por un conflicto de orden.";
+    }
+  }
+
+  if (supabaseError.code === "23503" && fullMessage.includes("category")) {
+    return "La categoria seleccionada no existe o no esta disponible para esa marca.";
+  }
+
+  if (supabaseError.code === "22P02" && fullMessage.includes("uuid")) {
+    return "El identificador del producto o de la categoria no es valido.";
+  }
+
+  if (fullMessage.includes("available_quantity")) {
+    return "El stock indicado no es valido.";
+  }
+
+  return fallbackMessage;
+}
 
 function getInventoryValue(inventory: AdminProductRecord["inventory"]) {
   if (Array.isArray(inventory)) {
@@ -226,6 +292,20 @@ async function getValidatedAdminCategory(
   return data as CategoryRow;
 }
 
+async function ensureAdminProductExists(productId: string) {
+  const supabase = await createSupabaseServerClient();
+  const productsTable = supabase.from("products") as any;
+  const { data, error } = await productsTable.select("id").eq("id", productId).maybeSingle();
+
+  if (error) {
+    throw new Error(`[admin-products] No se pudo validar el producto: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("El producto no existe o ya no esta disponible para editar.");
+  }
+}
+
 async function syncAdminProductInventory(productId: string, stock: number) {
   const supabase = await createSupabaseServerClient();
   const inventoryTable = supabase.from("inventory") as any;
@@ -240,7 +320,7 @@ async function syncAdminProductInventory(productId: string, stock: number) {
   );
 
   if (error) {
-    throw new Error(`[admin-products] No se pudo actualizar el stock: ${error.message}`);
+    throw new Error(getAdminProductErrorMessage(error, "No se pudo actualizar el stock del producto."));
   }
 }
 
@@ -254,7 +334,12 @@ async function replaceAdminProductGallery(productId: string, galleryImagePaths: 
   const { error: deleteError } = await productImagesTable.delete().eq("product_id", productId);
 
   if (deleteError) {
-    throw new Error(`[admin-products] No se pudo resetear la galeria: ${deleteError.message}`);
+    throw new Error(
+      getAdminProductErrorMessage(
+        deleteError,
+        "No se pudo actualizar la galeria del producto.",
+      ),
+    );
   }
 
   if (normalizedPaths.length === 0) {
@@ -274,7 +359,12 @@ async function replaceAdminProductGallery(productId: string, galleryImagePaths: 
   const { error: insertError } = await productImagesTable.insert(rows);
 
   if (insertError) {
-    throw new Error(`[admin-products] No se pudo guardar la galeria: ${insertError.message}`);
+    throw new Error(
+      getAdminProductErrorMessage(
+        insertError,
+        "No se pudo guardar la galeria del producto.",
+      ),
+    );
   }
 }
 
@@ -324,7 +414,7 @@ export async function getAdminProductsList(search?: string) {
     .select(ADMIN_PRODUCT_SELECT)
     .order("updated_at", { ascending: false });
 
-  const normalizedSearch = search?.trim();
+  const normalizedSearch = sanitizeAdminProductSearch(search);
 
   if (normalizedSearch) {
     query = query.or(
@@ -428,7 +518,7 @@ export async function createAdminProduct(input: AdminProductInput) {
   const { error } = await productsTable.insert(productPayload);
 
   if (error) {
-    throw new Error(`[admin-products] No se pudo crear el producto: ${error.message}`);
+    throw new Error(getAdminProductErrorMessage(error, "No se pudo crear el producto."));
   }
 
   await syncAdminProductInventory(productId, input.stock);
@@ -449,6 +539,8 @@ export async function updateAdminProduct(input: AdminProductInput) {
   if (!input.id) {
     throw new Error("No se puede actualizar un producto sin id.");
   }
+
+  await ensureAdminProductExists(input.id);
 
   const supabase = await createSupabaseServerClient();
   const productsTable = supabase.from("products") as any;
@@ -477,7 +569,7 @@ export async function updateAdminProduct(input: AdminProductInput) {
   const { error } = await productsTable.update(productPayload).eq("id", input.id);
 
   if (error) {
-    throw new Error(`[admin-products] No se pudo actualizar el producto: ${error.message}`);
+    throw new Error(getAdminProductErrorMessage(error, "No se pudo actualizar el producto."));
   }
 
   await syncAdminProductInventory(input.id, input.stock);
@@ -494,13 +586,19 @@ export async function updateAdminProduct(input: AdminProductInput) {
 
 export async function toggleAdminProductActive(id: string, nextActive: boolean) {
   await requireAdminAccess();
+  await ensureAdminProductExists(id);
 
   const supabase = await createSupabaseServerClient();
   const productsTable = supabase.from("products") as any;
   const { error } = await productsTable.update({ active: nextActive }).eq("id", id);
 
   if (error) {
-    throw new Error(`[admin-products] No se pudo cambiar el estado del producto: ${error.message}`);
+    throw new Error(
+      getAdminProductErrorMessage(
+        error,
+        "No se pudo cambiar el estado del producto.",
+      ),
+    );
   }
 
   return getAdminProductMutationMeta(id);
@@ -508,6 +606,7 @@ export async function toggleAdminProductActive(id: string, nextActive: boolean) 
 
 export async function updateAdminProductStock(productId: string, stock: number) {
   await requireAdminAccess();
+  await ensureAdminProductExists(productId);
 
   await syncAdminProductInventory(productId, stock);
 

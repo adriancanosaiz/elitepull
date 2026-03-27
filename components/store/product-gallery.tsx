@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
+import { StoreMediaImage } from "@/components/store/store-media-image";
 import { cn } from "@/lib/utils";
 
 export function ProductGallery({
   images,
   name,
+  fallbackSrc,
 }: {
   images: string[];
   name: string;
+  fallbackSrc: string;
 }) {
   const [activeImage, setActiveImage] = useState(images[0] ?? "");
 
@@ -18,8 +20,9 @@ export function ProductGallery({
     <div className="space-y-4">
       <div className="surface-card overflow-hidden p-4">
         <div className="relative rounded-[28px] border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-transparent p-6">
-          <Image
+          <StoreMediaImage
             src={activeImage}
+            fallbackSrc={fallbackSrc}
             alt={name}
             width={900}
             height={1100}
@@ -39,8 +42,9 @@ export function ProductGallery({
               activeImage === image && "border-primary/30 bg-primary/10",
             )}
           >
-            <Image
+            <StoreMediaImage
               src={image}
+              fallbackSrc={fallbackSrc}
               alt={`${name} miniatura ${index + 1}`}
               width={220}
               height={260}

@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/store/cart-provider";
+import { StoreMediaImage } from "@/components/store/store-media-image";
 import { formatPrice } from "@/lib/catalog";
 import type { ProductCardItem } from "@/types/contracts";
 
@@ -21,8 +21,9 @@ export function ProductCardSealed({ product }: { product: ProductCardItem }) {
           <div className="vault-grid absolute inset-0 opacity-[0.05]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_42%),linear-gradient(135deg,transparent_24%,rgba(128,226,221,0.06)_50%,transparent_78%)] opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
           <div className="absolute inset-x-8 bottom-3 h-8 rounded-full bg-primary/10 blur-2xl" />
-          <Image
+          <StoreMediaImage
             src={product.image}
+            fallbackSrc="/mock/products/pokemon-etb.svg"
             alt={product.name}
             width={900}
             height={1100}

@@ -40,16 +40,22 @@ const updateStockSchema = z.object({
 });
 
 function buildRedirectUrl(basePath: string, params: Record<string, string | undefined>) {
-  const searchParams = new URLSearchParams();
+  const [pathname, rawQuery = ""] = basePath.split("?");
+  const searchParams = new URLSearchParams(rawQuery);
+
+  searchParams.delete("error");
+  searchParams.delete("success");
 
   for (const [key, value] of Object.entries(params)) {
     if (value) {
       searchParams.set(key, value);
+    } else {
+      searchParams.delete(key);
     }
   }
 
   const query = searchParams.toString();
-  return query ? `${basePath}?${query}` : basePath;
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 function getFirstErrorMessage(error: unknown) {
@@ -58,7 +64,7 @@ function getFirstErrorMessage(error: unknown) {
   }
 
   if (error instanceof Error) {
-    return error.message;
+    return error.message.replace(/^\[[^\]]+\]\s*/, "");
   }
 
   return "Ha ocurrido un error inesperado.";
@@ -77,9 +83,14 @@ function getFormFieldValue(formData: FormData, key: string) {
   return formData.get(key);
 }
 
-function parseAdminProductFormData(formData: FormData) {
+function getRedirectTo(formData: FormData, fallbackPath: string) {
+  const redirectTo = formData.get("redirectTo");
+  return typeof redirectTo === "string" && redirectTo.trim() ? redirectTo : fallbackPath;
+}
+
+function parseAdminProductFormData(formData: FormData, forcedId?: string) {
   return adminProductSchema.parse({
-    id: formData.get("id"),
+    id: forcedId ?? formData.get("id"),
     slug: formData.get("slug"),
     sku: formData.get("sku"),
     name: formData.get("name"),
@@ -112,64 +123,58 @@ function revalidateAdminProductPaths(result: AdminProductMutationResult) {
   revalidatePath("/");
   revalidatePath("/catalogo");
   revalidatePath("/preventa");
+  revalidatePath("/marca/pokemon");
+  revalidatePath("/marca/one-piece");
+  revalidatePath("/marca/riftbound");
+  revalidatePath("/marca/magic");
+  revalidatePath("/accesorios");
   revalidatePath(`/producto/${result.slug}`);
-
-  if (result.brandSlug === "accesorios") {
-    revalidatePath("/accesorios");
-
-    if (result.categorySlug) {
-      revalidatePath(`/accesorios/${result.categorySlug}`);
-    }
-
-    return;
-  }
-
-  revalidatePath(`/marca/${result.brandSlug}`);
-
-  if (result.categorySlug) {
-    revalidatePath(`/marca/${result.brandSlug}/${result.categorySlug}`);
-  }
 }
 
 export async function createAdminProductAction(formData: FormData) {
+  let targetPath = "/admin/productos/nuevo";
+
   try {
     const input = parseAdminProductFormData(formData);
     const result = await createAdminProduct(input);
 
     revalidateAdminProductPaths(result);
-    redirect(buildRedirectUrl(`/admin/productos/${result.id}`, { success: "created" }));
+    targetPath = buildRedirectUrl(`/admin/productos/${result.id}`, { success: "created" });
   } catch (error) {
-    redirect(
-      buildRedirectUrl("/admin/productos/nuevo", {
-        error: getFirstErrorMessage(error),
-      }),
-    );
+    targetPath = buildRedirectUrl("/admin/productos/nuevo", {
+      error: getFirstErrorMessage(error),
+    });
   }
+
+  redirect(targetPath);
 }
 
-export async function updateAdminProductAction(formData: FormData) {
-  const fallbackId =
-    typeof formData.get("id") === "string" ? (formData.get("id") as string) : undefined;
+export async function updateAdminProductAction(productId: string, formData: FormData) {
+  const fallbackId = productId;
+  let targetPath = `/admin/productos/${fallbackId}`;
 
   try {
-    const input = parseAdminProductFormData(formData);
+    const input = parseAdminProductFormData(formData, productId);
     const result = await updateAdminProduct(input);
 
     revalidateAdminProductPaths(result);
-    redirect(buildRedirectUrl(`/admin/productos/${result.id}`, { success: "updated" }));
+    targetPath = buildRedirectUrl(`/admin/productos/${result.id}`, { success: "updated" });
   } catch (error) {
-    redirect(
-      buildRedirectUrl(
-        fallbackId ? `/admin/productos/${fallbackId}` : "/admin/productos",
-        {
-          error: getFirstErrorMessage(error),
-        },
-      ),
+    targetPath = buildRedirectUrl(
+      `/admin/productos/${fallbackId}`,
+      {
+        error: getFirstErrorMessage(error),
+      },
     );
   }
+
+  redirect(targetPath);
 }
 
 export async function toggleAdminProductActiveAction(formData: FormData) {
+  const redirectTo = getRedirectTo(formData, "/admin/productos");
+  let targetPath = redirectTo;
+
   try {
     const parsedPayload = toggleActiveSchema.parse({
       id: formData.get("id"),
@@ -182,19 +187,20 @@ export async function toggleAdminProductActiveAction(formData: FormData) {
     );
 
     revalidateAdminProductPaths(result);
-
-    return {
-      ok: true,
-    };
+    targetPath = buildRedirectUrl(redirectTo, { success: "status-updated" });
   } catch (error) {
-    return {
-      ok: false,
+    targetPath = buildRedirectUrl(redirectTo, {
       error: getFirstErrorMessage(error),
-    };
+    });
   }
+
+  redirect(targetPath);
 }
 
 export async function updateAdminProductStockAction(formData: FormData) {
+  const redirectTo = getRedirectTo(formData, "/admin/productos");
+  let targetPath = redirectTo;
+
   try {
     const parsedPayload = updateStockSchema.parse({
       productId: formData.get("productId"),
@@ -204,14 +210,12 @@ export async function updateAdminProductStockAction(formData: FormData) {
     const result = await updateAdminProductStock(parsedPayload.productId, parsedPayload.stock);
 
     revalidateAdminProductPaths(result);
-
-    return {
-      ok: true,
-    };
+    targetPath = buildRedirectUrl(redirectTo, { success: "stock-updated" });
   } catch (error) {
-    return {
-      ok: false,
+    targetPath = buildRedirectUrl(redirectTo, {
       error: getFirstErrorMessage(error),
-    };
+    });
   }
+
+  redirect(targetPath);
 }

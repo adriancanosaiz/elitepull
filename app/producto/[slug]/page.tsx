@@ -10,6 +10,17 @@ import {
 } from "@/lib/repositories/store-repository";
 import { formatPrice } from "@/lib/catalog";
 
+function getProductFallbackImage(productType: "sealed" | "single" | "accessory") {
+  switch (productType) {
+    case "single":
+      return "/mock/products/single-charizard.svg";
+    case "accessory":
+      return "/mock/products/accessory-box.svg";
+    default:
+      return "/mock/products/pokemon-etb.svg";
+  }
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -39,7 +50,11 @@ export default async function ProductPage({
         />
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-          <ProductGallery images={product.images} name={product.name} />
+          <ProductGallery
+            images={product.images}
+            name={product.name}
+            fallbackSrc={getProductFallbackImage(product.type)}
+          />
           <ProductInfo product={product} />
         </div>
 

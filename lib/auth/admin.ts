@@ -22,6 +22,10 @@ export function canAccessAdmin(role?: AppRole | null) {
   return role ? ADMIN_ROLES.has(role) : false;
 }
 
+function isMissingAuthSessionError(message?: string) {
+  return message?.toLowerCase().includes("auth session missing") ?? false;
+}
+
 export async function getCurrentSessionProfile() {
   if (!hasSupabaseEnv()) {
     const envStatus = getSupabaseEnvStatus();
@@ -45,6 +49,13 @@ export async function getCurrentSessionProfile() {
   } = await supabase.auth.getUser();
 
   if (userError) {
+    if (isMissingAuthSessionError(userError.message)) {
+      return {
+        user: null,
+        profile: null,
+      };
+    }
+
     throw new Error(`[auth] No se pudo resolver la sesion actual: ${userError.message}`);
   }
 
