@@ -8,14 +8,6 @@ type StoreMediaImageProps = Omit<ImageProps, "src"> & {
   fallbackSrc: string;
 };
 
-function isRemoteStorageImage(src: string) {
-  return (
-    src.startsWith("http://") ||
-    src.startsWith("https://") ||
-    src.startsWith("/storage/v1/object/public/")
-  );
-}
-
 export function StoreMediaImage({
   src,
   fallbackSrc,
@@ -34,7 +26,7 @@ export function StoreMediaImage({
       {...props}
       src={currentSrc}
       alt={alt}
-      unoptimized={unoptimized ?? isRemoteStorageImage(currentSrc)}
+      unoptimized={unoptimized ?? false}
       onError={() => {
         if (currentSrc !== fallbackSrc) {
           setCurrentSrc(fallbackSrc);

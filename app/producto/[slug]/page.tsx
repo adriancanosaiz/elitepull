@@ -62,8 +62,8 @@ export default async function ProductPage({
 
   return (
     <>
-      <section className="app-container pb-8 pt-8 md:pt-10">
-        <div className="surface-panel overflow-hidden px-5 py-6 md:px-8 md:py-8">
+      <section className="app-container pb-8 pt-6 md:pt-10">
+        <div className="surface-panel overflow-hidden px-4 py-5 sm:px-5 sm:py-6 md:px-8 md:py-8">
           <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
           <div className="kinetic-lines pointer-events-none absolute inset-0 opacity-[0.06]" />
           <div className="pointer-events-none absolute left-[8%] top-0 h-28 w-48 rounded-full bg-amber-300/12 blur-3xl" />
@@ -81,7 +81,7 @@ export default async function ProductPage({
               ]}
             />
 
-            <StoreReveal className="mt-6 grid gap-6 xl:grid-cols-[1.08fr_0.92fr] xl:items-start">
+            <StoreReveal className="mt-5 grid gap-5 xl:mt-6 xl:grid-cols-[1.08fr_0.92fr] xl:items-start">
               <ProductGallery
                 images={product.images}
                 name={product.name}
@@ -94,7 +94,7 @@ export default async function ProductPage({
           </div>
         </div>
 
-        <div className="scroll-defer mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="scroll-defer mt-6 grid gap-5 sm:mt-8 lg:grid-cols-2 lg:gap-6">
           <StoreReveal>
             <div className="surface-card p-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">

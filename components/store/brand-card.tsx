@@ -74,7 +74,7 @@ export function BrandCard({
         <div className="shine-pass" />
         <div className="collector-constellation absolute inset-0 opacity-30" />
 
-        <div className="relative grid h-full gap-6 sm:grid-cols-[1fr_180px] sm:items-center">
+        <div className="relative grid h-full grid-cols-[1fr_116px] gap-4 sm:grid-cols-[1fr_180px] sm:items-center sm:gap-6">
           <div className="flex h-full flex-col">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
@@ -83,7 +83,7 @@ export function BrandCard({
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400">
                     {brand.slug === "preventa" ? "Acceso anticipado" : "Coleccion protegida"}
                   </p>
-                  <h3 className="mt-2 font-heading text-2xl font-semibold text-white">
+                  <h3 className="mt-2 font-heading text-xl font-semibold text-white sm:text-2xl">
                     {brand.name}
                   </h3>
                 </div>
@@ -101,7 +101,9 @@ export function BrandCard({
               </span>
             </div>
 
-            <p className="mt-4 text-sm leading-7 text-slate-100/86">{brand.tagline}</p>
+            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-100/86 sm:mt-4 sm:leading-7">
+              {brand.tagline}
+            </p>
 
             <div
               className="mt-5 rounded-[22px] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
@@ -118,7 +120,7 @@ export function BrandCard({
 
             <div className="mt-auto pt-5">
               <div className="flex flex-wrap gap-2">
-                {compactCategories.map((category) => (
+                {compactCategories.slice(0, 2).map((category) => (
                   <span
                     key={category.id}
                     className="rounded-full border border-white/[0.1] bg-black/[0.18] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200"
@@ -154,6 +156,7 @@ export function BrandCard({
                   className="object-cover object-center opacity-90 transition-[transform,filter] duration-700 group-hover:scale-[1.02] group-hover:brightness-[1.04]"
                   loading="lazy"
                   sizes="180px"
+                  quality={68}
                 />
               ) : (
                 <div className="relative flex h-full items-center justify-center">
@@ -191,10 +194,15 @@ export function BrandCard({
       <div className="shine-pass" />
       <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.16] to-transparent" />
 
-      <div className="relative grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-        <div className={cn(visualOnRight && "lg:order-2")}>
+      <div className="relative grid gap-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-6">
+        <div
+          className={cn(
+            "order-2",
+            visualOnRight ? "lg:order-2" : "lg:order-1",
+          )}
+        >
           <div className="relative mx-auto max-w-[440px]">
-            <div className="relative aspect-[0.94] overflow-hidden rounded-[32px] border border-white/[0.08] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_22%),linear-gradient(180deg,rgba(8,11,18,0.92),rgba(14,18,28,0.96))] p-6 shadow-[0_24px_60px_rgba(2,6,23,0.42),inset_0_1px_0_rgba(255,255,255,0.05)] transition-transform duration-700 group-hover:scale-[1.008] [contain:layout_paint]">
+            <div className="relative aspect-[1.02] overflow-hidden rounded-[28px] border border-white/[0.08] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_22%),linear-gradient(180deg,rgba(8,11,18,0.92),rgba(14,18,28,0.96))] p-4 shadow-[0_24px_60px_rgba(2,6,23,0.42),inset_0_1px_0_rgba(255,255,255,0.05)] transition-transform duration-700 group-hover:scale-[1.008] sm:aspect-[0.94] sm:rounded-[32px] sm:p-6 [contain:layout_paint]">
               <div className="absolute inset-0 vault-grid opacity-[0.04]" />
               <div className="absolute inset-0 collector-constellation opacity-40" />
               <div className="shine-pass" />
@@ -227,6 +235,7 @@ export function BrandCard({
                         className="object-contain object-center drop-shadow-[0_18px_32px_rgba(2,6,23,0.45)] transition-[transform,filter] duration-700 group-hover:brightness-[1.03]"
                         loading="lazy"
                         sizes="200px"
+                        quality={70}
                       />
                     </div>
                   </div>
@@ -240,6 +249,7 @@ export function BrandCard({
                         className="object-contain object-center drop-shadow-[0_24px_40px_rgba(2,6,23,0.5)] transition-[transform,filter] duration-700 group-hover:brightness-[1.05]"
                         loading="lazy"
                         sizes="220px"
+                        quality={72}
                       />
                     </div>
                   </div>
@@ -253,6 +263,7 @@ export function BrandCard({
                         className="object-contain object-center drop-shadow-[0_18px_32px_rgba(2,6,23,0.45)] transition-[transform,filter] duration-700 group-hover:brightness-[1.03]"
                         loading="lazy"
                         sizes="200px"
+                        quality={70}
                       />
                     </div>
                   </div>
@@ -267,6 +278,7 @@ export function BrandCard({
                     className="object-cover object-center opacity-88 transition-[transform,filter] duration-900 group-hover:scale-[1.015] group-hover:brightness-[1.03]"
                     loading="lazy"
                     sizes="(min-width: 1024px) 420px, 100vw"
+                    quality={70}
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,16,0.04),rgba(7,10,16,0.48),rgba(7,10,16,0.82))]" />
                 </>
@@ -286,38 +298,45 @@ export function BrandCard({
                 </>
               )}
 
-              <div className="absolute inset-x-6 bottom-6 flex items-center justify-between rounded-[24px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(10,13,20,0.76),rgba(17,22,32,0.88))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <div className="absolute inset-x-4 bottom-4 flex items-center justify-between rounded-[22px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(10,13,20,0.76),rgba(17,22,32,0.88))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:inset-x-6 sm:bottom-6 sm:rounded-[24px] sm:p-4">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
                     Universo activo
                   </p>
-                  <p className="mt-1 font-heading text-xl font-semibold text-white">
+                  <p className="mt-1 font-heading text-lg font-semibold text-white sm:text-xl">
                     {brand.name}
                   </p>
                 </div>
                 <BrandGlyph
                   brand={brand.slug}
                   size="lg"
-                  className="h-20 w-20 rounded-[24px]"
+                  className="h-16 w-16 rounded-[20px] sm:h-20 sm:w-20 sm:rounded-[24px]"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className={cn("max-w-xl", visualOnRight && "lg:order-1")}>
+        <div
+          className={cn(
+            "order-1 max-w-xl",
+            visualOnRight ? "lg:order-1" : "lg:order-2",
+          )}
+        >
           <div className="inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em]" style={{ color: palette.labelColor }}>
             <span className="signal-line h-px w-10" />
             {brand.shortName}
           </div>
-          <h3 className="mt-3 font-heading text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h3 className="mt-3 font-heading text-[2.35rem] font-semibold tracking-tight text-white sm:text-5xl">
             {brand.name}
           </h3>
-          <p className="mt-5 text-base leading-8 text-slate-100/88">{brand.tagline}</p>
-          <p className="mt-4 text-sm leading-7 text-slate-300">{brand.description}</p>
+          <p className="mt-4 text-[15px] leading-7 text-slate-100/88 sm:mt-5 sm:text-base sm:leading-8">
+            {brand.tagline}
+          </p>
+          <p className="mt-3 text-sm leading-7 text-slate-300 sm:mt-4">{brand.description}</p>
 
           <div
-            className="mt-6 rounded-[24px] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+            className="mt-5 rounded-[22px] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:mt-6 sm:rounded-[24px] sm:p-5"
             style={{
               border: `1px solid ${palette.spotlightBorder}`,
               background: palette.spotlightBackground,
@@ -329,10 +348,26 @@ export function BrandCard({
             <p className="mt-3 text-sm leading-7 text-slate-100/86">{brand.spotlight}</p>
           </div>
 
-          <div className="mt-7 flex items-center justify-between border-t border-white/[0.08] pt-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Entrar en el universo
-            </p>
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            {brand.categories.slice(0, 3).map((category) => (
+              <span
+                key={category.id}
+                className="rounded-full border border-white/[0.1] bg-black/[0.18] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200"
+              >
+                {category.label}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-6 flex items-center justify-between border-t border-white/[0.08] pt-4 sm:mt-7 sm:pt-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                Entrar en el universo
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                Explora sellado, singles y producto destacado.
+              </p>
+            </div>
             <span
               className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-white transition-transform duration-300 group-hover:translate-x-1"
               style={{

@@ -41,6 +41,8 @@ export function ProductCardSingle({ product }: { product: ProductCardItem }) {
             alt={product.name}
             width={750}
             height={1050}
+            sizes="(min-width: 1280px) 320px, (min-width: 768px) 42vw, 88vw"
+            quality={78}
             className="relative h-[250px] w-full rounded-[20px] object-contain transition-[transform,filter] duration-500 group-hover:scale-[1.03] group-hover:-translate-y-1 group-hover:brightness-110 group-hover:saturate-110"
           />
         </div>

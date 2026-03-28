@@ -86,8 +86,8 @@ export function ProductGallery({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="surface-card relative overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(16,20,30,0.96),rgba(9,12,19,0.88))] p-4 shadow-[0_24px_60px_rgba(4,8,18,0.24)]">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="surface-card relative overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(16,20,30,0.96),rgba(9,12,19,0.88))] p-3 shadow-[0_24px_60px_rgba(4,8,18,0.24)] sm:p-4">
         <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
         <div className="kinetic-lines pointer-events-none absolute inset-0 opacity-[0.08]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_42%),radial-gradient(circle_at_bottom,rgba(245,199,112,0.08),transparent_38%)]" />
@@ -105,14 +105,14 @@ export function ProductGallery({
                 }
               : undefined
           }
-          className="relative overflow-hidden rounded-[30px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-6"
+          className="relative overflow-hidden rounded-[26px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-4 sm:rounded-[30px] sm:p-6"
         >
           <div className="collector-orbit pointer-events-none absolute left-1/2 top-1/2 h-[76%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-45" />
           <div className="collector-orbit pointer-events-none absolute left-1/2 top-1/2 h-[56%] w-[56%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-30" />
           <div className="pointer-events-none absolute inset-x-10 top-4 h-24 rounded-full bg-white/[0.06] blur-3xl" />
           <div className="pointer-events-none absolute inset-x-16 bottom-3 h-12 rounded-full bg-primary/12 blur-3xl" />
           <div className="shine-pass" />
-          <div className="pointer-events-none absolute right-4 top-4 rounded-full border border-white/10 bg-black/[0.25] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-300 backdrop-blur-md">
+          <div className="pointer-events-none absolute right-3 top-3 hidden rounded-full border border-white/10 bg-black/[0.25] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-300 backdrop-blur-md sm:block">
             Main visual
           </div>
           {isTiltEnabled ? (
@@ -131,7 +131,7 @@ export function ProductGallery({
               exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 1.012, y: -4 }}
               transition={storefrontImageTransition}
               className={cn(
-                "relative flex min-h-[420px] items-center justify-center md:min-h-[560px]",
+                "relative flex min-h-[320px] items-center justify-center sm:min-h-[420px] md:min-h-[560px]",
                 !isTiltEnabled && !shouldReduceMotion && "media-float",
               )}
             >
@@ -141,14 +141,16 @@ export function ProductGallery({
                 alt={name}
                 width={900}
                 height={1100}
-                className="mx-auto h-[420px] w-auto object-contain drop-shadow-[0_24px_48px_rgba(2,6,16,0.28)] md:h-[560px]"
+                sizes="(min-width: 1280px) 560px, (min-width: 768px) 50vw, 92vw"
+                quality={82}
+                className="mx-auto h-[320px] w-auto object-contain drop-shadow-[0_24px_48px_rgba(2,6,16,0.28)] sm:h-[420px] md:h-[560px]"
               />
             </motion.div>
           </AnimatePresence>
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 md:gap-4">
+      <div className="flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:pb-0">
         {images.map((image, index) => (
           <motion.button
             key={`${image}-${index}`}
@@ -158,7 +160,7 @@ export function ProductGallery({
             whileHover={shouldReduceMotion ? undefined : { y: -2 }}
             transition={{ duration: 0.2, ease: storefrontMotionEase }}
             className={cn(
-              "surface-soft group/thumb overflow-hidden rounded-[22px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-2 transition-[border-color,background-color,box-shadow,transform] duration-300 hover:border-white/[0.18] hover:bg-white/[0.06] hover:shadow-[0_14px_30px_rgba(4,8,18,0.16)]",
+              "surface-soft group/thumb min-w-[92px] overflow-hidden rounded-[22px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-2 transition-[border-color,background-color,box-shadow,transform] duration-300 hover:border-white/[0.18] hover:bg-white/[0.06] hover:shadow-[0_14px_30px_rgba(4,8,18,0.16)] md:min-w-0",
               activeImage === image &&
                 "border-primary/35 bg-primary/10 shadow-[0_16px_32px_rgba(234,179,8,0.16)]",
             )}
@@ -181,7 +183,9 @@ export function ProductGallery({
               alt={`${name} miniatura ${index + 1}`}
               width={220}
               height={260}
-              className="h-24 w-full rounded-[18px] object-cover transition-[transform,filter] duration-300 group-hover/thumb:scale-[1.02] group-hover/thumb:brightness-105"
+              sizes="(min-width: 768px) 120px, 22vw"
+              quality={70}
+              className="h-20 w-[92px] rounded-[18px] object-cover transition-[transform,filter] duration-300 group-hover/thumb:scale-[1.02] group-hover/thumb:brightness-105 md:h-24 md:w-full"
             />
             </div>
           </motion.button>

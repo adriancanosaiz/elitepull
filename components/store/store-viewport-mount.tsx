@@ -45,8 +45,8 @@ export function StoreViewportMount({
       },
       {
         root: null,
-        rootMargin: "120px 0px -8% 0px",
-        threshold: 0.12,
+        rootMargin: "56px 0px -4% 0px",
+        threshold: 0.2,
       },
     );
 

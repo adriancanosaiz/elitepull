@@ -32,12 +32,17 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
         transition={{ ...revealProps.transition, delay: 0.04 }}
         className="space-y-4"
       >
-        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-          <span>{product.brand.label}</span>
-          <span>{productExpansion}</span>
-          <span>{productFormat}</span>
-          <span>{productLanguage}</span>
-          {product.variant ? <span>{product.variant}</span> : null}
+        <div className="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+          {[product.brand.label, productExpansion, productFormat, productLanguage, product.variant]
+            .filter((value): value is string => Boolean(value))
+            .map((value, index) => (
+              <span
+                key={`${value}-${index}`}
+                className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5"
+              >
+                {value}
+              </span>
+            ))}
         </div>
 
         {product.badge ? (
@@ -47,10 +52,12 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
         ) : null}
 
         <div>
-          <h1 className="font-heading text-4xl font-semibold tracking-[-0.04em] text-white md:text-[3.35rem] md:leading-[1.02]">
+          <h1 className="font-heading text-[2.35rem] font-semibold leading-[0.98] tracking-[-0.045em] text-white md:text-[3.35rem] md:leading-[1.02]">
             {product.name}
           </h1>
-          <p className="mt-4 max-w-[62ch] text-base leading-8 text-slate-300">{product.description}</p>
+          <p className="mt-3 max-w-[62ch] text-[15px] leading-7 text-slate-300 md:mt-4 md:text-base md:leading-8">
+            {product.description}
+          </p>
         </div>
       </motion.div>
 
@@ -69,20 +76,20 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
       <motion.div
         {...revealProps}
         transition={{ ...revealProps.transition, delay: 0.16 }}
-        className="surface-panel border-primary/16 p-6"
+        className="surface-panel border-primary/16 p-5 md:p-6"
       >
         <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
         <div className="pointer-events-none absolute inset-x-[18%] top-0 h-24 rounded-full bg-white/[0.06] blur-3xl" />
         <div className="pointer-events-none absolute bottom-4 left-[14%] h-16 w-[42%] rounded-full bg-primary/14 blur-3xl" />
 
         <div className="relative">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
                 Estado de compra
               </p>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="font-heading text-4xl font-semibold text-white">
+              <div className="mt-3 flex flex-wrap items-center gap-2.5 md:gap-3">
+                <span className="font-heading text-[2.2rem] font-semibold text-white md:text-4xl">
                   {formatPrice(product.price)}
                 </span>
                 {product.compareAtPrice ? (
@@ -108,8 +115,8 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-[auto_1fr] lg:items-center">
-            <div className="flex items-center rounded-full border border-white/10 bg-black/20">
+          <div className="mt-6 grid gap-3 sm:gap-4 lg:grid-cols-[auto_1fr] lg:items-center">
+            <div className="mx-auto flex items-center rounded-full border border-white/10 bg-black/20 lg:mx-0">
               <button
                 type="button"
                 onClick={() => setQuantity((current) => Math.max(1, current - 1))}
@@ -148,7 +155,7 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
               idleLabel={product.isPreorder ? "Reservar ahora" : "Añadir al carrito"}
               addedLabel={product.isPreorder ? "Reserva añadida" : "Añadido al carrito"}
               size="lg"
-              className="h-14 rounded-[22px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] text-slate-950 shadow-[0_18px_42px_rgba(214,186,131,0.24)]"
+              className="h-14 w-full rounded-[22px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] text-slate-950 shadow-[0_18px_42px_rgba(214,186,131,0.24)]"
             />
           </div>
 
@@ -168,7 +175,7 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
       <motion.div
         {...revealProps}
         transition={{ ...revealProps.transition, delay: 0.22 }}
-        className="grid gap-4 rounded-[26px] border border-white/10 bg-white/[0.03] p-5 text-sm leading-7 text-slate-300"
+        className="grid gap-4 rounded-[26px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300 md:p-5"
       >
         <div>
           <h2 className="font-heading text-xl font-semibold text-white">Lectura rápida</h2>

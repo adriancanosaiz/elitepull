@@ -1,28 +1,36 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect } from "react";
 import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
-import { Menu, Search, ShoppingBag, User2 } from "lucide-react";
+import { Menu, ShoppingBag, User2 } from "lucide-react";
 
 import { BrandGlyph } from "@/components/store/brand-glyph";
 import { brands } from "@/data/brands";
-import { headerQuickLinks, mainNavigation } from "@/data/site";
+import { mainNavigation } from "@/data/site";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { MegaMenu } from "@/components/store/mega-menu";
 import { useCart } from "@/components/store/cart-provider";
-import { SearchBar } from "@/components/store/search-bar";
 import { SiteLogo } from "@/components/store/site-logo";
 import { storefrontMotionEase } from "@/lib/storefront-motion";
+
+const SearchBar = dynamic(
+  () => import("@/components/store/search-bar").then((module) => module.SearchBar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-12 rounded-[22px] border border-primary/15 bg-[linear-gradient(180deg,rgba(18,22,32,0.92),rgba(10,13,20,0.85))] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]" />
+    ),
+  },
+);
 
 export function Header() {
   const { totalItems, cartPulseKey } = useCart();
@@ -49,7 +57,7 @@ export function Header() {
   }, [cartBadgeControls, cartIconControls, cartPulseKey, shouldReduceMotion]);
 
   return (
-    <header className="sticky top-0 z-50 pt-4">
+    <header className="sticky top-0 z-50 pt-2 sm:pt-3 md:pt-4">
       <div className="app-container">
         <div className="mb-3 hidden items-center justify-between rounded-[22px] border border-primary/15 bg-[linear-gradient(90deg,rgba(13,16,25,0.96),rgba(19,24,34,0.8),rgba(13,16,25,0.96))] px-4 py-2.5 text-[10px] uppercase tracking-[0.28em] text-slate-400 shadow-[0_12px_34px_rgba(2,6,23,0.18)] backdrop-blur-md md:flex">
           <span className="inline-flex items-center gap-3">
@@ -72,12 +80,12 @@ export function Header() {
           </div>
         </div>
 
-        <div className="surface-panel vault-sheen overflow-visible border-primary/20 px-4 py-3 sm:px-5">
+        <div className="surface-panel vault-sheen overflow-visible border-primary/20 px-3 py-2.5 sm:px-5 sm:py-3">
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
-          <div className="flex items-center gap-3 xl:gap-4">
-            <Link href="/" className="shrink-0">
-              <SiteLogo />
+          <div className="flex items-center gap-2.5 sm:gap-3 xl:gap-4">
+            <Link href="/" className="min-w-0 shrink-0">
+              <SiteLogo compact className="max-w-[152px] sm:max-w-none" />
             </Link>
 
             <nav className="hidden items-center gap-1 xl:flex">
@@ -98,24 +106,12 @@ export function Header() {
               <SearchBar />
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
               <Button
                 asChild
                 variant="outline"
                 size="icon"
-                className="hidden rounded-[18px] border-primary/15 bg-black/20 lg:inline-flex xl:hidden"
-              >
-                <Link href="/catalogo">
-                  <Search className="h-4 w-4" />
-                  <span className="sr-only">Buscar</span>
-                </Link>
-              </Button>
-
-              <Button
-                asChild
-                variant="outline"
-                size="icon"
-                className="relative rounded-[18px] border-primary/15 bg-black/20"
+                className="relative rounded-[16px] border-primary/15 bg-black/20 sm:rounded-[18px]"
               >
                 <Link href="/carrito">
                   <motion.span animate={cartIconControls} className="inline-flex">
@@ -134,7 +130,7 @@ export function Header() {
               <Button
                 variant="outline"
                 size="icon"
-                className="hidden rounded-[18px] border-primary/15 bg-black/20 sm:inline-flex"
+                className="hidden rounded-[18px] border-primary/15 bg-black/20 md:inline-flex"
               >
                 <User2 className="h-4 w-4" />
                 <span className="sr-only">Usuario</span>
@@ -145,7 +141,7 @@ export function Header() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-[18px] border-primary/15 bg-black/20 xl:hidden"
+                    className="rounded-[16px] border-primary/15 bg-black/20 sm:rounded-[18px] xl:hidden"
                   >
                     <Menu className="h-4 w-4" />
                     <span className="sr-only">Abrir menu</span>
@@ -158,72 +154,66 @@ export function Header() {
                 >
                   <SheetHeader>
                     <SheetTitle>Navegacion ElitePull</SheetTitle>
-                    <SheetDescription>
-                      Explora catálogo, marcas y preventas desde un solo menú.
-                    </SheetDescription>
                   </SheetHeader>
 
-                  <div className="mt-6">
+                  <div className="mt-5">
                     <SearchBar compact />
                   </div>
 
-                  <div className="mt-6 space-y-2">
-                    {mainNavigation.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="block rounded-[20px] border border-primary/12 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
+                  <div className="mt-6">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Catalogo
+                    </p>
+                    <Link
+                      href="/catalogo"
+                      className="block rounded-[20px] border border-primary/12 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                    >
+                      Ver catalogo completo
+                    </Link>
                   </div>
 
-                  <Separator className="my-6" />
-
-                  <div className="space-y-4">
-                    <div>
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                        Marcas destacadas
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {headerQuickLinks.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            className="rounded-full border border-primary/14 bg-white/[0.03] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-200"
-                          >
-                            {link.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-
-                    {brands.map((brand) => (
-                      <details
-                        key={brand.id}
-                        className="rounded-[24px] border border-primary/12 bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                      >
-                        <summary className="flex cursor-pointer list-none items-center gap-3 font-heading text-lg font-semibold text-white">
-                          <BrandGlyph brand={brand.slug} size="sm" />
-                          {brand.name}
-                        </summary>
-                        <p className="mt-3 text-sm leading-6 text-slate-300">
-                          {brand.tagline}
-                        </p>
-                        <div className="mt-4 grid gap-2">
-                          {brand.categories.map((category) => (
+                  <div className="mt-6">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Marcas
+                    </p>
+                    <details className="rounded-[22px] border border-primary/12 bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                      <summary className="cursor-pointer list-none text-base font-semibold text-white">
+                        Ver marcas
+                      </summary>
+                      <div className="mt-4 grid gap-2">
+                        {brands
+                          .filter((brand) => !["accesorios", "preventa"].includes(brand.slug))
+                          .map((brand) => (
                             <Link
-                              key={category.id}
-                              href={category.href}
-                              className="rounded-[18px] border border-white/[0.08] bg-black/10 px-3 py-3 text-sm text-slate-100"
+                              key={brand.id}
+                              href={brand.href}
+                              className="flex min-w-0 items-center gap-3 rounded-[18px] border border-white/[0.08] bg-black/10 px-3 py-3 text-sm text-slate-100"
                             >
-                              {category.label}
+                              <BrandGlyph brand={brand.slug} size="sm" />
+                              <span className="truncate">{brand.name}</span>
                             </Link>
                           ))}
-                        </div>
-                      </details>
-                    ))}
+                      </div>
+                    </details>
+                  </div>
+
+                  <div className="mt-6">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Otros
+                    </p>
+                    <div className="space-y-2">
+                      {mainNavigation
+                        .filter((item) => item.href !== "/catalogo")
+                        .map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className="block rounded-[20px] border border-primary/12 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>

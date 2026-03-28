@@ -1,6 +1,7 @@
+import dynamic from "next/dynamic";
+
 import { homeHeroBanner } from "@/data/banners";
 import { brands } from "@/data/brands";
-import { BenefitStrip } from "@/components/store/benefit-strip";
 import { BrandCard } from "@/components/store/brand-card";
 import { HeroBanner } from "@/components/store/hero-banner";
 import { SectionHeading } from "@/components/store/section-heading";
@@ -10,6 +11,12 @@ import { buildPageMetadata } from "@/lib/site-config";
 
 const primaryBrands = brands.filter((brand) => !["accesorios", "preventa"].includes(brand.slug));
 const supportBrands = brands.filter((brand) => ["accesorios", "preventa"].includes(brand.slug));
+const BenefitStrip = dynamic(
+  () => import("@/components/store/benefit-strip").then((module) => module.BenefitStrip),
+  {
+    loading: () => null,
+  },
+);
 
 export const metadata = buildPageMetadata({
   title: "Tienda TCG premium",

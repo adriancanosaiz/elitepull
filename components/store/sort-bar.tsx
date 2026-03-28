@@ -31,8 +31,8 @@ export function SortBar({
           : "0 productos listos para explorar"}
       </p>
 
-      <div className="flex items-center gap-3">
-        <span className="inline-flex items-center gap-2 text-sm text-slate-300">
+      <div className="flex w-full items-center gap-3 sm:w-auto">
+        <span className="inline-flex shrink-0 items-center gap-2 text-sm text-slate-300">
           <ArrowUpDown className="h-4 w-4" />
           Ordenar por
         </span>
@@ -44,7 +44,7 @@ export function SortBar({
             params.delete("page");
             router.push(`${pathname}?${params.toString()}`, { scroll: false });
           }}
-          className="h-11 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+          className="h-11 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none sm:w-[220px] sm:flex-none"
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value} className="bg-slate-950">

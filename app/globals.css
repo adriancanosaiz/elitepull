@@ -49,7 +49,7 @@
       radial-gradient(circle at 72% 16%, rgba(124, 231, 227, 0.12), transparent 18%),
       radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05), transparent 24%),
       linear-gradient(180deg, rgba(13, 17, 27, 0.98), rgba(6, 9, 16, 1));
-    background-attachment: fixed;
+    background-attachment: scroll;
   }
 
   body::before {
@@ -90,5 +90,11 @@
   ::selection {
     background: rgba(221, 184, 120, 0.26);
     color: #fff7ea;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    background-attachment: fixed;
   }
 }

@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/store/breadcrumbs";
 import { CollectionPagination } from "@/components/store/collection-pagination";
 import { EmptyState } from "@/components/store/empty-state";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
+import { MobileFilterDrawer } from "@/components/store/mobile-filter-drawer";
 import { ProductGrid } from "@/components/store/product-grid";
 import { SortBar } from "@/components/store/sort-bar";
 import { StoreReveal } from "@/components/store/store-reveal";
@@ -121,8 +122,8 @@ export function ListingPage({
         </div>
       </StoreReveal>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[320px_1fr]">
-        <StoreReveal delay={0.05}>
+      <div className="mt-6 grid gap-6 xl:mt-8 xl:grid-cols-[320px_1fr]">
+        <StoreReveal delay={0.05} className="hidden xl:block">
           <FilterSidebar
             brands={collection.filters.brands}
             categories={collection.filters.categories}
@@ -134,6 +135,8 @@ export function ListingPage({
         </StoreReveal>
 
         <StoreReveal className="space-y-5" delay={0.1}>
+          <MobileFilterDrawer collection={collection} />
+
           <SortBar
             resultCount={collection.total}
             page={collection.pagination.page}
