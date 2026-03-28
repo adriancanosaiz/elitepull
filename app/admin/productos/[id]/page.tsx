@@ -47,24 +47,6 @@ export default async function AdminEditProductPage({
       ? "Producto actualizado correctamente."
       : undefined;
 
-  async function updateProductFormAction(formData: FormData) {
-    "use server";
-
-    return updateAdminProductAction(resolvedProduct.id, formData);
-  }
-
-  async function uploadCoverFormAction(formData: FormData) {
-    "use server";
-
-    return uploadAdminProductCoverAction(resolvedProduct.id, formData);
-  }
-
-  async function replaceGalleryFormAction(formData: FormData) {
-    "use server";
-
-    return replaceAdminProductGalleryAction(resolvedProduct.id, formData);
-  }
-
   return (
     <div className="space-y-6">
       <section className="rounded-[30px] border border-white/10 bg-black/20 p-6 md:p-7">
@@ -102,7 +84,7 @@ export default async function AdminEditProductPage({
 
       <ProductForm
         mode="edit"
-        action={updateProductFormAction}
+        action={updateAdminProductAction}
         categories={categories}
         product={resolvedProduct}
         error={resolvedSearchParams.error}
@@ -113,8 +95,8 @@ export default async function AdminEditProductPage({
         productId={resolvedProduct.id}
         coverImagePath={resolvedProduct.coverImagePath}
         galleryImageCount={resolvedProduct.galleryImagePaths.length}
-        uploadCoverAction={uploadCoverFormAction}
-        replaceGalleryAction={replaceGalleryFormAction}
+        uploadCoverAction={uploadAdminProductCoverAction}
+        replaceGalleryAction={replaceAdminProductGalleryAction}
         mediaError={resolvedSearchParams.mediaError}
         mediaSuccess={resolvedSearchParams.mediaSuccess}
       />

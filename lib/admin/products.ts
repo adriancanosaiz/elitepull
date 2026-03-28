@@ -1,4 +1,6 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
+
 import { normalizeProductMediaPath } from "@/lib/supabase/storage";
 import { requireAdminAccess } from "@/lib/auth/admin";
 import type { Database, Json } from "@/lib/supabase/database.types";
@@ -36,6 +38,11 @@ type AdminProductRecord = ProductRow & {
   inventory: InventoryRow | InventoryRow[] | null;
   images: ProductImageRow[] | null;
 };
+
+const adminProductsEnvSchema = z.object({
+  supabaseUrl: z.string().trim().url("Falta una SUPABASE URL valida."),
+  serviceRoleKey: z.string().trim().min(1, "Falta SUPABASE_SERVICE_ROLE_KEY."),
+});
 
 export type AdminCategoryOption = {
   id: string;
@@ -117,6 +124,27 @@ const ADMIN_PRODUCT_SELECT = `
     sort_order
   )
 `;
+
+function getAdminProductsEnv() {
+  return adminProductsEnvSchema.parse({
+    supabaseUrl: process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL,
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+}
+
+function createAdminProductsServiceClient() {
+  const env = getAdminProductsEnv();
+
+  return createClient<Database>(env.supabaseUrl, env.serviceRoleKey, {
+    db: {
+      schema: "public",
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }) as SupabaseClient<Database>;
+}
 
 function sanitizeAdminProductSearch(search?: string) {
   return search
@@ -272,7 +300,7 @@ async function getValidatedAdminCategory(
   categoryId: string,
   brandSlug: AdminProductInput["brandSlug"],
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const { data, error } = await supabase
     .from("categories")
     .select("id, slug, label, brand_slug, sort_order, active")
@@ -293,7 +321,7 @@ async function getValidatedAdminCategory(
 }
 
 async function ensureAdminProductExists(productId: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const productsTable = supabase.from("products") as any;
   const { data, error } = await productsTable.select("id").eq("id", productId).maybeSingle();
 
@@ -307,7 +335,7 @@ async function ensureAdminProductExists(productId: string) {
 }
 
 async function syncAdminProductInventory(productId: string, stock: number) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const inventoryTable = supabase.from("inventory") as any;
   const { error } = await inventoryTable.upsert(
     {
@@ -325,7 +353,7 @@ async function syncAdminProductInventory(productId: string, stock: number) {
 }
 
 async function replaceAdminProductGallery(productId: string, galleryImagePaths: string[]) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const productImagesTable = supabase.from("product_images") as any;
   const normalizedPaths = galleryImagePaths
     .map((path) => normalizeProductMediaPath(path))
@@ -369,7 +397,7 @@ async function replaceAdminProductGallery(productId: string, galleryImagePaths: 
 }
 
 async function getAdminProductMutationMeta(productId: string): Promise<AdminProductMutationResult> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const productsTable = supabase.from("products") as any;
   const { data, error } = await productsTable
     .select(`
@@ -408,7 +436,7 @@ async function getAdminProductMutationMeta(productId: string): Promise<AdminProd
 export async function getAdminProductsList(search?: string) {
   await requireAdminAccess();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   let query = supabase
     .from("products")
     .select(ADMIN_PRODUCT_SELECT)
@@ -434,7 +462,7 @@ export async function getAdminProductsList(search?: string) {
 export async function getAdminProductById(id: string) {
   await requireAdminAccess();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const { data, error } = await supabase
     .from("products")
     .select(ADMIN_PRODUCT_SELECT)
@@ -455,7 +483,7 @@ export async function getAdminProductById(id: string) {
 export async function getAdminCategories() {
   await requireAdminAccess();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const categoriesTable = supabase.from("categories") as any;
   const { data, error } = await categoriesTable
     .select("id, brand_slug, slug, label, description, sort_order")
@@ -489,7 +517,7 @@ export async function getAdminCategories() {
 export async function createAdminProduct(input: AdminProductInput) {
   await requireAdminAccess();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const productsTable = supabase.from("products") as any;
   const productId = input.id ?? crypto.randomUUID();
   const category = await getValidatedAdminCategory(input.categoryId, input.brandSlug);
@@ -542,7 +570,7 @@ export async function updateAdminProduct(input: AdminProductInput) {
 
   await ensureAdminProductExists(input.id);
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const productsTable = supabase.from("products") as any;
   const category = await getValidatedAdminCategory(input.categoryId, input.brandSlug);
 
@@ -588,7 +616,7 @@ export async function toggleAdminProductActive(id: string, nextActive: boolean) 
   await requireAdminAccess();
   await ensureAdminProductExists(id);
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createAdminProductsServiceClient();
   const productsTable = supabase.from("products") as any;
   const { error } = await productsTable.update({ active: nextActive }).eq("id", id);
 

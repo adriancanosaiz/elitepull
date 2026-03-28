@@ -274,7 +274,7 @@ function ToggleActiveQuickForm({
 }) {
   return (
     <form action={toggleAdminProductActiveAction}>
-      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="productId" value={id} />
       <input type="hidden" name="redirectTo" value={redirectTo} />
       <input type="hidden" name="nextActive" value={active ? "false" : "true"} />
       <ToggleActiveButton active={active} />

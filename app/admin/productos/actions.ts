@@ -12,9 +12,10 @@ import {
   type AdminProductMutationResult,
 } from "@/lib/admin/products";
 import { adminProductSchema } from "@/lib/validators/admin-product";
+import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
 
 const toggleActiveSchema = z.object({
-  id: z.string().uuid("El id de producto no es valido."),
+  productId: createUuidLikeSchema("El id de producto no es valido."),
   nextActive: z.preprocess(
     (value) => value === true || value === "true" || value === "on",
     z.boolean(),
@@ -22,7 +23,7 @@ const toggleActiveSchema = z.object({
 });
 
 const updateStockSchema = z.object({
-  productId: z.string().uuid("El id de producto no es valido."),
+  productId: createUuidLikeSchema("El id de producto no es valido."),
   stock: z.preprocess(
     (value) => {
       if (typeof value === "string") {
@@ -38,6 +39,8 @@ const updateStockSchema = z.object({
       .nonnegative("El stock no puede ser negativo."),
   ),
 });
+
+const adminProductIdSchema = createUuidLikeSchema("El id de producto no es valido.");
 
 function buildRedirectUrl(basePath: string, params: Record<string, string | undefined>) {
   const [pathname, rawQuery = ""] = basePath.split("?");
@@ -90,7 +93,7 @@ function getRedirectTo(formData: FormData, fallbackPath: string) {
 
 function parseAdminProductFormData(formData: FormData, forcedId?: string) {
   return adminProductSchema.parse({
-    id: forcedId ?? formData.get("id"),
+    id: forcedId ?? formData.get("productId"),
     slug: formData.get("slug"),
     sku: formData.get("sku"),
     name: formData.get("name"),
@@ -115,6 +118,22 @@ function parseAdminProductFormData(formData: FormData, forcedId?: string) {
     coverImagePath: formData.get("coverImagePath"),
     galleryImagePaths: getFormFieldValue(formData, "galleryImagePaths"),
   });
+}
+
+function resolveAdminProductId(formData: FormData) {
+  const parsedProductId = adminProductIdSchema.safeParse(formData.get("productId"));
+
+  if (parsedProductId.success) {
+    return parsedProductId.data;
+  }
+
+  throw new z.ZodError([
+    {
+      code: "custom",
+      message: "El id de producto no es valido.",
+      path: ["id"],
+    },
+  ]);
 }
 
 function revalidateAdminProductPaths(result: AdminProductMutationResult) {
@@ -149,12 +168,17 @@ export async function createAdminProductAction(formData: FormData) {
   redirect(targetPath);
 }
 
-export async function updateAdminProductAction(productId: string, formData: FormData) {
-  const fallbackId = productId;
+export async function updateAdminProductAction(formData: FormData) {
+  const requestedId =
+    typeof formData.get("productId") === "string"
+      ? String(formData.get("productId")).trim()
+      : "";
+  const fallbackId = requestedId || "producto";
   let targetPath = `/admin/productos/${fallbackId}`;
 
   try {
-    const input = parseAdminProductFormData(formData, productId);
+    const resolvedProductId = resolveAdminProductId(formData);
+    const input = parseAdminProductFormData(formData, resolvedProductId);
     const result = await updateAdminProduct(input);
 
     revalidateAdminProductPaths(result);
@@ -177,12 +201,12 @@ export async function toggleAdminProductActiveAction(formData: FormData) {
 
   try {
     const parsedPayload = toggleActiveSchema.parse({
-      id: formData.get("id"),
+      productId: formData.get("productId"),
       nextActive: formData.get("nextActive"),
     });
 
     const result = await toggleAdminProductActive(
-      parsedPayload.id,
+      parsedPayload.productId,
       parsedPayload.nextActive,
     );
 

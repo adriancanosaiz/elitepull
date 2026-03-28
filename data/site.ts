@@ -1,4 +1,5 @@
 import type { Benefit, FooterLinkGroup, NavLinkItem } from "@/types/store";
+import { buildCollectionQueryString } from "@/lib/routes/query-params";
 
 export const mainNavigation: NavLinkItem[] = [
   {
@@ -63,15 +64,21 @@ export const footerLinkGroups: FooterLinkGroup[] = [
     links: [
       { label: "Accesorios", href: "/accesorios" },
       { label: "Preventa", href: "/preventa" },
-      { label: "Singles", href: "/catalogo?tipo=single" },
-      { label: "Sellado premium", href: "/catalogo?tipo=sealed" },
+      {
+        label: "Singles",
+        href: `/catalogo?${buildCollectionQueryString({ category: ["cartas-individuales"] })}`,
+      },
+      {
+        label: "Destacados premium",
+        href: `/catalogo?${buildCollectionQueryString({ featured: true })}`,
+      },
     ],
   },
   {
     title: "Soporte",
     links: [
-      { label: "Envios", href: "/envios" },
-      { label: "FAQ", href: "/faq" },
+      { label: "Envios y devoluciones", href: "/envios-devoluciones" },
+      { label: "Privacidad", href: "/politica-privacidad" },
       { label: "Condiciones", href: "/terminos" },
       { label: "Contacto", href: "/contacto" },
     ],

@@ -8,6 +8,9 @@ import {
   uploadAdminProductCover,
   type AdminProductMediaMutationResult,
 } from "@/lib/admin/product-media";
+import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
+
+const adminProductMediaIdSchema = createUuidLikeSchema("El id de producto no es valido.");
 
 function buildRedirectUrl(basePath: string, params: Record<string, string | undefined>) {
   const [pathname, rawQuery = ""] = basePath.split("?");
@@ -40,6 +43,16 @@ function getEditProductPath(productId?: string) {
   return productId ? `/admin/productos/${productId}` : "/admin/productos";
 }
 
+function resolveAdminProductMediaId(formData: FormData) {
+  const parsedProductId = adminProductMediaIdSchema.safeParse(formData.get("productId"));
+
+  if (parsedProductId.success) {
+    return parsedProductId.data;
+  }
+
+  throw new Error("El id de producto no es valido.");
+}
+
 function revalidateAdminProductMediaPaths(result: AdminProductMediaMutationResult) {
   revalidatePath("/admin/productos");
   revalidatePath(`/admin/productos/${result.productId}`);
@@ -55,20 +68,22 @@ function revalidateAdminProductMediaPaths(result: AdminProductMediaMutationResul
   revalidatePath(`/marca/${result.brandSlug}`);
 }
 
-export async function uploadAdminProductCoverAction(productId: string, formData: FormData) {
-  const safeProductId = typeof productId === "string" && productId.trim() ? productId : undefined;
+export async function uploadAdminProductCoverAction(formData: FormData) {
+  const requestedId =
+    typeof formData.get("productId") === "string"
+      ? String(formData.get("productId"))
+      : undefined;
+  const safeProductId = requestedId?.trim() || undefined;
   let targetPath = getEditProductPath(safeProductId);
 
   try {
-    if (!safeProductId) {
-      throw new Error("No se ha podido identificar el producto para subir la portada.");
-    }
+    const resolvedProductId = resolveAdminProductMediaId(formData);
 
     const coverFile = formData.get("coverImage");
-    const result = await uploadAdminProductCover(safeProductId, coverFile as File);
+    const result = await uploadAdminProductCover(resolvedProductId, coverFile as File);
 
     revalidateAdminProductMediaPaths(result);
-    targetPath = buildRedirectUrl(getEditProductPath(safeProductId), {
+    targetPath = buildRedirectUrl(getEditProductPath(resolvedProductId), {
       mediaSuccess: "cover-uploaded",
     });
   } catch (error) {
@@ -80,22 +95,24 @@ export async function uploadAdminProductCoverAction(productId: string, formData:
   redirect(targetPath);
 }
 
-export async function replaceAdminProductGalleryAction(productId: string, formData: FormData) {
-  const safeProductId = typeof productId === "string" && productId.trim() ? productId : undefined;
+export async function replaceAdminProductGalleryAction(formData: FormData) {
+  const requestedId =
+    typeof formData.get("productId") === "string"
+      ? String(formData.get("productId"))
+      : undefined;
+  const safeProductId = requestedId?.trim() || undefined;
   let targetPath = getEditProductPath(safeProductId);
 
   try {
-    if (!safeProductId) {
-      throw new Error("No se ha podido identificar el producto para reemplazar la galeria.");
-    }
+    const resolvedProductId = resolveAdminProductMediaId(formData);
 
     const galleryFiles = formData
       .getAll("galleryImages")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0);
-    const result = await replaceAdminProductGallery(safeProductId, galleryFiles);
+    const result = await replaceAdminProductGallery(resolvedProductId, galleryFiles);
 
     revalidateAdminProductMediaPaths(result);
-    targetPath = buildRedirectUrl(getEditProductPath(safeProductId), {
+    targetPath = buildRedirectUrl(getEditProductPath(resolvedProductId), {
       mediaSuccess: "gallery-replaced",
     });
   } catch (error) {

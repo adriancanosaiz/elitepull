@@ -6,8 +6,36 @@ import type { StoredCartItem } from "@/types/store";
 export const CART_SHIPPING_THRESHOLD = 120;
 export const CART_SHIPPING_COST = 6.9;
 
+function buildCartItemFromSnapshot(item: StoredCartItem): CartItem | null {
+  if (!item.snapshot) {
+    return null;
+  }
+
+  return {
+    productId: item.productId,
+    slug: item.snapshot.slug,
+    href: item.snapshot.href,
+    name: item.snapshot.name,
+    description: item.snapshot.description,
+    image: item.snapshot.image,
+    brandLabel: item.snapshot.brandLabel,
+    ...(item.snapshot.expansion ? { expansion: item.snapshot.expansion } : {}),
+    unitPrice: item.snapshot.unitPrice,
+    quantity: item.quantity,
+    lineTotal: item.snapshot.unitPrice * item.quantity,
+    stock: item.snapshot.stock,
+    isPreorder: item.snapshot.isPreorder,
+  } satisfies CartItem;
+}
+
 export function adaptStoredCartItems(items: StoredCartItem[]): CartItem[] {
   return items.flatMap((item) => {
+      const snapshotItem = buildCartItemFromSnapshot(item);
+
+      if (snapshotItem) {
+        return [snapshotItem];
+      }
+
       const product = products.find((entry) => entry.id === item.productId);
 
       if (!product) {

@@ -10,27 +10,17 @@ import {
 
 import { adaptStoredCartItems, buildCartSummary } from "@/lib/adapters";
 import type { CartItem, CartSummary } from "@/types/contracts";
-import type { StoredCartItem } from "@/types/store";
+import type { StoredCartItem, StoredCartItemSnapshot } from "@/types/store";
 
 const STORAGE_KEY = "elitepull-cart";
 
-const initialCartItems: StoredCartItem[] = [
-  {
-    productId: "prod_pokemon_prismatic_etb",
-    quantity: 1,
-  },
-  {
-    productId: "prod_accessories_sleeves",
-    quantity: 2,
-  },
-];
-
 type CartContextValue = {
+  rawItems: StoredCartItem[];
   items: CartItem[];
   summary: CartSummary;
   totalItems: number;
   subtotal: number;
-  addItem: (productId: string, quantity?: number) => void;
+  addItem: (productId: string, quantity?: number, snapshot?: StoredCartItemSnapshot) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -39,7 +29,7 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [rawItems, setRawItems] = useState<StoredCartItem[]>(initialCartItems);
+  const [rawItems, setRawItems] = useState<StoredCartItem[]>([]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -67,19 +57,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalItems = summary.itemCount;
   const subtotal = summary.subtotal;
 
-  function addItem(productId: string, quantity = 1) {
+  function addItem(
+    productId: string,
+    quantity = 1,
+    snapshot?: StoredCartItemSnapshot,
+  ) {
     setRawItems((current) => {
       const existing = current.find((item) => item.productId === productId);
 
       if (existing) {
         return current.map((item) =>
           item.productId === productId
-            ? { ...item, quantity: item.quantity + quantity }
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+                snapshot: snapshot ?? item.snapshot,
+              }
             : item,
         );
       }
 
-      return [...current, { productId, quantity }];
+      return [...current, { productId, quantity, snapshot }];
     });
   }
 
@@ -107,6 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider
       value={{
+        rawItems,
         items,
         summary,
         totalItems,

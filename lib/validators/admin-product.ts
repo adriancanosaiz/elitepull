@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
+
 const productAdminBrandSchema = z.enum([
   "pokemon",
   "one-piece",
@@ -132,7 +134,7 @@ export const adminProductSchema = z
   .object({
     id: z.preprocess(
       normalizeOptionalString,
-      z.string().uuid("El id debe ser un UUID valido.").optional(),
+      createUuidLikeSchema("El id debe ser un UUID valido.").optional(),
     ),
     slug: z.string().trim().min(1, "El slug es obligatorio."),
     sku: z.string().trim().min(1, "El SKU es obligatorio."),
@@ -140,7 +142,7 @@ export const adminProductSchema = z
     description: z.string().trim().min(1, "La descripcion es obligatoria."),
     productType: productTypeSchema,
     brandSlug: productAdminBrandSchema,
-    categoryId: z.string().uuid("La categoria seleccionada no es valida."),
+    categoryId: createUuidLikeSchema("La categoria seleccionada no es valida."),
     price: z.preprocess(
       parseOptionalNumber,
       z.number().nonnegative("El precio no puede ser negativo."),

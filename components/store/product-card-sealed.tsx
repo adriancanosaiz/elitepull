@@ -78,7 +78,20 @@ export function ProductCardSealed({ product }: { product: ProductCardItem }) {
 
           <Button
             size="sm"
-            onClick={() => addItem(product.id, 1)}
+            onClick={() =>
+              addItem(product.id, 1, {
+                slug: product.slug,
+                href: product.href,
+                name: product.name,
+                description: product.description,
+                image: product.image,
+                brandLabel: product.brand.label,
+                expansion: product.expansion,
+                unitPrice: product.price,
+                stock: product.stock,
+                isPreorder: product.isPreorder,
+              })
+            }
             disabled={isDisabled}
             className="shrink-0 bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] text-slate-950 shadow-[0_10px_26px_rgba(214,186,131,0.22)]"
           >

@@ -4,11 +4,27 @@ import type { ReactNode } from "react";
 import "@/app/globals.css";
 import { AppShell } from "@/components/app-shell";
 import { CartProvider } from "@/components/store/cart-provider";
+import { getSiteUrl, siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "ElitePull | Premium TCG Store",
-  description:
-    "Frontend premium para una tienda de cartas coleccionables y accesorios en Next.js.",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    siteName: siteConfig.name,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    url: getSiteUrl(),
+  },
 };
 
 export default function RootLayout({

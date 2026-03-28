@@ -85,6 +85,7 @@ export function ProductMediaUploader({
             action={uploadCoverAction}
             className="rounded-[26px] border border-white/10 bg-white/[0.03] p-5"
           >
+            <input type="hidden" name="productId" value={productId} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
               Portada
             </p>
@@ -108,6 +109,7 @@ export function ProductMediaUploader({
             action={replaceGalleryAction}
             className="rounded-[26px] border border-white/10 bg-white/[0.03] p-5"
           >
+            <input type="hidden" name="productId" value={productId} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
               Galeria
             </p>

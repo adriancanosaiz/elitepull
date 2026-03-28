@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
+
 const brandSlugSchema = z.enum([
   "pokemon",
   "one-piece",
@@ -19,7 +21,7 @@ const imageFileNameSchema = z
   .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*\.webp$/i, "Image files must be flat .webp files");
 
 export const categoryImportSchema = z.object({
-  id: z.string().uuid("Category id must be a valid UUID"),
+  id: createUuidLikeSchema("Category id must be a valid UUID"),
   brandSlug: brandSlugSchema,
   slug: z.string().trim().min(1, "Category slug is required"),
   label: z.string().trim().min(1, "Category label is required"),
@@ -40,7 +42,7 @@ export const productMediaImportSchema = z.object({
 });
 
 export const productImportSchema = z.object({
-  id: z.string().uuid("Product id must be a valid UUID"),
+  id: createUuidLikeSchema("Product id must be a valid UUID"),
   slug: z.string().trim().min(1, "Product slug is required"),
   sku: z.string().trim().min(1, "Product SKU is required"),
   name: z.string().trim().min(1, "Product name is required"),

@@ -23,9 +23,9 @@ const adminNavItems = [
     icon: Boxes,
   },
   {
-    href: "/admin#pedidos",
+    href: "/admin/pedidos",
     label: "Pedidos",
-    description: "Placeholder V1",
+    description: "Listado y detalle",
     icon: PackageSearch,
   },
   {

@@ -183,7 +183,7 @@ export function ProductForm({
       ) : null}
 
       <form action={action} className="space-y-6">
-        {values.id ? <input type="hidden" name="id" value={values.id} /> : null}
+        {values.id ? <input type="hidden" name="productId" value={values.id} /> : null}
 
         <FormSection
           eyebrow="Core"

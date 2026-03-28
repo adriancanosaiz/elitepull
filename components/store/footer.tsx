@@ -31,7 +31,7 @@ export function Footer() {
                 </h2>
                 <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
                   La tienda ya nace con tono premium, jerarquia clara y componentes pensados
-                  para conectar despues con productos, filtros, auth y checkout reales.
+                  para operar un primer lanzamiento real con catalogo, admin y checkout.
                 </p>
               </div>
             </div>
@@ -44,8 +44,8 @@ export function Footer() {
                 Newsletter visual para preventas y drops.
               </h3>
               <p className="mt-3 text-sm leading-6 text-slate-300">
-                De momento es un bloque mock, pero la estructura ya queda lista para enganchar
-                despues a mailing o automatizaciones.
+                Es un bloque placeholder. Antes de publicar conecta este formulario a tu stack
+                real de captacion o eliminalo temporalmente.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -84,7 +84,7 @@ export function Footer() {
             <div>
               <p className="text-sm leading-7 text-slate-300">
                 ElitePull propone una experiencia entre boutique TCG, universo anime y escaparate
-                de coleccionismo premium.
+                de coleccionismo premium lista para una primera publicacion seria.
               </p>
             </div>
 
@@ -111,13 +111,16 @@ export function Footer() {
           <Separator className="my-8" />
 
           <div className="flex flex-col gap-3 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
-            <p>© 2026 ElitePull. Frontend mock premium listo para evolucionar.</p>
+            <p>© 2026 ElitePull. Primera version operativa para catalogo, admin y checkout.</p>
             <div className="flex items-center gap-5">
               <Link href="/politica-privacidad" className="link-fade">
                 Privacidad
               </Link>
-              <Link href="/cookies" className="link-fade">
-                Cookies
+              <Link href="/terminos" className="link-fade">
+                Terminos
+              </Link>
+              <Link href="/envios-devoluciones" className="link-fade">
+                Envios
               </Link>
               <Link href="/contacto" className="link-fade">
                 Contacto

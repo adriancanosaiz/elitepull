@@ -11,7 +11,7 @@ const adminModules = [
     eyebrow: "Pedidos",
     title: "Pipeline de pedidos",
     description:
-      "Bloque reservado para pedidos reales, estados y operativa comercial cuando entremos en checkout.",
+      "Listado y detalle V1 para revisar email, total, estado, stripe ids e items snapshot.",
   },
   {
     id: "clientes",

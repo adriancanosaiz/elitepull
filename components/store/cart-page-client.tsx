@@ -1,17 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/store/breadcrumbs";
+import { CartCheckoutButton } from "@/components/store/cart-checkout-button";
 import { useCart } from "@/components/store/cart-provider";
 import { EmptyState } from "@/components/store/empty-state";
 import { formatPrice } from "@/lib/catalog";
 
 export function CartPageClient() {
-  const { items, summary, subtotal, updateQuantity, removeItem, clearCart } = useCart();
+  const { rawItems, items, summary, subtotal, updateQuantity, removeItem, clearCart } = useCart();
+  const [customerEmail, setCustomerEmail] = useState("");
 
   return (
     <section className="app-container pb-8 pt-8 md:pt-10">
@@ -24,12 +27,12 @@ export function CartPageClient() {
 
       <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <span className="eyebrow-label">Carrito visual</span>
+          <span className="eyebrow-label">Carrito</span>
           <h1 className="mt-4 font-heading text-4xl font-semibold tracking-tight text-white md:text-5xl">
             Tu seleccion actual
           </h1>
           <p className="mt-3 text-base leading-8 text-slate-300">
-            {summary.itemCount} items en el carrito mock preparados para checkout futuro.
+            {summary.itemCount} items preparados para pasar a Stripe Checkout.
           </p>
         </div>
 
@@ -137,7 +140,7 @@ export function CartPageClient() {
               Resumen
             </p>
             <h2 className="mt-3 font-heading text-2xl font-semibold text-white">
-              Pedido mock
+              Pedido V1
             </h2>
 
             <div className="mt-6 space-y-4 text-sm text-slate-300">
@@ -149,16 +152,32 @@ export function CartPageClient() {
               <SummaryLine label="Total" value={formatPrice(summary.total)} strong />
             </div>
 
-            <Button className="mt-6 w-full" size="lg">
-              Checkout visual
-            </Button>
+            <div className="mt-6 space-y-3">
+              <label className="block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Email de compra
+                </span>
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(event) => setCustomerEmail(event.target.value)}
+                  placeholder="tu@email.com"
+                  className="flex h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                />
+              </label>
+
+              <CartCheckoutButton
+                rawItems={rawItems}
+                customerEmail={customerEmail}
+                disabled={summary.isEmpty}
+              />
+            </div>
             <Button asChild variant="outline" className="mt-3 w-full" size="lg">
               <Link href="/catalogo">Seguir comprando</Link>
             </Button>
 
             <p className="mt-4 text-xs leading-6 text-slate-400">
-              El checkout es intencionalmente falso en esta fase. La estructura ya queda lista
-              para integrar pagos y backend despues.
+              El total final y la disponibilidad se recalculan en servidor antes de abrir Stripe.
             </p>
           </aside>
         </div>

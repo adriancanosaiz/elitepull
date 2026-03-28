@@ -50,7 +50,7 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
             </div>
             <p className="mt-2 text-sm text-slate-300">
               {product.isPreorder
-                ? "Reserva abierta. Se cobrara como checkout visual en fase mock."
+                ? "Reserva abierta. El cobro se completa mediante Stripe Checkout."
                 : product.stockLabel}
             </p>
           </div>
@@ -78,7 +78,20 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
 
             <Button
               size="lg"
-              onClick={() => addItem(product.id, quantity)}
+              onClick={() =>
+                addItem(product.id, quantity, {
+                  slug: product.slug,
+                  href: product.href,
+                  name: product.name,
+                  description: product.description,
+                  image: product.image,
+                  brandLabel: product.brand.label,
+                  expansion: product.expansion,
+                  unitPrice: product.price,
+                  stock: product.stock,
+                  isPreorder: product.isPreorder,
+                })
+              }
               disabled={product.stock < 1 && !product.isPreorder}
             >
               <ShoppingBag className="h-4 w-4" />
@@ -94,7 +107,7 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
           </div>
           <div className="rounded-[22px] border border-white/[0.08] bg-black/[0.15] p-4">
             <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
-            Front listo para conectar despues con stock real, checkout y validaciones.
+            Checkout V1 activo con validacion server-side y pago en Stripe.
           </div>
         </div>
       </div>

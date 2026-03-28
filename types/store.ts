@@ -132,4 +132,18 @@ export interface ListingFilters {
 export interface StoredCartItem {
   productId: string;
   quantity: number;
+  snapshot?: StoredCartItemSnapshot;
+}
+
+export interface StoredCartItemSnapshot {
+  slug: string;
+  href: string;
+  name: string;
+  description: string;
+  image: string;
+  brandLabel: string;
+  expansion?: string;
+  unitPrice: number;
+  stock: number;
+  isPreorder: boolean;
 }
