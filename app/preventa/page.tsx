@@ -3,6 +3,20 @@ import { brandsBySlug } from "@/data/brands";
 import { getCollectionData } from "@/lib/repositories/store-repository";
 import { buildCollectionRepositoryInput } from "@/lib/routes/collection-input";
 import type { SearchParamsInput } from "@/lib/routes/query-params";
+import { buildPageMetadata } from "@/lib/site-config";
+
+export const metadata = buildPageMetadata({
+  title: "Preventa TCG",
+  description:
+    "Reserva próximos lanzamientos de Pokemon, One Piece, Magic y Riftbound. Preventas destacadas con información clara y navegación rápida.",
+  path: "/preventa",
+  keywords: [
+    "preventa tcg",
+    "reservas pokemon",
+    "reservas one piece tcg",
+    "nuevos lanzamientos tcg",
+  ],
+});
 
 export default async function PreorderPage({
   searchParams,
@@ -22,7 +36,6 @@ export default async function PreorderPage({
     <ListingPage
       title="Preventa"
       description={brand.description}
-      eyebrow="Early access"
       collection={collection}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
@@ -30,10 +43,6 @@ export default async function PreorderPage({
       ]}
       brand={brand}
       resetHref="/preventa"
-      categoryPills={brand.categories.map((category) => ({
-        label: category.label,
-        href: category.href,
-      }))}
     />
   );
 }

@@ -1,13 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { brands } from "@/data/brands";
 import { brandMedia } from "@/data/brand-media";
 import { brandPalettes } from "@/data/brand-palettes";
+import { storefrontMotionEase } from "@/lib/storefront-motion";
 import { cn } from "@/lib/utils";
-import type { ProductCardItem } from "@/types/contracts";
 import type { PromoBanner } from "@/types/store";
 
 const heroBrands = brands.filter((brand) => !["accesorios", "preventa"].includes(brand.slug));
@@ -21,11 +24,14 @@ const heroCardOffsets = [
 
 export function HeroBanner({
   banner,
-  featuredProducts,
 }: {
   banner: PromoBanner;
-  featuredProducts: ProductCardItem[];
 }) {
+  const shouldReduceMotion = useReducedMotion();
+  const heroIntroTransition = {
+    duration: 0.82,
+    ease: storefrontMotionEase,
+  } as const;
   const heroCards = heroBrands
     .map((brand) => {
       const media = brandMedia[brand.slug];
@@ -65,32 +71,55 @@ export function HeroBanner({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_82%_16%,rgba(124,231,227,0.18),transparent_22%),linear-gradient(115deg,transparent_18%,rgba(255,255,255,0.05)_50%,transparent_82%)]" />
 
         <div className="relative grid gap-8 px-6 py-7 sm:px-8 sm:py-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-stretch xl:min-h-[540px]">
-          <div className="flex max-w-xl flex-col gap-8 lg:h-full lg:max-w-2xl lg:justify-between">
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={heroIntroTransition}
+            className="flex max-w-xl flex-col gap-8 lg:h-full lg:max-w-2xl lg:justify-between"
+          >
             <div>
-              <h1 className="max-w-[11ch] font-heading text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl md:text-6xl">
+              <motion.h1
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(12px)" }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ ...heroIntroTransition, delay: 0.08 }}
+                className="max-w-[11ch] font-heading text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl md:text-6xl"
+              >
                 {banner.title}
-              </h1>
-              <p className="mt-5 max-w-xl text-sm leading-7 text-slate-100/88 sm:text-base sm:leading-8">
+              </motion.h1>
+              <motion.p
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ ...heroIntroTransition, delay: 0.18 }}
+                className="mt-5 max-w-xl text-sm leading-7 text-slate-100/88 sm:text-base sm:leading-8"
+              >
                 {banner.subtitle}
-              </p>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-200/78">
+              </motion.p>
+              <motion.p
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ ...heroIntroTransition, delay: 0.3 }}
+                className="mt-4 max-w-xl text-sm leading-7 text-slate-200/78"
+              >
                 {banner.description}
-              </p>
+              </motion.p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                <span className="rounded-full border border-primary/18 bg-black/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/90">
-                  {heroBrands.length} marcas principales
-                </span>
-                <span className="rounded-full border border-accent/18 bg-black/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">
-                  {featuredProducts.length} piezas curadas
-                </span>
-                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200">
-                  foil mood · rareza · vitrina
-                </span>
-              </div>
+              <motion.p
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ ...heroIntroTransition, delay: 0.42 }}
+                className="mt-6 text-sm leading-7 text-slate-200/82"
+              >
+                Marcas principales, producto seleccionado y una navegación pensada para encontrar
+                rápido lo que te interesa.
+              </motion.p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <motion.div
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(8px)" }}
+              animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ ...heroIntroTransition, delay: 0.54 }}
+              className="flex flex-col gap-3 sm:flex-row"
+            >
               <Button
                 asChild
                 size="lg"
@@ -110,16 +139,42 @@ export function HeroBanner({
               >
                 <Link href="/preventa">Ver preventa</Link>
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="grid h-[330px] grid-rows-[1fr_auto] gap-5 pt-2 sm:h-[380px] sm:gap-6 sm:pt-3 md:h-[430px] lg:h-full lg:min-h-[430px] lg:pt-0 xl:min-h-[500px]">
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 18, scale: 0.992, filter: "blur(12px)" }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{ ...heroIntroTransition, delay: 0.26 }}
+            className="grid h-[330px] grid-rows-[1fr_auto] gap-5 pt-2 sm:h-[380px] sm:gap-6 sm:pt-3 md:h-[430px] lg:h-full lg:min-h-[430px] lg:pt-0 xl:min-h-[500px]"
+          >
             <div className="relative mx-auto flex w-full max-w-[520px] items-center justify-center sm:max-w-[580px] md:max-w-[620px] lg:max-w-[660px] xl:max-w-[700px]">
               {heroCards.length === 4 ? (
                 <div className="relative h-[238px] w-full overflow-visible sm:h-[282px] md:h-[330px] lg:h-[346px] xl:h-[382px]">
                   {heroCards.map((card, index) => (
                     <div key={`${card.brand}-${card.src}`} className={cn("absolute", heroCardOffsets[index])}>
-                      <div className="relative aspect-[660/920]">
+                      <motion.div
+                        animate={
+                          shouldReduceMotion
+                            ? undefined
+                            : {
+                                y: [0, index % 2 === 0 ? -10 : -6, 0],
+                              }
+                        }
+                        transition={
+                          shouldReduceMotion
+                            ? undefined
+                            : {
+                                duration: index % 2 === 0 ? 7.4 : 8.2,
+                                ease: storefrontMotionEase,
+                                repeat: Number.POSITIVE_INFINITY,
+                              }
+                        }
+                        className={cn(
+                          "relative aspect-[660/920]",
+                          index % 2 === 0 ? "hero-card-float" : "hero-card-float-delay",
+                        )}
+                      >
                         <Image
                           src={card.src}
                           alt={card.alt}
@@ -128,7 +183,7 @@ export function HeroBanner({
                           sizes="(min-width: 1280px) 230px, (min-width: 1024px) 30vw, (min-width: 768px) 34vw, 38vw"
                           priority={index < 2}
                         />
-                      </div>
+                      </motion.div>
                     </div>
                   ))}
                 </div>
@@ -166,7 +221,7 @@ export function HeroBanner({
                 </div>
               </div>
             ) : null}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -20,6 +20,7 @@ type CartContextValue = {
   summary: CartSummary;
   totalItems: number;
   subtotal: number;
+  cartPulseKey: number;
   addItem: (productId: string, quantity?: number, snapshot?: StoredCartItemSnapshot) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -30,6 +31,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [rawItems, setRawItems] = useState<StoredCartItem[]>([]);
+  const [cartPulseKey, setCartPulseKey] = useState(0);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -62,6 +64,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     quantity = 1,
     snapshot?: StoredCartItemSnapshot,
   ) {
+    setCartPulseKey((current) => current + 1);
+
     setRawItems((current) => {
       const existing = current.find((item) => item.productId === productId);
 
@@ -110,6 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         summary,
         totalItems,
         subtotal,
+        cartPulseKey,
         addItem,
         removeItem,
         updateQuantity,

@@ -1,61 +1,114 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
+import { Minus, Plus, ShieldCheck, Truck } from "lucide-react";
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
+import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/components/store/cart-provider";
 import { formatPrice } from "@/lib/catalog";
+import { storefrontMotionEase } from "@/lib/storefront-motion";
 import type { ProductDetail } from "@/types/contracts";
 
 export function ProductInfo({ product }: { product: ProductDetail }) {
-  const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const shouldReduceMotion = useReducedMotion();
+  const productExpansion = product.expansion ?? product.category.label;
+  const productFormat = product.format ?? product.category.label;
+  const productLanguage = product.language ?? "ES";
+
+  const revealProps = {
+    initial: shouldReduceMotion ? false : { opacity: 0, y: 16 },
+    animate: shouldReduceMotion ? undefined : { opacity: 1, y: 0 },
+    transition: { duration: 0.48, ease: storefrontMotionEase },
+  } as const;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary">{product.brand.label}</Badge>
-        <Badge variant="outline">{product.category.label}</Badge>
-        {product.badge ? <Badge>{product.badge}</Badge> : null}
-      </div>
+      <motion.div
+        {...revealProps}
+        transition={{ ...revealProps.transition, delay: 0.04 }}
+        className="space-y-4"
+      >
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <span>{product.brand.label}</span>
+          <span>{productExpansion}</span>
+          <span>{productFormat}</span>
+          <span>{productLanguage}</span>
+          {product.variant ? <span>{product.variant}</span> : null}
+        </div>
 
-      <div>
-        <h1 className="font-heading text-4xl font-semibold tracking-tight text-white">
-          {product.name}
-        </h1>
-        <p className="mt-4 text-base leading-8 text-slate-300">{product.description}</p>
-      </div>
+        {product.badge ? (
+          <div className="flex flex-wrap gap-2">
+            <Badge>{product.badge}</Badge>
+          </div>
+        ) : null}
 
-      <div className="grid gap-3 rounded-[26px] border border-white/10 bg-white/[0.03] p-5 text-sm text-slate-300 md:grid-cols-2">
-        {product.details.map((detail) => (
-          <InfoLine key={detail.label} label={detail.label} value={detail.value} />
-        ))}
-      </div>
+        <div>
+          <h1 className="font-heading text-4xl font-semibold tracking-[-0.04em] text-white md:text-[3.35rem] md:leading-[1.02]">
+            {product.name}
+          </h1>
+          <p className="mt-4 max-w-[62ch] text-base leading-8 text-slate-300">{product.description}</p>
+        </div>
+      </motion.div>
 
-      <div className="surface-card p-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="font-heading text-4xl font-semibold text-white">
-                {formatPrice(product.price)}
-              </span>
-              {product.compareAtPrice ? (
-                <span className="text-lg text-slate-500 line-through">
-                  {formatPrice(product.compareAtPrice)}
+      <motion.div
+        {...revealProps}
+        transition={{ ...revealProps.transition, delay: 0.1 }}
+        className="anime-panel rounded-[28px] p-5"
+      >
+        <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+          {product.details.map((detail) => (
+            <InfoLine key={detail.label} label={detail.label} value={detail.value} />
+          ))}
+        </div>
+      </motion.div>
+
+      <motion.div
+        {...revealProps}
+        transition={{ ...revealProps.transition, delay: 0.16 }}
+        className="surface-panel border-primary/16 p-6"
+      >
+        <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
+        <div className="pointer-events-none absolute inset-x-[18%] top-0 h-24 rounded-full bg-white/[0.06] blur-3xl" />
+        <div className="pointer-events-none absolute bottom-4 left-[14%] h-16 w-[42%] rounded-full bg-primary/14 blur-3xl" />
+
+        <div className="relative">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                Estado de compra
+              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="font-heading text-4xl font-semibold text-white">
+                  {formatPrice(product.price)}
                 </span>
-              ) : null}
+                {product.compareAtPrice ? (
+                  <span className="text-lg text-slate-500 line-through">
+                    {formatPrice(product.compareAtPrice)}
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                {product.isPreorder
+                  ? "Reserva activa. Si el lanzamiento sigue abierto, puedes asegurar tu unidad ahora."
+                  : product.stockLabel}
+              </p>
             </div>
-            <p className="mt-2 text-sm text-slate-300">
-              {product.isPreorder
-                ? "Reserva abierta. El cobro se completa mediante Stripe Checkout."
-                : product.stockLabel}
-            </p>
+
+            <div className="rounded-[22px] border border-white/10 bg-black/[0.25] px-4 py-3 text-sm text-slate-200">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Preparado para coleccion
+              </p>
+              <p className="mt-2 leading-6">
+                Visual claro, checkout seguro y lectura rápida de expansión, formato e idioma.
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="mt-6 grid gap-4 lg:grid-cols-[auto_1fr] lg:items-center">
             <div className="flex items-center rounded-full border border-white/10 bg-black/20">
               <button
                 type="button"
@@ -76,46 +129,53 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
               </button>
             </div>
 
-            <Button
-              size="lg"
-              onClick={() =>
-                addItem(product.id, quantity, {
-                  slug: product.slug,
-                  href: product.href,
-                  name: product.name,
-                  description: product.description,
-                  image: product.image,
-                  brandLabel: product.brand.label,
-                  expansion: product.expansion,
-                  unitPrice: product.price,
-                  stock: product.stock,
-                  isPreorder: product.isPreorder,
-                })
-              }
+            <AddToCartButton
+              productId={product.id}
+              quantity={quantity}
+              snapshot={{
+                slug: product.slug,
+                href: product.href,
+                name: product.name,
+                description: product.description,
+                image: product.image,
+                brandLabel: product.brand.label,
+                expansion: product.expansion,
+                unitPrice: product.price,
+                stock: product.stock,
+                isPreorder: product.isPreorder,
+              }}
               disabled={product.stock < 1 && !product.isPreorder}
-            >
-              <ShoppingBag className="h-4 w-4" />
-              {product.isPreorder ? "Reservar ahora" : "Anadir al carrito"}
-            </Button>
+              idleLabel={product.isPreorder ? "Reservar ahora" : "Añadir al carrito"}
+              addedLabel={product.isPreorder ? "Reserva añadida" : "Añadido al carrito"}
+              size="lg"
+              className="h-14 rounded-[22px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] text-slate-950 shadow-[0_18px_42px_rgba(214,186,131,0.24)]"
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 text-sm text-slate-300 md:grid-cols-2">
+            <div className="rounded-[22px] border border-white/[0.08] bg-black/[0.15] p-4">
+              <Truck className="mb-3 h-5 w-5 text-primary" />
+              Envío rápido y embalaje cuidado para producto de colección.
+            </div>
+            <div className="rounded-[22px] border border-white/[0.08] bg-black/[0.15] p-4">
+              <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
+              Pago seguro con Stripe y confirmación por email tras la compra.
+            </div>
           </div>
         </div>
+      </motion.div>
 
-        <div className="mt-6 grid gap-4 text-sm text-slate-300 md:grid-cols-2">
-          <div className="rounded-[22px] border border-white/[0.08] bg-black/[0.15] p-4">
-            <Truck className="mb-3 h-5 w-5 text-primary" />
-            Envio rapido en peninsula y preparacion cuidada para producto de coleccion.
-          </div>
-          <div className="rounded-[22px] border border-white/[0.08] bg-black/[0.15] p-4">
-            <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
-            Checkout V1 activo con validacion server-side y pago en Stripe.
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-4 rounded-[26px] border border-white/10 bg-white/[0.03] p-5 text-sm leading-7 text-slate-300">
+      <motion.div
+        {...revealProps}
+        transition={{ ...revealProps.transition, delay: 0.22 }}
+        className="grid gap-4 rounded-[26px] border border-white/10 bg-white/[0.03] p-5 text-sm leading-7 text-slate-300"
+      >
         <div>
-          <h2 className="font-heading text-xl font-semibold text-white">Detalles</h2>
-          <p className="mt-3">{product.description}</p>
+          <h2 className="font-heading text-xl font-semibold text-white">Lectura rápida</h2>
+          <p className="mt-3">
+            Todo lo importante del producto está visible de un vistazo: expansión, formato,
+            idioma, variante, precio y disponibilidad.
+          </p>
         </div>
 
         <div>
@@ -138,7 +198,7 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
         >
           Ver carrito actual
         </Link>
-      </div>
+      </motion.div>
     </div>
   );
 }

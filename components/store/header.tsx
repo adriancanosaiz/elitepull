@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { Menu, Search, ShoppingBag, User2 } from "lucide-react";
 
 import { BrandGlyph } from "@/components/store/brand-glyph";
@@ -20,26 +22,48 @@ import { MegaMenu } from "@/components/store/mega-menu";
 import { useCart } from "@/components/store/cart-provider";
 import { SearchBar } from "@/components/store/search-bar";
 import { SiteLogo } from "@/components/store/site-logo";
+import { storefrontMotionEase } from "@/lib/storefront-motion";
 
 export function Header() {
-  const { totalItems } = useCart();
+  const { totalItems, cartPulseKey } = useCart();
+  const shouldReduceMotion = useReducedMotion();
+  const cartIconControls = useAnimationControls();
+  const cartBadgeControls = useAnimationControls();
+
+  useEffect(() => {
+    if (shouldReduceMotion || cartPulseKey < 1) {
+      return;
+    }
+
+    void cartIconControls.start({
+      scale: [1, 1.12, 0.97, 1],
+      y: [0, -2, 0],
+      rotate: [0, -6, 4, 0],
+      transition: { duration: 0.58, ease: storefrontMotionEase },
+    });
+
+    void cartBadgeControls.start({
+      scale: [1, 1.22, 0.96, 1],
+      transition: { duration: 0.54, ease: storefrontMotionEase },
+    });
+  }, [cartBadgeControls, cartIconControls, cartPulseKey, shouldReduceMotion]);
 
   return (
     <header className="sticky top-0 z-50 pt-4">
       <div className="app-container">
-        <div className="mb-3 hidden items-center justify-between rounded-[22px] border border-primary/15 bg-[linear-gradient(90deg,rgba(13,16,25,0.94),rgba(19,24,34,0.72),rgba(13,16,25,0.94))] px-4 py-2.5 text-[10px] uppercase tracking-[0.28em] text-slate-400 shadow-[0_12px_34px_rgba(2,6,23,0.18)] backdrop-blur-md md:flex">
+        <div className="mb-3 hidden items-center justify-between rounded-[22px] border border-primary/15 bg-[linear-gradient(90deg,rgba(13,16,25,0.96),rgba(19,24,34,0.8),rgba(13,16,25,0.96))] px-4 py-2.5 text-[10px] uppercase tracking-[0.28em] text-slate-400 shadow-[0_12px_34px_rgba(2,6,23,0.18)] backdrop-blur-md md:flex">
           <span className="inline-flex items-center gap-3">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary/80" />
-            Sellado premium, singles curados y accesorios de coleccion
+            <span className="pulse-signal h-1.5 w-1.5 rounded-full bg-primary/80" />
+            ElitePull collector vault abierto
           </span>
           <div className="flex items-center gap-5">
             <span className="inline-flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-accent/80" />
-              Envio rapido
+              Stock real
             </span>
             <span className="inline-flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary/80" />
-              Stock real
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-300/80" />
+              Envio cuidado
             </span>
             <span className="inline-flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
@@ -48,8 +72,9 @@ export function Header() {
           </div>
         </div>
 
-        <div className="surface-panel vault-sheen overflow-visible px-4 py-3 sm:px-5">
+        <div className="surface-panel vault-sheen overflow-visible border-primary/20 px-4 py-3 sm:px-5">
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
           <div className="flex items-center gap-3 xl:gap-4">
             <Link href="/" className="shrink-0">
               <SiteLogo />
@@ -62,7 +87,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-full border border-transparent px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-300 transition-all duration-200 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
+                  className="rounded-full border border-transparent px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
                 >
                   {item.label}
                 </Link>
@@ -93,11 +118,16 @@ export function Header() {
                 className="relative rounded-[18px] border-primary/15 bg-black/20"
               >
                 <Link href="/carrito">
-                  <ShoppingBag className="h-4 w-4" />
+                  <motion.span animate={cartIconControls} className="inline-flex">
+                    <ShoppingBag className="h-4 w-4" />
+                  </motion.span>
                   <span className="sr-only">Carrito</span>
-                  <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(232,204,151,1),rgba(206,165,96,1))] px-1 text-[10px] font-bold text-slate-950 shadow-[0_8px_18px_rgba(221,184,120,0.28)]">
+                  <motion.span
+                    animate={cartBadgeControls}
+                    className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(232,204,151,1),rgba(206,165,96,1))] px-1 text-[10px] font-bold text-slate-950 shadow-[0_8px_18px_rgba(221,184,120,0.28)]"
+                  >
                     {totalItems}
-                  </span>
+                  </motion.span>
                 </Link>
               </Button>
 
@@ -129,7 +159,7 @@ export function Header() {
                   <SheetHeader>
                     <SheetTitle>Navegacion ElitePull</SheetTitle>
                     <SheetDescription>
-                      Sellado, singles y preventa en una estructura preparada para crecer.
+                      Explora catálogo, marcas y preventas desde un solo menú.
                     </SheetDescription>
                   </SheetHeader>
 

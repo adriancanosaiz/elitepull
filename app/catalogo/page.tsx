@@ -1,8 +1,22 @@
 import { ListingPage } from "@/components/store/listing-page";
-import { brands } from "@/data/brands";
 import { buildCollectionRepositoryInput } from "@/lib/routes/collection-input";
 import { getCollectionData } from "@/lib/repositories/store-repository";
 import type { SearchParamsInput } from "@/lib/routes/query-params";
+import { buildPageMetadata } from "@/lib/site-config";
+
+export const metadata = buildPageMetadata({
+  title: "Catalogo TCG",
+  description:
+    "Explora el catálogo completo de ElitePull con sellado, singles, accesorios y preventas de Pokemon, One Piece, Magic y Riftbound.",
+  path: "/catalogo",
+  keywords: [
+    "catalogo tcg",
+    "comprar cartas pokemon",
+    "comprar one piece tcg",
+    "magic sellado",
+    "tienda de cartas coleccionables",
+  ],
+});
 
 export default async function CatalogoPage({
   searchParams,
@@ -19,18 +33,13 @@ export default async function CatalogoPage({
   return (
     <ListingPage
       title="Catalogo completo"
-      description="Vista global para explorar sellado, singles, accesorios y preventa con filtros visuales y una presentacion limpia, premium y preparada para backend."
-      eyebrow="Coleccion reusable"
+      description="Todo el catálogo de ElitePull en una sola vista: sellado, singles, accesorios y preventas con filtros claros y navegación rápida."
       collection={collection}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
         { label: "Catalogo" },
       ]}
       resetHref="/catalogo"
-      categoryPills={brands.map((brand) => ({
-        label: brand.shortName,
-        href: brand.href,
-      }))}
     />
   );
 }

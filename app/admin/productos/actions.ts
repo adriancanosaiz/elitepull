@@ -6,11 +6,16 @@ import { z } from "zod";
 
 import {
   createAdminProduct,
+  deleteAdminProduct,
   toggleAdminProductActive,
   updateAdminProduct,
   updateAdminProductStock,
   type AdminProductMutationResult,
 } from "@/lib/admin/products";
+import {
+  replaceAdminProductGallery,
+  uploadAdminProductCover,
+} from "@/lib/admin/product-media";
 import { adminProductSchema } from "@/lib/validators/admin-product";
 import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
 
@@ -91,16 +96,29 @@ function getRedirectTo(formData: FormData, fallbackPath: string) {
   return typeof redirectTo === "string" && redirectTo.trim() ? redirectTo : fallbackPath;
 }
 
+function getUploadedFile(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return value instanceof File && value.size > 0 ? value : null;
+}
+
+function getUploadedFiles(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+}
+
 function parseAdminProductFormData(formData: FormData, forcedId?: string) {
   return adminProductSchema.parse({
     id: forcedId ?? formData.get("productId"),
-    slug: formData.get("slug"),
-    sku: formData.get("sku"),
     name: formData.get("name"),
     description: formData.get("description"),
     productType: formData.get("productType"),
-    brandSlug: formData.get("brandSlug"),
+    brandId: formData.get("brandId"),
     categoryId: formData.get("categoryId"),
+    expansionId: formData.get("expansionId"),
+    formatId: formData.get("formatId"),
+    languageCode: formData.get("languageCode"),
+    variantLabel: formData.get("variantLabel"),
     price: formData.get("price"),
     compareAtPrice: formData.get("compareAtPrice"),
     featured: formData.get("featured"),
@@ -109,14 +127,14 @@ function parseAdminProductFormData(formData: FormData, forcedId?: string) {
     stock: formData.get("stock"),
     tags: getFormFieldValue(formData, "tags"),
     attributes: {
-      expansion: formData.get("expansion"),
-      language: formData.get("language"),
       rarity: formData.get("rarity"),
       condition: formData.get("condition"),
       badge: formData.get("badge"),
     },
-    coverImagePath: formData.get("coverImagePath"),
-    galleryImagePaths: getFormFieldValue(formData, "galleryImagePaths"),
+    coverImagePath: formData.has("coverImagePath") ? formData.get("coverImagePath") : undefined,
+    galleryImagePaths: formData.has("galleryImagePaths")
+      ? getFormFieldValue(formData, "galleryImagePaths")
+      : undefined,
   });
 }
 
@@ -139,6 +157,7 @@ function resolveAdminProductId(formData: FormData) {
 function revalidateAdminProductPaths(result: AdminProductMutationResult) {
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
+  revalidatePath(`/admin/productos/${result.id}`);
   revalidatePath("/");
   revalidatePath("/catalogo");
   revalidatePath("/preventa");
@@ -147,22 +166,52 @@ function revalidateAdminProductPaths(result: AdminProductMutationResult) {
   revalidatePath("/marca/riftbound");
   revalidatePath("/marca/magic");
   revalidatePath("/accesorios");
+
+  if (result.brandSlug === "accesorios" && result.categorySlug) {
+    revalidatePath(`/accesorios/${result.categorySlug}`);
+  } else if (result.categorySlug) {
+    revalidatePath(`/marca/${result.brandSlug}/${result.categorySlug}`);
+  }
+
   revalidatePath(`/producto/${result.slug}`);
 }
 
 export async function createAdminProductAction(formData: FormData) {
   let targetPath = "/admin/productos/nuevo";
+  let createdProduct: AdminProductMutationResult | null = null;
 
   try {
     const input = parseAdminProductFormData(formData);
+    const coverImage = getUploadedFile(formData, "coverImage");
+    const galleryImages = getUploadedFiles(formData, "galleryImages");
     const result = await createAdminProduct(input);
 
+    createdProduct = result;
     revalidateAdminProductPaths(result);
-    targetPath = buildRedirectUrl(`/admin/productos/${result.id}`, { success: "created" });
-  } catch (error) {
-    targetPath = buildRedirectUrl("/admin/productos/nuevo", {
-      error: getFirstErrorMessage(error),
+
+    if (coverImage) {
+      await uploadAdminProductCover(result.id, coverImage);
+    }
+
+    if (galleryImages.length > 0) {
+      await replaceAdminProductGallery(result.id, galleryImages);
+    }
+
+    revalidateAdminProductPaths(result);
+    targetPath = buildRedirectUrl(`/admin/productos/${result.id}`, {
+      success: coverImage || galleryImages.length > 0 ? "created-with-media" : "created",
     });
+  } catch (error) {
+    if (createdProduct) {
+      targetPath = buildRedirectUrl(`/admin/productos/${createdProduct.id}`, {
+        success: "created",
+        error: `Producto creado, pero la subida inicial de media no ha terminado bien: ${getFirstErrorMessage(error)}`,
+      });
+    } else {
+      targetPath = buildRedirectUrl("/admin/productos/nuevo", {
+        error: getFirstErrorMessage(error),
+      });
+    }
   }
 
   redirect(targetPath);
@@ -235,6 +284,32 @@ export async function updateAdminProductStockAction(formData: FormData) {
 
     revalidateAdminProductPaths(result);
     targetPath = buildRedirectUrl(redirectTo, { success: "stock-updated" });
+  } catch (error) {
+    targetPath = buildRedirectUrl(redirectTo, {
+      error: getFirstErrorMessage(error),
+    });
+  }
+
+  redirect(targetPath);
+}
+
+export async function deleteAdminProductAction(formData: FormData) {
+  const requestedId =
+    typeof formData.get("productId") === "string"
+      ? String(formData.get("productId")).trim()
+      : "";
+  const redirectTo = getRedirectTo(
+    formData,
+    requestedId ? `/admin/productos/${requestedId}` : "/admin/productos",
+  );
+  let targetPath = redirectTo;
+
+  try {
+    const productId = resolveAdminProductId(formData);
+    const result = await deleteAdminProduct(productId);
+
+    revalidateAdminProductPaths(result);
+    targetPath = buildRedirectUrl("/admin/productos", { success: "deleted" });
   } catch (error) {
     targetPath = buildRedirectUrl(redirectTo, {
       error: getFirstErrorMessage(error),

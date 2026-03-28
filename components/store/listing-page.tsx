@@ -1,9 +1,15 @@
+import Image from "next/image";
+
+import { ActiveFiltersBar } from "@/components/store/active-filters-bar";
 import { Breadcrumbs } from "@/components/store/breadcrumbs";
-import { CategoryPill } from "@/components/store/category-pill";
+import { CollectionPagination } from "@/components/store/collection-pagination";
 import { EmptyState } from "@/components/store/empty-state";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
 import { ProductGrid } from "@/components/store/product-grid";
 import { SortBar } from "@/components/store/sort-bar";
+import { StoreReveal } from "@/components/store/store-reveal";
+import { brandMedia } from "@/data/brand-media";
+import { brandPalettes } from "@/data/brand-palettes";
 import { cn } from "@/lib/utils";
 import type { CollectionResponse } from "@/types/contracts";
 import type { Brand } from "@/types/store";
@@ -16,70 +22,135 @@ export function ListingPage({
   breadcrumbs,
   brand,
   resetHref,
-  categoryPills = [],
+  heroVariant = "default",
 }: {
   title: string;
   description: string;
-  eyebrow: string;
+  eyebrow?: string;
   collection: CollectionResponse;
   breadcrumbs: Array<{ label: string; href?: string }>;
   brand?: Brand;
   resetHref: string;
-  categoryPills?: Array<{ label: string; href: string; active?: boolean }>;
+  heroVariant?: "default" | "logo-only";
 }) {
+  const brandLogoSrc = brand ? brandMedia[brand.slug]?.logo : undefined;
+  const brandPalette = brand ? brandPalettes[brand.slug] : undefined;
+  const showLogoOnlyHero = heroVariant === "logo-only" && Boolean(brandLogoSrc);
+  const hideVisualTitle = Boolean(
+    brand &&
+      brandLogoSrc &&
+      (showLogoOnlyHero || title === brand.name || title === brand.shortName),
+  );
+
   return (
-    <section className="app-container pb-8 pt-8 md:pt-10">
-      <div
-        className={cn(
-          "surface-panel relative overflow-hidden px-6 py-8 sm:px-8 sm:py-10",
-          brand?.theme.glow,
-        )}
-      >
+    <section
+      className={cn(
+        "app-container pb-8 pt-8 md:pt-10",
+        showLogoOnlyHero && "pb-6 pt-5 md:pt-6",
+      )}
+    >
+      <StoreReveal>
         <div
           className={cn(
-            "absolute inset-0 bg-gradient-to-br opacity-40",
-            brand?.theme.from ?? "from-primary/[0.15]",
-            brand?.theme.via ?? "via-white/5",
-            brand?.theme.to ?? "to-accent/[0.15]",
+            showLogoOnlyHero
+              ? "relative px-2 py-0 sm:px-4 sm:py-0"
+              : "surface-panel relative overflow-hidden px-6 py-8 sm:px-8 sm:py-10",
+            !showLogoOnlyHero && brand?.theme.glow,
           )}
-        />
-        <div className="relative">
-          <Breadcrumbs items={breadcrumbs} />
-          <span className="eyebrow-label mt-6">{eyebrow}</span>
-          <h1 className="mt-5 font-heading text-4xl font-semibold tracking-tight text-white md:text-5xl">
-            {title}
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">{description}</p>
-
-          {categoryPills.length > 0 ? (
-            <div className="mt-6 flex flex-wrap gap-3">
-              {categoryPills.map((pill) => (
-                <CategoryPill
-                  key={pill.href}
-                  label={pill.label}
-                  href={pill.href}
-                  active={pill.active}
-                />
-              ))}
-            </div>
+        >
+          {!showLogoOnlyHero ? (
+            <div
+              className={cn(
+                "absolute inset-0 bg-gradient-to-br opacity-40",
+                brand?.theme.from ?? "from-primary/[0.15]",
+                brand?.theme.via ?? "via-white/5",
+                brand?.theme.to ?? "to-accent/[0.15]",
+              )}
+            />
           ) : null}
+          <div
+            className={cn(
+              "relative",
+              showLogoOnlyHero && "flex min-h-[88px] flex-col justify-center md:min-h-[108px] lg:min-h-[120px]",
+            )}
+          >
+            <Breadcrumbs items={breadcrumbs} />
+            {!showLogoOnlyHero && eyebrow ? <span className="eyebrow-label mt-6">{eyebrow}</span> : null}
+            {brandLogoSrc ? (
+              <div
+                className={cn(
+                  showLogoOnlyHero
+                    ? "relative mx-auto mt-2 h-44 w-full max-w-[560px] sm:h-52 sm:max-w-[720px] md:h-64 md:max-w-[980px] lg:h-[19rem] lg:max-w-[1220px] xl:h-[22rem] xl:max-w-[1480px]"
+                    : "relative mt-6 h-14 w-[180px] sm:h-16 sm:w-[220px] md:h-20 md:w-[280px]",
+                  !showLogoOnlyHero && eyebrow ? "md:mt-5" : "",
+                )}
+                style={
+                  showLogoOnlyHero && brandPalette
+                    ? {
+                        filter: brandPalette.logoShadow,
+                      }
+                    : undefined
+                }
+              >
+                <Image
+                  src={brandLogoSrc}
+                  alt={`${brand?.name ?? title} logo`}
+                  fill
+                  className={cn(
+                    "object-contain",
+                    showLogoOnlyHero ? "object-center" : "object-left",
+                  )}
+                  sizes={showLogoOnlyHero ? "(min-width: 1280px) 1220px, (min-width: 1024px) 1220px, (min-width: 768px) 980px, 100vw" : "(min-width: 768px) 280px, 220px"}
+                  priority
+                />
+              </div>
+            ) : null}
+            <h1
+              className={cn(
+                "font-heading text-4xl font-semibold tracking-tight text-white md:text-5xl",
+                brandLogoSrc ? "mt-5" : eyebrow ? "mt-5" : "mt-6",
+                hideVisualTitle && "sr-only",
+              )}
+            >
+              {title}
+            </h1>
+            {!showLogoOnlyHero ? (
+              <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">{description}</p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </StoreReveal>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[320px_1fr]">
-        <FilterSidebar
-          brands={collection.filters.brands}
-          categories={collection.filters.categories}
-          expansions={collection.filters.expansions}
-          languages={collection.filters.languages}
-          price={collection.filters.price}
-        />
+        <StoreReveal delay={0.05}>
+          <FilterSidebar
+            brands={collection.filters.brands}
+            categories={collection.filters.categories}
+            expansions={collection.filters.expansions}
+            formats={collection.filters.formats}
+            languages={collection.filters.languages}
+            price={collection.filters.price}
+          />
+        </StoreReveal>
 
-        <div className="space-y-5">
-          <SortBar resultCount={collection.total} />
+        <StoreReveal className="space-y-5" delay={0.1}>
+          <SortBar
+            resultCount={collection.total}
+            page={collection.pagination.page}
+            pageSize={collection.pagination.pageSize}
+            visibleCount={collection.items.length}
+          />
+
+          <ActiveFiltersBar basePath={resetHref} collection={collection} />
 
           {collection.items.length > 0 ? (
-            <ProductGrid products={collection.items} />
+            <>
+              <ProductGrid products={collection.items} />
+              <CollectionPagination
+                currentPage={collection.pagination.page}
+                pageCount={collection.pagination.pageCount}
+              />
+            </>
           ) : (
             <EmptyState
               className="min-h-[320px]"
@@ -88,7 +159,7 @@ export function ListingPage({
               action={{ label: "Limpiar filtros", href: resetHref }}
             />
           )}
-        </div>
+        </StoreReveal>
       </div>
     </section>
   );

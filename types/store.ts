@@ -1,34 +1,18 @@
-export type BrandSlug =
-  | "pokemon"
-  | "one-piece"
-  | "riftbound"
-  | "magic"
-  | "accesorios"
-  | "preventa";
+export type BrandSlug = string;
 
 export type ProductType = "sealed" | "single" | "accessory";
 
-export type ProductCategorySlug =
-  | "sobres"
-  | "etb"
-  | "blister-3-sobres"
-  | "booster-packs"
-  | "ediciones-especiales"
-  | "sobres-individuales"
-  | "cajas"
-  | "commander-decks"
-  | "booster-normales"
-  | "booster-coleccion"
-  | "fundas"
-  | "deck-boxes"
-  | "binders"
-  | "toploaders"
-  | "dados-tapetes"
-  | "cartas-individuales";
+export type ProductCategorySlug = string;
+
+export type ProductFormatSlug = string;
+
+export type ExpansionSlug = string;
 
 export type ProductLanguage = "ES" | "EN" | "JP";
 
 export type ProductCondition = "NM" | "EX" | "LP" | "GD";
+
+export type ExpansionReleaseStatus = "upcoming" | "live" | "archived";
 
 export interface BrandCategory {
   id: string;
@@ -64,7 +48,9 @@ export interface Product {
   type: ProductType;
   name: string;
   brand: BrandSlug;
+  brandLabel?: string;
   category: ProductCategorySlug;
+  categoryLabel?: string;
   description: string;
   price: number;
   compareAtPrice?: number;
@@ -72,7 +58,12 @@ export interface Product {
   featured: boolean;
   isPreorder: boolean;
   expansion?: string;
+  expansionSlug?: ExpansionSlug;
+  expansionReleaseStatus?: ExpansionReleaseStatus;
+  format?: string;
+  formatSlug?: ProductFormatSlug;
   language?: ProductLanguage;
+  variant?: string;
   rarity?: string;
   condition?: ProductCondition;
   badge?: string;
@@ -117,9 +108,10 @@ export type SortOption =
   | "stock-desc";
 
 export interface ListingFilters {
-  brand: BrandSlug[];
-  category: ProductCategorySlug[];
+  brand: string[];
+  category: string[];
   expansion: string[];
+  format: string[];
   language: ProductLanguage[];
   priceMin?: number;
   priceMax?: number;
@@ -127,6 +119,7 @@ export interface ListingFilters {
   isPreorder: boolean;
   featured: boolean;
   sort: SortOption;
+  page: number;
 }
 
 export interface StoredCartItem {

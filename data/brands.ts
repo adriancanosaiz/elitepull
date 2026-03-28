@@ -92,9 +92,9 @@ export const brands: Brand[] = [
     name: "Riftbound",
     shortName: "Riftbound",
     href: "/marca/riftbound",
-    tagline: "La capa más nueva del catálogo con identidad high fantasy y enfoque premium.",
+    tagline: "La nueva apuesta high fantasy para quienes buscan producto fresco y gran presencia de colección.",
     description:
-      "Preparado para lanzar producto sellado, commander decks y especiales con un lenguaje visual potente desde el día uno.",
+      "Selección de producto sellado, commander decks y ediciones especiales para descubrir Riftbound desde sus primeras olas.",
     spotlight: "Commander decks, displays sellados y primeras olas de colección.",
     categories: [
       {
@@ -136,7 +136,7 @@ export const brands: Brand[] = [
     href: "/marca/magic",
     tagline: "Boosters, collector boosters y commander para un público experto y coleccionista.",
     description:
-      "Catálogo preparado para sellado premium, singles de chase y líneas evergreen con tratamiento visual elegante.",
+      "Selección de sellado, collector boosters y producto commander para jugadores y coleccionistas de Magic.",
     spotlight: "Collector boosters, Modern Horizons y commander de alto ticket.",
     categories: [
       {

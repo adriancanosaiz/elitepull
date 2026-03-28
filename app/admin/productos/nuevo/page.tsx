@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { createAdminProductAction } from "@/app/admin/productos/actions";
 import { ProductForm } from "@/components/admin/product-form";
 import { Button } from "@/components/ui/button";
+import { getAdminProductCatalogOptions } from "@/lib/admin/catalog-taxonomy";
 import { getAdminCategories } from "@/lib/admin/products";
 
 type NewProductSearchParams = Promise<{
@@ -16,7 +17,10 @@ export default async function AdminNewProductPage({
   searchParams: NewProductSearchParams;
 }) {
   const params = await searchParams;
-  const categories = await getAdminCategories();
+  const [categories, catalogOptions] = await Promise.all([
+    getAdminCategories(),
+    getAdminProductCatalogOptions(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -30,8 +34,8 @@ export default async function AdminNewProductPage({
               Alta rapida de catalogo
             </h1>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-              Empieza por la ficha base y deja la media V1 en paths simples. Si lo prefieres,
-              puedes crear primero el producto y completar despues las rutas de portada y galeria.
+              Define la estructura, el precio y los flags editoriales. Si quieres, tambien puedes
+              subir la portada y la galeria inicial en este mismo alta, sin escribir paths a mano.
             </p>
           </div>
 
@@ -48,6 +52,7 @@ export default async function AdminNewProductPage({
         mode="create"
         action={createAdminProductAction}
         categories={categories}
+        catalogOptions={catalogOptions}
         error={params.error}
       />
     </div>

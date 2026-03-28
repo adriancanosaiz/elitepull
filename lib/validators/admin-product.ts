@@ -2,14 +2,6 @@ import { z } from "zod";
 
 import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
 
-const productAdminBrandSchema = z.enum([
-  "pokemon",
-  "one-piece",
-  "riftbound",
-  "magic",
-  "accesorios",
-]);
-
 const productTypeSchema = z.enum(["sealed", "single", "accessory"]);
 const productLanguageSchema = z.enum(["ES", "EN", "JP"]);
 const productConditionSchema = z.enum(["NM", "EX", "LP", "GD"]);
@@ -68,7 +60,7 @@ function normalizeTagList(value: unknown) {
 
 function normalizeGalleryPaths(value: unknown) {
   if (value === null || value === undefined) {
-    return [];
+    return undefined;
   }
 
   if (Array.isArray(value)) {
@@ -117,11 +109,6 @@ const optionalMediaPathSchema = z.preprocess(
 );
 
 export const adminProductAttributesSchema = z.object({
-  expansion: optionalTextField,
-  language: z.preprocess(
-    normalizeOptionalString,
-    productLanguageSchema.optional(),
-  ),
   rarity: optionalTextField,
   condition: z.preprocess(
     normalizeOptionalString,
@@ -136,13 +123,17 @@ export const adminProductSchema = z
       normalizeOptionalString,
       createUuidLikeSchema("El id debe ser un UUID valido.").optional(),
     ),
-    slug: z.string().trim().min(1, "El slug es obligatorio."),
-    sku: z.string().trim().min(1, "El SKU es obligatorio."),
+    slug: optionalTextField,
+    sku: optionalTextField,
     name: z.string().trim().min(1, "El nombre es obligatorio."),
     description: z.string().trim().min(1, "La descripcion es obligatoria."),
     productType: productTypeSchema,
-    brandSlug: productAdminBrandSchema,
+    brandId: createUuidLikeSchema("La marca seleccionada no es valida."),
     categoryId: createUuidLikeSchema("La categoria seleccionada no es valida."),
+    expansionId: createUuidLikeSchema("La expansion seleccionada no es valida."),
+    formatId: createUuidLikeSchema("El formato seleccionado no es valido."),
+    languageCode: productLanguageSchema,
+    variantLabel: optionalTextField,
     price: z.preprocess(
       parseOptionalNumber,
       z.number().nonnegative("El precio no puede ser negativo."),
@@ -163,7 +154,7 @@ export const adminProductSchema = z
     coverImagePath: optionalMediaPathSchema,
     galleryImagePaths: z.preprocess(
       normalizeGalleryPaths,
-      z.array(mediaPathSchema),
+      z.array(mediaPathSchema).optional(),
     ),
   })
   .superRefine((product, ctx) => {
@@ -175,9 +166,10 @@ export const adminProductSchema = z
       });
     }
 
+    const galleryPaths = product.galleryImagePaths ?? [];
     const uniqueGalleryPaths = new Set<string>();
 
-    product.galleryImagePaths.forEach((path, index) => {
+    galleryPaths.forEach((path, index) => {
       if (uniqueGalleryPaths.has(path)) {
         ctx.addIssue({
           code: "custom",

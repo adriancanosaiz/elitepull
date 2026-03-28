@@ -1,10 +1,39 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ListingPage } from "@/components/store/listing-page";
-import { brandsBySlug } from "@/data/brands";
 import { getCollectionData } from "@/lib/repositories/store-repository";
+import {
+  getStoreBrandBySlug,
+  getStoreCategoryByBrandAndSlug,
+} from "@/lib/repositories/store-taxonomy-repository";
 import { buildCollectionRepositoryInput } from "@/lib/routes/collection-input";
 import type { SearchParamsInput } from "@/lib/routes/query-params";
+import { buildPageMetadata } from "@/lib/site-config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categorySlug: string }>;
+}): Promise<Metadata> {
+  const { categorySlug } = await params;
+  const category = await getStoreCategoryByBrandAndSlug("accesorios", categorySlug);
+
+  if (!category) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    title: `Accesorios ${category.label}`,
+    description: category.description,
+    path: category.href,
+    keywords: [
+      `${category.label} tcg`,
+      `accesorios ${category.label}`,
+      "proteccion cartas",
+    ],
+  });
+}
 
 export default async function AccessoriesCategoryPage({
   params,
@@ -15,8 +44,10 @@ export default async function AccessoriesCategoryPage({
 }) {
   const { categorySlug } = await params;
   const resolvedSearchParams = await searchParams;
-  const brand = brandsBySlug.accesorios;
-  const category = brand.categories.find((entry) => entry.slug === categorySlug);
+  const [brand, category] = await Promise.all([
+    getStoreBrandBySlug("accesorios"),
+    getStoreCategoryByBrandAndSlug("accesorios", categorySlug),
+  ]);
 
   if (!category) {
     notFound();
@@ -34,20 +65,14 @@ export default async function AccessoriesCategoryPage({
     <ListingPage
       title={`Accesorios / ${category.label}`}
       description={category.description}
-      eyebrow="Accesorio destacado"
       collection={collection}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
         { label: "Accesorios", href: "/accesorios" },
         { label: category.label },
       ]}
-      brand={brand}
+      brand={brand ?? undefined}
       resetHref={category.href}
-      categoryPills={brand.categories.map((entry) => ({
-        label: entry.label,
-        href: entry.href,
-        active: entry.slug === category.slug,
-      }))}
     />
   );
 }

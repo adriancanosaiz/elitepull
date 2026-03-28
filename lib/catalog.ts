@@ -29,6 +29,14 @@ export const priceRanges = [
   { min: 150, label: "150 EUR +" },
 ] as const;
 
+function humanizeSlug(value: string) {
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export function formatPrice(value: number) {
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
@@ -41,7 +49,7 @@ export function getBrandBySlug(slug: BrandSlug) {
 }
 
 export function getBrandCategories(slug: BrandSlug) {
-  return brandsBySlug[slug].categories;
+  return brandsBySlug[slug]?.categories ?? [];
 }
 
 export function getCategoryLabel(categorySlug: ProductCategorySlug) {
@@ -52,11 +60,7 @@ export function getCategoryLabel(categorySlug: ProductCategorySlug) {
     }
   }
 
-  if (categorySlug === "cartas-individuales") {
-    return "Cartas individuales";
-  }
-
-  return categorySlug;
+  return humanizeSlug(categorySlug);
 }
 
 export function getProductBySlug(slug: string) {
@@ -76,7 +80,9 @@ export function getRelatedProducts(product: Product, limit = 4) {
     .filter(
       (candidate) =>
         candidate.id !== product.id &&
-        (candidate.brand === product.brand || candidate.category === product.category),
+        (candidate.brand === product.brand ||
+          candidate.category === product.category ||
+          candidate.expansionSlug === product.expansionSlug),
     )
     .slice(0, limit);
 }
@@ -97,7 +103,14 @@ export function filterProducts(input: Product[], filters: ListingFilters) {
 
     if (
       filters.expansion.length > 0 &&
-      (!product.expansion || !filters.expansion.includes(product.expansion))
+      (!product.expansionSlug || !filters.expansion.includes(product.expansionSlug))
+    ) {
+      return false;
+    }
+
+    if (
+      filters.format.length > 0 &&
+      (!product.formatSlug || !filters.format.includes(product.formatSlug))
     ) {
       return false;
     }
@@ -169,27 +182,41 @@ export function sortProducts(input: Product[], sort: SortOption) {
 
 export function getListingFilterOptions(input: Product[]) {
   const prices = input.map((product) => product.price);
+  const brandsMap = new Map<string, { slug: string; label: string }>();
+  const categoriesMap = new Map<string, { slug: string; label: string }>();
+  const expansionsMap = new Map<string, string>();
+  const formatsMap = new Map<string, string>();
+  const languages = new Set<ProductLanguage>();
+
+  for (const product of input) {
+    brandsMap.set(product.brand, {
+      slug: product.brand,
+      label: product.brandLabel ?? humanizeSlug(product.brand),
+    });
+    categoriesMap.set(product.category, {
+      slug: product.category,
+      label: product.categoryLabel ?? getCategoryLabel(product.category),
+    });
+
+    if (product.expansionSlug && product.expansion) {
+      expansionsMap.set(product.expansionSlug, product.expansion);
+    }
+
+    if (product.formatSlug && product.format) {
+      formatsMap.set(product.formatSlug, product.format);
+    }
+
+    if (product.language) {
+      languages.add(product.language);
+    }
+  }
 
   return {
-    brands: brands.filter((brand) => input.some((product) => product.brand === brand.slug)),
-    categories: Array.from(new Set(input.map((product) => product.category))).map((slug) => ({
-      slug,
-      label: getCategoryLabel(slug),
-    })),
-    expansions: Array.from(
-      new Set(
-        input
-          .map((product) => product.expansion)
-          .filter((expansion): expansion is string => Boolean(expansion)),
-      ),
-    ),
-    languages: Array.from(
-      new Set(
-        input
-          .map((product) => product.language)
-          .filter((language): language is ProductLanguage => Boolean(language)),
-      ),
-    ),
+    brands: Array.from(brandsMap.values()),
+    categories: Array.from(categoriesMap.values()),
+    expansions: Array.from(expansionsMap.entries()).map(([slug, label]) => ({ slug, label })),
+    formats: Array.from(formatsMap.entries()).map(([slug, label]) => ({ slug, label })),
+    languages: Array.from(languages),
     price: {
       min: prices.length > 0 ? Math.min(...prices) : 0,
       max: prices.length > 0 ? Math.max(...prices) : 0,
@@ -204,7 +231,7 @@ export function buildBreadcrumbs(
 }
 
 export function isBrandSlug(value: string): value is BrandSlug {
-  return brands.some((brand) => brand.slug === value);
+  return value.trim().length > 0;
 }
 
 export function getScopedCollection(options: {

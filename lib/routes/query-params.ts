@@ -1,7 +1,5 @@
 import type {
-  BrandSlug,
   ListingFilters,
-  ProductCategorySlug,
   ProductLanguage,
   SortOption,
 } from "@/types/store";
@@ -11,10 +9,12 @@ import { normalizeSlug } from "@/lib/routes/slugs";
 export type SearchParamsInput = Record<string, string | string[] | undefined>;
 
 export const collectionQueryParamKeys = {
+  page: "page",
   sort: "sort",
   brand: "brand",
   category: "category",
   expansion: "expansion",
+  format: "format",
   language: "language",
   priceMin: "priceMin",
   priceMax: "priceMax",
@@ -23,6 +23,9 @@ export const collectionQueryParamKeys = {
   featured: "featured",
 } as const;
 
+export const COLLECTION_DEFAULT_PAGE = 1;
+export const COLLECTION_PAGE_SIZE = 18;
+
 export const sortOptionValues = [
   "featured",
   "price-asc",
@@ -30,34 +33,6 @@ export const sortOptionValues = [
   "name-asc",
   "stock-desc",
 ] as const satisfies readonly SortOption[];
-
-const brandSlugValues = [
-  "pokemon",
-  "one-piece",
-  "riftbound",
-  "magic",
-  "accesorios",
-  "preventa",
-] as const satisfies readonly BrandSlug[];
-
-const productCategorySlugValues = [
-  "sobres",
-  "etb",
-  "blister-3-sobres",
-  "booster-packs",
-  "ediciones-especiales",
-  "sobres-individuales",
-  "cajas",
-  "commander-decks",
-  "booster-normales",
-  "booster-coleccion",
-  "fundas",
-  "deck-boxes",
-  "binders",
-  "toploaders",
-  "dados-tapetes",
-  "cartas-individuales",
-] as const satisfies readonly ProductCategorySlug[];
 
 const productLanguageValues = ["ES", "EN", "JP"] as const satisfies readonly ProductLanguage[];
 
@@ -82,22 +57,14 @@ function parseCsv(value: string | undefined) {
     .filter(Boolean);
 }
 
-function parseEnumList<T extends readonly string[]>(value: string | undefined, allowed: T) {
-  const allowedSet = new Set<string>(allowed);
-
-  return parseCsv(value).filter((item): item is T[number] => allowedSet.has(item));
+function parseNormalizedList(value: string | undefined) {
+  return parseCsv(value).map((item) => normalizeSlug(item)).filter(Boolean);
 }
 
-function parseNormalizedEnumList<T extends readonly string[]>(value: string | undefined, allowed: T) {
-  const allowedSet = new Set<string>(allowed);
+function parseLanguageList(value: string | undefined) {
+  const allowedSet = new Set<string>(productLanguageValues);
 
-  return parseCsv(value)
-    .map((item) => normalizeSlug(item))
-    .filter((item): item is T[number] => allowedSet.has(item));
-}
-
-function parseExpansionList(value: string | undefined) {
-  return parseCsv(value);
+  return parseCsv(value).filter((item): item is ProductLanguage => allowedSet.has(item));
 }
 
 function parseNumber(value: string | undefined) {
@@ -114,6 +81,20 @@ function parseBooleanFlag(value: string | undefined) {
   return value === "1" || value === "true";
 }
 
+function parsePage(value: string | undefined) {
+  if (!value) {
+    return COLLECTION_DEFAULT_PAGE;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return COLLECTION_DEFAULT_PAGE;
+  }
+
+  return parsed;
+}
+
 export function parseCollectionFilters(searchParams: SearchParamsInput): ListingFilters {
   const requestedSort = getSearchParamValue(searchParams, collectionQueryParamKeys.sort);
   const sort: SortOption = sortOptionValues.includes(requestedSort as SortOption)
@@ -121,21 +102,22 @@ export function parseCollectionFilters(searchParams: SearchParamsInput): Listing
     : "featured";
 
   return {
+    page: parsePage(getSearchParamValue(searchParams, collectionQueryParamKeys.page)),
     sort,
-    brand: parseNormalizedEnumList(
+    brand: parseNormalizedList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.brand),
-      brandSlugValues,
     ),
-    category: parseNormalizedEnumList(
+    category: parseNormalizedList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.category),
-      productCategorySlugValues,
     ),
-    expansion: parseExpansionList(
+    expansion: parseNormalizedList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.expansion),
     ),
-    language: parseEnumList(
+    format: parseNormalizedList(
+      getSearchParamValue(searchParams, collectionQueryParamKeys.format),
+    ),
+    language: parseLanguageList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.language),
-      productLanguageValues,
     ),
     priceMin: parseNumber(getSearchParamValue(searchParams, collectionQueryParamKeys.priceMin)),
     priceMax: parseNumber(getSearchParamValue(searchParams, collectionQueryParamKeys.priceMax)),
@@ -152,6 +134,10 @@ export function parseCollectionFilters(searchParams: SearchParamsInput): Listing
 export function buildCollectionQueryString(filters: Partial<ListingFilters>) {
   const params = new URLSearchParams();
 
+  if (typeof filters.page === "number" && filters.page > COLLECTION_DEFAULT_PAGE) {
+    params.set(collectionQueryParamKeys.page, String(filters.page));
+  }
+
   if (filters.sort) {
     params.set(collectionQueryParamKeys.sort, filters.sort);
   }
@@ -166,6 +152,10 @@ export function buildCollectionQueryString(filters: Partial<ListingFilters>) {
 
   if (filters.expansion?.length) {
     params.set(collectionQueryParamKeys.expansion, filters.expansion.join(","));
+  }
+
+  if (filters.format?.length) {
+    params.set(collectionQueryParamKeys.format, filters.format.join(","));
   }
 
   if (filters.language?.length) {

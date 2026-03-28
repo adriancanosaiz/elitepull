@@ -9,7 +9,7 @@ export function ProductNotFoundState() {
         className="min-h-[520px]"
         icon={PackageSearch}
         title="No hemos encontrado este producto"
-        description="Puede que ya no este disponible, que el slug haya cambiado o que aun no se haya conectado el backend real."
+        description="Puede que ya no esté disponible o que el enlace haya cambiado. Te llevamos al catálogo para que sigas explorando."
         action={{ label: "Volver al catalogo", href: "/catalogo" }}
         secondaryAction={{ label: "Ir a inicio", href: "/" }}
       />

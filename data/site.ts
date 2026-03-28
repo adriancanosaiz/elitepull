@@ -30,22 +30,22 @@ export const benefits: Benefit[] = [
   {
     id: "shipping",
     title: "Envio rapido",
-    description: "Preparado para destacar plazos y confianza desde el primer scroll.",
+    description: "Preparación cuidada y envío ágil para que tu pedido llegue en perfectas condiciones.",
   },
   {
     id: "stock",
     title: "Stock real",
-    description: "La interfaz ya contempla mensajes claros de disponibilidad y reserva.",
+    description: "Disponibilidad visible para comprar con más seguridad y menos sorpresas.",
   },
   {
     id: "secure",
     title: "Pago seguro",
-    description: "Bloques visuales listos para integrar checkout cuando llegue el backend.",
+    description: "Checkout seguro con Stripe y confirmación clara durante todo el proceso.",
   },
   {
     id: "support",
     title: "Atencion especializada",
-    description: "Tono y estructura pensados para coleccionistas exigentes.",
+    description: "Soporte pensado para resolver dudas de producto, preventa y seguimiento de pedido.",
   },
 ];
 

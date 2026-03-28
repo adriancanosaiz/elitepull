@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Boxes } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Boxes } from "lucide-react";
 
-import { updateAdminProductAction } from "@/app/admin/productos/actions";
+import {
+  deleteAdminProductAction,
+  updateAdminProductAction,
+} from "@/app/admin/productos/actions";
+import { DeleteProductForm } from "@/components/admin/delete-product-form";
 import {
   replaceAdminProductGalleryAction,
   uploadAdminProductCoverAction,
@@ -10,6 +14,7 @@ import {
 import { ProductMediaUploader } from "@/components/admin/product-media-uploader";
 import { ProductForm } from "@/components/admin/product-form";
 import { Button } from "@/components/ui/button";
+import { getAdminProductCatalogOptions } from "@/lib/admin/catalog-taxonomy";
 import { getAdminCategories, getAdminProductById } from "@/lib/admin/products";
 
 type ProductEditPageParams = Promise<{
@@ -31,8 +36,9 @@ export default async function AdminEditProductPage({
   searchParams: ProductEditPageSearchParams;
 }) {
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
-  const [categories, product] = await Promise.all([
+  const [categories, catalogOptions, product] = await Promise.all([
     getAdminCategories(),
+    getAdminProductCatalogOptions(),
     getAdminProductById(id),
   ]);
 
@@ -45,7 +51,11 @@ export default async function AdminEditProductPage({
   const successMessage =
     resolvedSearchParams.success === "updated"
       ? "Producto actualizado correctamente."
-      : undefined;
+      : resolvedSearchParams.success === "created"
+        ? "Producto creado correctamente."
+        : resolvedSearchParams.success === "created-with-media"
+          ? "Producto creado correctamente con portada y galeria inicial."
+          : undefined;
 
   return (
     <div className="space-y-6">
@@ -61,7 +71,9 @@ export default async function AdminEditProductPage({
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
               <span>Slug: <span className="text-white">{resolvedProduct.slug}</span></span>
               <span>SKU: <span className="text-white">{resolvedProduct.sku}</span></span>
-              <span>Categoria: <span className="text-white">{resolvedProduct.categoryLabel}</span></span>
+              <span>Marca: <span className="text-white">{resolvedProduct.brandLabel}</span></span>
+              <span>Expansion: <span className="text-white">{resolvedProduct.expansionLabel}</span></span>
+              <span>Formato: <span className="text-white">{resolvedProduct.formatLabel}</span></span>
             </div>
           </div>
 
@@ -86,6 +98,7 @@ export default async function AdminEditProductPage({
         mode="edit"
         action={updateAdminProductAction}
         categories={categories}
+        catalogOptions={catalogOptions}
         product={resolvedProduct}
         error={resolvedSearchParams.error}
         success={successMessage}
@@ -100,6 +113,31 @@ export default async function AdminEditProductPage({
         mediaError={resolvedSearchParams.mediaError}
         mediaSuccess={resolvedSearchParams.mediaSuccess}
       />
+
+      <section className="rounded-[30px] border border-rose-400/20 bg-rose-500/5 p-6 md:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-rose-200/80">
+              <AlertTriangle className="h-4 w-4" />
+              Zona sensible
+            </p>
+            <h2 className="mt-3 font-heading text-2xl font-semibold text-white">
+              Eliminar producto
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+              Esta accion elimina el producto del catalogo y del admin. El historial de pedidos no
+              se borra, pero el producto dejara de estar vinculado en futuras consultas.
+            </p>
+          </div>
+
+          <DeleteProductForm
+            action={deleteAdminProductAction}
+            productId={resolvedProduct.id}
+            redirectTo={`/admin/productos/${resolvedProduct.id}`}
+            productName={resolvedProduct.name}
+          />
+        </div>
+      </section>
     </div>
   );
 }

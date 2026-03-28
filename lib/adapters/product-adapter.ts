@@ -1,28 +1,41 @@
 import { brandsBySlug } from "@/data/brands";
 import { products } from "@/data/products";
 import { getCategoryLabel, getRelatedProducts } from "@/lib/catalog";
-import { getProductRoute } from "@/lib/routes/store-routes";
+import {
+  getBrandRoute,
+  getCategoryRoute,
+  getProductRoute,
+} from "@/lib/routes/store-routes";
 import type { CollectionItem, ProductCardItem, ProductDetail } from "@/types/contracts";
 import type { Product } from "@/types/store";
 
+function humanizeSlug(value: string) {
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function adaptBrand(product: Product) {
   const brand = brandsBySlug[product.brand];
+  const label = product.brandLabel ?? brand?.shortName ?? humanizeSlug(product.brand);
 
   return {
-    slug: brand.slug,
-    label: brand.shortName,
-    href: brand.href,
+    slug: product.brand,
+    label,
+    href: brand?.href ?? getBrandRoute(product.brand),
   };
 }
 
 function adaptCategory(product: Product) {
   const brand = brandsBySlug[product.brand];
-  const category = brand.categories.find((entry) => entry.slug === product.category);
+  const category = brand?.categories.find((entry) => entry.slug === product.category);
 
   return {
     slug: product.category,
-    label: category?.label ?? getCategoryLabel(product.category),
-    href: category?.href,
+    label: product.categoryLabel ?? category?.label ?? getCategoryLabel(product.category),
+    href: category?.href ?? getCategoryRoute(product.brand, product.category),
   };
 }
 
@@ -54,7 +67,11 @@ export function adaptProductToCardItem(product: Product): ProductCardItem {
     featured: product.featured,
     isPreorder: product.isPreorder,
     expansion: product.expansion,
+    expansionSlug: product.expansionSlug,
+    format: product.format,
+    formatSlug: product.formatSlug,
     language: product.language,
+    variant: product.variant,
     rarity: product.rarity,
     condition: product.condition,
     badge: product.badge,
@@ -64,28 +81,48 @@ export function adaptProductToCardItem(product: Product): ProductCardItem {
 }
 
 export function adaptProductToDetail(product: Product): ProductDetail {
+  const details = [
+    {
+      label: "Marca",
+      value: product.brandLabel ?? humanizeSlug(product.brand),
+    },
+    {
+      label: "Expansion",
+      value: product.expansion ?? "General",
+    },
+    {
+      label: "Formato",
+      value: product.format ?? adaptCategory(product).label,
+    },
+    {
+      label: "Idioma",
+      value: product.language ?? "ES",
+    },
+  ];
+
+  if (product.variant) {
+    details.push({
+      label: "Variante",
+      value: product.variant,
+    });
+  }
+
+  details.push(
+    {
+      label: "Rareza",
+      value: product.rarity ?? "No aplica",
+    },
+    {
+      label: "Estado",
+      value: product.condition ?? "Sellado",
+    },
+  );
+
   return {
     ...adaptProductToCardItem(product),
     images: product.images,
     stockLabel: getStockLabel(product),
-    details: [
-      {
-        label: "Expansion",
-        value: product.expansion ?? "Seleccion premium",
-      },
-      {
-        label: "Idioma",
-        value: product.language ?? "No aplica",
-      },
-      {
-        label: "Rareza",
-        value: product.rarity ?? "No aplica",
-      },
-      {
-        label: "Estado",
-        value: product.condition ?? "Sellado",
-      },
-    ],
+    details,
   };
 }
 

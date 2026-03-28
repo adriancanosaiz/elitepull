@@ -2,8 +2,11 @@ import Link from "next/link";
 import {
   Boxes,
   FolderKanban,
+  Layers3,
   LayoutDashboard,
   PackageSearch,
+  SlidersHorizontal,
+  Tags,
   Users,
 } from "lucide-react";
 
@@ -21,6 +24,30 @@ const adminNavItems = [
     label: "Productos",
     description: "Catalogo y stock",
     icon: Boxes,
+  },
+  {
+    href: "/admin/catalogo/marcas",
+    label: "Marcas",
+    description: "Taxonomia base",
+    icon: Tags,
+  },
+  {
+    href: "/admin/catalogo/expansiones",
+    label: "Expansiones",
+    description: "Sets por marca",
+    icon: Layers3,
+  },
+  {
+    href: "/admin/catalogo/formatos",
+    label: "Formatos",
+    description: "ETB, bundles y mas",
+    icon: Boxes,
+  },
+  {
+    href: "/admin/catalogo/configuracion",
+    label: "Configuracion",
+    description: "Expansion + formato + idioma",
+    icon: SlidersHorizontal,
   },
   {
     href: "/admin/pedidos",

@@ -76,7 +76,7 @@ export function ProductMediaUploader({
             <p>Formatos V1: webp, png, jpg, jpeg.</p>
             <p>Limite: 8 MB por archivo.</p>
             <p>La extension final se conserva segun el archivo subido.</p>
-            <p>Puedes seguir usando los campos manuales del formulario como fallback.</p>
+            <p>Este es el flujo principal de media; ya no necesitas escribir paths manuales.</p>
           </div>
         </div>
 

@@ -1,11 +1,37 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ListingPage } from "@/components/store/listing-page";
-import { brandsBySlug } from "@/data/brands";
 import { getCollectionData } from "@/lib/repositories/store-repository";
+import { getStoreBrandBySlug } from "@/lib/repositories/store-taxonomy-repository";
 import { buildCollectionRepositoryInput } from "@/lib/routes/collection-input";
-import { isBrandSlug } from "@/lib/catalog";
 import type { SearchParamsInput } from "@/lib/routes/query-params";
+import { buildPageMetadata } from "@/lib/site-config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ brandSlug: string }>;
+}): Promise<Metadata> {
+  const { brandSlug } = await params;
+  const brand = await getStoreBrandBySlug(brandSlug);
+
+  if (!brand || ["preventa"].includes(brandSlug)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    title: `${brand.name} TCG`,
+    description: brand.description,
+    path: brand.href,
+    keywords: [
+      `${brand.shortName} tcg`,
+      `${brand.shortName} cartas`,
+      `${brand.shortName} sellado`,
+      `${brand.shortName} coleccion`,
+    ],
+  });
+}
 
 export default async function BrandPage({
   params,
@@ -16,12 +42,11 @@ export default async function BrandPage({
 }) {
   const { brandSlug } = await params;
   const resolvedSearchParams = await searchParams;
+  const brand = await getStoreBrandBySlug(brandSlug);
 
-  if (!isBrandSlug(brandSlug) || ["accesorios", "preventa"].includes(brandSlug)) {
+  if (!brand || ["preventa"].includes(brandSlug)) {
     notFound();
   }
-
-  const brand = brandsBySlug[brandSlug];
   const collection = await getCollectionData(
     buildCollectionRepositoryInput({
       searchParams: resolvedSearchParams,
@@ -33,7 +58,6 @@ export default async function BrandPage({
     <ListingPage
       title={brand.name}
       description={brand.description}
-      eyebrow={`Marca / ${brand.shortName}`}
       collection={collection}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
@@ -42,10 +66,7 @@ export default async function BrandPage({
       ]}
       brand={brand}
       resetHref={brand.href}
-      categoryPills={brand.categories.map((category) => ({
-        label: category.label,
-        href: category.href,
-      }))}
+      heroVariant="logo-only"
     />
   );
 }

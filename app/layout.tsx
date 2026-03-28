@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  keywords: [...siteConfig.defaultKeywords],
   applicationName: siteConfig.name,
   alternates: {
     canonical: "/",
@@ -24,6 +25,11 @@ export const metadata: Metadata = {
     title: siteConfig.title,
     description: siteConfig.description,
     url: getSiteUrl(),
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.title,
+    description: siteConfig.description,
   },
 };
 

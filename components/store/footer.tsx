@@ -18,20 +18,24 @@ export function Footer() {
   return (
     <footer className="pb-8 pt-16">
       <div className="app-container">
-        <div className="surface-panel overflow-hidden px-6 py-8 sm:px-8 sm:py-10">
+        <div className="surface-panel overflow-hidden border-primary/18 px-6 py-8 sm:px-8 sm:py-10">
+          <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
           <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <span className="eyebrow-label">Universe built for collectors</span>
+              <div className="inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-300">
+                <span className="signal-line h-px w-10" />
+                TCG collector vault
+              </div>
               <div className="mt-5 max-w-2xl">
                 <Link href="/" className="inline-flex">
                   <SiteLogo />
                 </Link>
                 <h2 className="mt-6 font-heading text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  Una base visual lista para escalar a catalogo real sin rehacer el frontend.
+                  Sellado, singles y accesorios presentados como una experiencia de colección.
                 </h2>
                 <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-                  La tienda ya nace con tono premium, jerarquia clara y componentes pensados
-                  para operar un primer lanzamiento real con catalogo, admin y checkout.
+                  ElitePull reúne producto sellado, singles destacados y accesorios para comprar
+                  con una presentación premium y navegación rápida.
                 </p>
               </div>
             </div>
@@ -41,17 +45,16 @@ export function Footer() {
                 Acceso prioritario
               </p>
               <h3 className="mt-3 font-heading text-2xl font-semibold text-white">
-                Newsletter visual para preventas y drops.
+                Recibe avisos de preventas y reposiciones.
               </h3>
               <p className="mt-3 text-sm leading-6 text-slate-300">
-                Es un bloque placeholder. Antes de publicar conecta este formulario a tu stack
-                real de captacion o eliminalo temporalmente.
+                Déjanos tu email y te avisaremos de lanzamientos, restocks y novedades destacadas.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Input placeholder="tuemail@coleccion.com" className="sm:flex-1" />
                 <Button className="sm:min-w-40">
-                  Quiero acceso
+                  Quiero avisos
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -83,8 +86,8 @@ export function Footer() {
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
               <p className="text-sm leading-7 text-slate-300">
-                ElitePull propone una experiencia entre boutique TCG, universo anime y escaparate
-                de coleccionismo premium lista para una primera publicacion seria.
+                ElitePull está pensado para quienes buscan una tienda TCG con selección cuidada,
+                imagen sólida y una compra cómoda desde el primer vistazo.
               </p>
             </div>
 
@@ -111,7 +114,7 @@ export function Footer() {
           <Separator className="my-8" />
 
           <div className="flex flex-col gap-3 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
-            <p>© 2026 ElitePull. Primera version operativa para catalogo, admin y checkout.</p>
+            <p>© 2026 ElitePull. Tienda TCG online para coleccionistas y jugadores.</p>
             <div className="flex items-center gap-5">
               <Link href="/politica-privacidad" className="link-fade">
                 Privacidad

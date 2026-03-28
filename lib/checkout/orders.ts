@@ -215,11 +215,20 @@ const CHECKOUT_PRODUCT_SELECT = `
 const CHECKOUT_ALLOWED_SHIPPING_COUNTRIES: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] =
   ["ES", "PT"];
 
-const CHECKOUT_PAYMENT_METHOD_TYPES = [
-  "card",
-  "link",
-  "bizum",
-] as unknown as Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
+function getStripeCheckoutPaymentMethodTypes() {
+  const basePaymentMethodTypes = [
+    "card",
+    "link",
+  ] satisfies Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
+
+  if (process.env.STRIPE_ENABLE_BIZUM === "true") {
+    // Stripe documenta `bizum` para Checkout, pero en muchas cuentas sigue
+    // apareciendo como private preview y la API rechaza el enum si no esta habilitado.
+    return [...basePaymentMethodTypes, "bizum"] as unknown as Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
+  }
+
+  return basePaymentMethodTypes;
+}
 
 function getCheckoutOrdersEnv() {
   return checkoutOrdersEnvSchema.parse({
@@ -774,9 +783,7 @@ async function createStripeCheckoutSession(
     // dominio y configuracion de la cuenta los hacen elegibles.
     // Si en el futuro quieres volver a metodos dinamicos o anadir otros como PayPal,
     // elimina o amplía `payment_method_types`.
-    // `bizum` ya esta soportado por Stripe Checkout, pero la version tipada instalada
-    // en este repo todavia no lo incluye en la union de `PaymentMethodType`.
-    payment_method_types: CHECKOUT_PAYMENT_METHOD_TYPES,
+    payment_method_types: getStripeCheckoutPaymentMethodTypes(),
     billing_address_collection: "required",
     phone_number_collection: {
       enabled: true,

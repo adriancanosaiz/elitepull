@@ -66,7 +66,8 @@ export const brandPalettes: Record<BrandSlug, BrandPalette> = {
     actionGlow: "0 16px 34px rgba(47, 107, 255, 0.16)",
     artworkGlowPrimary: withAlpha("#F6C90E", 0.16),
     artworkGlowSecondary: withAlpha("#2F6BFF", 0.14),
-    logoShadow: "0 8px 18px rgba(47, 107, 255, 0.12)",
+    logoShadow:
+      "drop-shadow(0 0 24px rgba(47, 107, 255, 0.34)) drop-shadow(0 0 68px rgba(246, 201, 14, 0.2))",
   },
   "one-piece": {
     primary: "#D72638",
@@ -93,7 +94,8 @@ export const brandPalettes: Record<BrandSlug, BrandPalette> = {
     actionGlow: "0 16px 34px rgba(215, 38, 56, 0.16)",
     artworkGlowPrimary: withAlpha("#D72638", 0.14),
     artworkGlowSecondary: withAlpha("#D4A017", 0.14),
-    logoShadow: "0 8px 18px rgba(215, 38, 56, 0.12)",
+    logoShadow:
+      "drop-shadow(0 0 24px rgba(215, 38, 56, 0.34)) drop-shadow(0 0 68px rgba(212, 160, 23, 0.2))",
   },
   magic: {
     primary: "#6D28D9",
@@ -120,7 +122,8 @@ export const brandPalettes: Record<BrandSlug, BrandPalette> = {
     actionGlow: "0 16px 34px rgba(109, 40, 217, 0.16)",
     artworkGlowPrimary: withAlpha("#6D28D9", 0.16),
     artworkGlowSecondary: withAlpha("#2563EB", 0.12),
-    logoShadow: "0 8px 18px rgba(109, 40, 217, 0.12)",
+    logoShadow:
+      "drop-shadow(0 0 24px rgba(109, 40, 217, 0.34)) drop-shadow(0 0 68px rgba(245, 158, 11, 0.2))",
   },
   riftbound: {
     primary: "#00AEEF",
@@ -147,7 +150,8 @@ export const brandPalettes: Record<BrandSlug, BrandPalette> = {
     actionGlow: "0 16px 34px rgba(0, 174, 239, 0.16)",
     artworkGlowPrimary: withAlpha("#00AEEF", 0.14),
     artworkGlowSecondary: withAlpha("#14B8A6", 0.12),
-    logoShadow: "0 8px 18px rgba(0, 174, 239, 0.12)",
+    logoShadow:
+      "drop-shadow(0 0 24px rgba(0, 174, 239, 0.34)) drop-shadow(0 0 68px rgba(20, 184, 166, 0.2))",
   },
   accesorios: {
     primary: "#D6B782",
@@ -174,7 +178,8 @@ export const brandPalettes: Record<BrandSlug, BrandPalette> = {
     actionGlow: "0 16px 34px rgba(148, 163, 184, 0.14)",
     artworkGlowPrimary: withAlpha("#D6B782", 0.1),
     artworkGlowSecondary: withAlpha("#94A3B8", 0.1),
-    logoShadow: "0 8px 18px rgba(148, 163, 184, 0.1)",
+    logoShadow:
+      "drop-shadow(0 0 22px rgba(148, 163, 184, 0.28)) drop-shadow(0 0 58px rgba(214, 183, 130, 0.18))",
   },
   preventa: {
     primary: "#F59E0B",
@@ -201,7 +206,8 @@ export const brandPalettes: Record<BrandSlug, BrandPalette> = {
     actionGlow: "0 16px 34px rgba(232, 121, 249, 0.14)",
     artworkGlowPrimary: withAlpha("#F59E0B", 0.1),
     artworkGlowSecondary: withAlpha("#38BDF8", 0.1),
-    logoShadow: "0 8px 18px rgba(232, 121, 249, 0.1)",
+    logoShadow:
+      "drop-shadow(0 0 24px rgba(232, 121, 249, 0.3)) drop-shadow(0 0 64px rgba(56, 189, 248, 0.18))",
   },
 };
 

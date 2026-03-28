@@ -47,6 +47,11 @@ export function getCategoryRouteFromData(
   categorySlug: ProductCategorySlug,
 ) {
   const brand = brandsBySlug[brandSlug];
+
+  if (!brand) {
+    return getCategoryRoute(brandSlug, categorySlug);
+  }
+
   const category = brand.categories.find((entry) => entry.slug === categorySlug);
 
   return category?.href ?? getCategoryRoute(brandSlug, categorySlug);

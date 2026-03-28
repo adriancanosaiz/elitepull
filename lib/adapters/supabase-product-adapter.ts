@@ -6,12 +6,25 @@ import {
 import type { Product } from "@/types/store";
 
 type ProductAttributes = {
-  expansion?: string;
-  language?: Product["language"];
   rarity?: string;
   condition?: Product["condition"];
   badge?: string;
 };
+
+type BrandRow = Pick<
+  Database["public"]["Tables"]["brands"]["Row"],
+  "id" | "slug" | "label"
+>;
+
+type ExpansionRow = Pick<
+  Database["public"]["Tables"]["expansions"]["Row"],
+  "id" | "slug" | "label" | "release_status"
+>;
+
+type FormatRow = Pick<
+  Database["public"]["Tables"]["product_formats"]["Row"],
+  "id" | "slug" | "label"
+>;
 
 type CategoryRow = Pick<
   Database["public"]["Tables"]["categories"]["Row"],
@@ -29,6 +42,9 @@ type InventoryRow = Pick<
 >;
 
 export type SupabaseProductRecord = Database["public"]["Tables"]["products"]["Row"] & {
+  brand: BrandRow | null;
+  expansion: ExpansionRow | null;
+  format: FormatRow | null;
   category: CategoryRow | null;
   images: ProductImageRow[] | null;
   inventory: InventoryRow | InventoryRow[] | null;
@@ -120,16 +136,24 @@ export function adaptSupabaseProductRecord(record: SupabaseProductRecord): Produ
     slug: record.slug,
     type: productType,
     name: record.name,
-    brand: record.brand_slug as Product["brand"],
-    category: (record.category?.slug ?? "ediciones-especiales") as Product["category"],
+    brand: record.brand?.slug ?? record.brand_slug,
+    brandLabel: record.brand?.label ?? record.brand_slug,
+    category: record.category?.slug ?? "ediciones-especiales",
+    categoryLabel: record.category?.label ?? "General",
     description: record.description,
     price: parseNumber(record.price),
     compareAtPrice: parseOptionalNumber(record.compare_at_price),
     stock: Math.max(inventory?.available_quantity ?? 0, 0),
     featured: record.featured,
     isPreorder: record.is_preorder,
-    expansion: attributes.expansion,
-    language: attributes.language,
+    expansion: record.expansion?.label ?? "General",
+    expansionSlug: record.expansion?.slug ?? "general",
+    expansionReleaseStatus:
+      (record.expansion?.release_status as Product["expansionReleaseStatus"]) ?? "live",
+    format: record.format?.label ?? record.category?.label ?? "General",
+    formatSlug: record.format?.slug ?? record.category?.slug ?? "general",
+    language: (record.language_code as Product["language"]) ?? "ES",
+    variant: record.variant_label ?? undefined,
     rarity: attributes.rarity,
     condition: attributes.condition,
     badge: attributes.badge,

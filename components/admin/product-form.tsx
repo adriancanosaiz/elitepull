@@ -3,25 +3,40 @@
 import type {
   ChangeEvent,
   ComponentProps,
+  ComponentPropsWithoutRef,
   ReactNode,
   TextareaHTMLAttributes,
 } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 
+import {
+  buildGeneratedProductSku,
+  buildGeneratedProductSlug,
+} from "@/lib/admin/catalog-identifiers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
   AdminCategoryOption,
   AdminProductDetail,
 } from "@/lib/admin/products";
+import type {
+  AdminProductCatalogOptions,
+} from "@/lib/admin/catalog-taxonomy";
+import type { ProductLanguage } from "@/types/store";
 
 const selectClassName =
-  "flex h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "flex h-11 w-full appearance-none rounded-2xl border border-white/10 bg-slate-950/90 [color-scheme:dark] px-4 pr-11 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-200 focus-visible:border-primary/40 focus-visible:bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50";
+
+const selectOptionClassName = "bg-slate-950 text-white";
 
 const textareaClassName =
   "flex min-h-[140px] w-full rounded-[22px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+const fileInputClassName =
+  "block w-full rounded-[22px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white file:mr-4 file:rounded-full file:border-0 file:bg-white/[0.08] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white";
 
 type ProductFormValues = {
   id?: string;
@@ -30,8 +45,12 @@ type ProductFormValues = {
   name: string;
   description: string;
   productType: "sealed" | "single" | "accessory";
-  brandSlug: "pokemon" | "one-piece" | "riftbound" | "magic" | "accesorios";
+  brandId: string;
   categoryId: string;
+  expansionId: string;
+  formatId: string;
+  languageCode: ProductLanguage;
+  variantLabel: string;
   price: number;
   compareAtPrice?: number;
   stock: number;
@@ -40,46 +59,51 @@ type ProductFormValues = {
   isPreorder: boolean;
   tags: string[];
   attributes: {
-    expansion: string;
-    language?: "ES" | "EN" | "JP";
     rarity: string;
     condition?: "NM" | "EX" | "LP" | "GD";
     badge: string;
-  },
+  };
   coverImagePath: string;
   galleryImagePaths: string[];
 };
 
-const defaultValues: ProductFormValues = {
-  id: undefined,
-  slug: "",
-  sku: "",
-  name: "",
-  description: "",
-  productType: "sealed",
-  brandSlug: "pokemon",
-  categoryId: "",
-  price: 0,
-  compareAtPrice: undefined,
-  stock: 0,
-  active: true,
-  featured: false,
-  isPreorder: false,
-  tags: [],
-  attributes: {
-    expansion: "",
-    language: undefined,
-    rarity: "",
-    condition: undefined,
-    badge: "",
-  },
-  coverImagePath: "",
-  galleryImagePaths: [],
-};
+function getDefaultBrandId(catalogOptions: AdminProductCatalogOptions) {
+  return catalogOptions.brands.find((brand) => brand.active)?.id ?? catalogOptions.brands[0]?.id ?? "";
+}
 
-function buildInitialValues(product?: AdminProductDetail | null): ProductFormValues {
+function buildInitialValues(
+  product: AdminProductDetail | null | undefined,
+  catalogOptions: AdminProductCatalogOptions,
+): ProductFormValues {
   if (!product) {
-    return defaultValues;
+    return {
+      id: undefined,
+      slug: "",
+      sku: "",
+      name: "",
+      description: "",
+      productType: "sealed",
+      brandId: getDefaultBrandId(catalogOptions),
+      categoryId: "",
+      expansionId: "",
+      formatId: "",
+      languageCode: "ES",
+      variantLabel: "",
+      price: 0,
+      compareAtPrice: undefined,
+      stock: 0,
+      active: true,
+      featured: false,
+      isPreorder: false,
+      tags: [],
+      attributes: {
+        rarity: "",
+        condition: undefined,
+        badge: "",
+      },
+      coverImagePath: "",
+      galleryImagePaths: [],
+    };
   }
 
   return {
@@ -89,8 +113,12 @@ function buildInitialValues(product?: AdminProductDetail | null): ProductFormVal
     name: product.name,
     description: product.description,
     productType: product.productType,
-    brandSlug: product.brandSlug,
+    brandId: product.brandId,
     categoryId: product.categoryId,
+    expansionId: product.expansionId,
+    formatId: product.formatId,
+    languageCode: product.languageCode,
+    variantLabel: product.variantLabel ?? "",
     price: product.price,
     compareAtPrice: product.compareAtPrice,
     stock: product.stock,
@@ -99,8 +127,6 @@ function buildInitialValues(product?: AdminProductDetail | null): ProductFormVal
     isPreorder: product.isPreorder,
     tags: product.tags,
     attributes: {
-      expansion: product.attributes.expansion ?? "",
-      language: product.attributes.language,
       rarity: product.attributes.rarity ?? "",
       condition: product.attributes.condition,
       badge: product.attributes.badge ?? "",
@@ -110,27 +136,94 @@ function buildInitialValues(product?: AdminProductDetail | null): ProductFormVal
   };
 }
 
-function brandLabel(brandSlug: string) {
-  switch (brandSlug) {
-    case "pokemon":
-      return "Pokemon";
-    case "one-piece":
-      return "One Piece";
-    case "riftbound":
-      return "Riftbound";
-    case "magic":
-      return "Magic";
-    case "accesorios":
-      return "Accesorios";
-    default:
-      return brandSlug;
+function getBrandLabel(
+  catalogOptions: AdminProductCatalogOptions,
+  brandId: string,
+) {
+  return catalogOptions.brands.find((brand) => brand.id === brandId)?.label ?? "la marca";
+}
+
+function getVariantOptions(
+  catalogOptions: AdminProductCatalogOptions,
+  expansionId: string,
+  formatId: string,
+  languageCode: ProductLanguage,
+) {
+  const matchingAvailabilities = catalogOptions.availabilities.filter(
+    (availability) =>
+      availability.expansionId === expansionId &&
+      availability.formatId === formatId &&
+      availability.languageCode === languageCode,
+  );
+
+  const variantValues = Array.from(
+    new Set(
+      matchingAvailabilities
+        .map((availability) => availability.variantLabel?.trim() ?? "")
+        .filter((value, index, values) => values.indexOf(value) === index),
+    ),
+  );
+
+  return variantValues;
+}
+
+function getGeneratedProductIdentifiers(input: {
+  catalogOptions: AdminProductCatalogOptions;
+  brandId: string;
+  expansionId: string;
+  formatId: string;
+  languageCode: ProductLanguage;
+  variantLabel: string;
+  name: string;
+}) {
+  const brand = input.catalogOptions.brands.find((entry) => entry.id === input.brandId);
+  const expansion = input.catalogOptions.expansions.find((entry) => entry.id === input.expansionId);
+  const format = input.catalogOptions.formats.find((entry) => entry.id === input.formatId);
+
+  if (!brand || !expansion || !format || !input.name.trim()) {
+    return {
+      slug: "",
+      sku: "",
+    };
   }
+
+  return {
+    slug: buildGeneratedProductSlug({
+      brandSlug: brand.slug,
+      expansionSlug: expansion.slug,
+      formatSlug: format.slug,
+      languageCode: input.languageCode,
+      variantLabel: input.variantLabel,
+      name: input.name,
+    }),
+    sku: buildGeneratedProductSku({
+      brandSlug: brand.slug,
+      expansionSlug: expansion.slug,
+      formatSlug: format.slug,
+      languageCode: input.languageCode,
+      variantLabel: input.variantLabel,
+      name: input.name,
+    }),
+  };
+}
+
+function matchesInitialAvailabilitySelection(
+  availability: AdminProductCatalogOptions["availabilities"][number],
+  values: ProductFormValues,
+) {
+  return (
+    availability.expansionId === values.expansionId &&
+    availability.formatId === values.formatId &&
+    availability.languageCode === values.languageCode &&
+    (availability.variantLabel ?? "") === values.variantLabel
+  );
 }
 
 export function ProductForm({
   mode,
   action,
   categories,
+  catalogOptions,
   product,
   error,
   success,
@@ -138,65 +231,159 @@ export function ProductForm({
   mode: "create" | "edit";
   action: (formData: FormData) => void | Promise<void>;
   categories: AdminCategoryOption[];
+  catalogOptions: AdminProductCatalogOptions;
   product?: AdminProductDetail | null;
   error?: string;
   success?: string;
 }) {
-  const values = buildInitialValues(product);
-  const [brandSlug, setBrandSlug] = useState(values.brandSlug);
+  const values = buildInitialValues(product, catalogOptions);
+  const [brandId, setBrandId] = useState(values.brandId);
   const [categoryId, setCategoryId] = useState(values.categoryId);
-  const availableCategories = categories.filter((category) => category.brandSlug === brandSlug);
-  const selectedCategory = availableCategories.find((category) => category.id === categoryId);
-  const coverPlaceholder = values.id
-    ? `products/${values.id}/cover.webp`
-    : "products/{productId}/cover.webp";
-  const galleryPlaceholder = values.id
-    ? `products/${values.id}/gallery/01.webp`
-    : "products/{productId}/gallery/01.webp";
-  const secondGalleryPlaceholder = galleryPlaceholder.replace("/01.", "/02.");
+  const [expansionId, setExpansionId] = useState(values.expansionId);
+  const [formatId, setFormatId] = useState(values.formatId);
+  const [languageCode, setLanguageCode] = useState<ProductLanguage>(values.languageCode);
+  const [variantLabel, setVariantLabel] = useState(values.variantLabel);
+  const [productName, setProductName] = useState(values.name);
+
+  const availableCategories = categories.filter(
+    (category) => category.brandId === brandId || category.id === values.categoryId,
+  );
+  const availableExpansions = catalogOptions.expansions.filter(
+    (expansion) => expansion.brandId === brandId && (expansion.active || expansion.id === values.expansionId),
+  );
+  const availabilityForExpansion = catalogOptions.availabilities.filter(
+    (availability) =>
+      availability.expansionId === expansionId &&
+      (availability.active || matchesInitialAvailabilitySelection(availability, values)),
+  );
+  const availableFormatIds = Array.from(
+    new Set(availabilityForExpansion.map((availability) => availability.formatId)),
+  );
+  const availableFormats = catalogOptions.formats.filter(
+    (format) => availableFormatIds.includes(format.id) || format.id === values.formatId,
+  );
+  const availabilityForFormat = availabilityForExpansion.filter(
+    (availability) => availability.formatId === formatId,
+  );
+  const availableLanguageCodes = Array.from(
+    new Set(availabilityForFormat.map((availability) => availability.languageCode)),
+  ) as ProductLanguage[];
+  const availableLanguages = catalogOptions.languages.filter(
+    (language) =>
+      availableLanguageCodes.includes(language.code) || language.code === values.languageCode,
+  );
+  const variantOptions = getVariantOptions(
+    catalogOptions,
+    expansionId,
+    formatId,
+    languageCode,
+  );
+  const hasExplicitVariants = variantOptions.some((variant) => variant.length > 0);
+  const variantSelectOptions = hasExplicitVariants
+    ? [
+        { value: "", label: "Selecciona una variante" },
+        ...variantOptions
+          .filter((variant) => variant.length > 0)
+          .map((variant) => ({
+            value: variant,
+            label: variant,
+          })),
+      ]
+    : [{ value: "", label: "Sin variante" }];
+  const generatedIdentifiers = getGeneratedProductIdentifiers({
+    catalogOptions,
+    brandId,
+    expansionId,
+    formatId,
+    languageCode,
+    variantLabel,
+    name: productName,
+  });
+
+  useEffect(() => {
+    if (!availableCategories.some((category) => category.id === categoryId)) {
+      setCategoryId(availableCategories[0]?.id ?? "");
+    }
+  }, [availableCategories, categoryId]);
+
+  useEffect(() => {
+    if (!availableExpansions.some((expansion) => expansion.id === expansionId)) {
+      setExpansionId(availableExpansions[0]?.id ?? "");
+    }
+  }, [availableExpansions, expansionId]);
+
+  useEffect(() => {
+    if (!availableFormats.some((format) => format.id === formatId)) {
+      setFormatId(availableFormats[0]?.id ?? "");
+    }
+  }, [availableFormats, formatId]);
+
+  useEffect(() => {
+    if (!availableLanguages.some((language) => language.code === languageCode)) {
+      setLanguageCode(availableLanguages[0]?.code ?? "ES");
+    }
+  }, [availableLanguages, languageCode]);
+
+  useEffect(() => {
+    if (variantOptions.length === 0) {
+      if (variantLabel) {
+        setVariantLabel("");
+      }
+      return;
+    }
+
+    if (!variantOptions.includes(variantLabel)) {
+      setVariantLabel(variantOptions[0] ?? "");
+    }
+  }, [variantOptions, variantLabel]);
 
   function handleBrandChange(event: ChangeEvent<HTMLSelectElement>) {
-    const nextBrandSlug = event.target.value as ProductFormValues["brandSlug"];
-    setBrandSlug(nextBrandSlug);
-    setCategoryId((currentCategoryId) => {
-      const stillValid = categories.some(
-        (category) =>
-          category.id === currentCategoryId && category.brandSlug === nextBrandSlug,
-      );
-
-      return stillValid ? currentCategoryId : "";
-    });
+    setBrandId(event.target.value);
   }
 
   function handleCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
     setCategoryId(event.target.value);
   }
 
+  function handleExpansionChange(event: ChangeEvent<HTMLSelectElement>) {
+    setExpansionId(event.target.value);
+  }
+
+  function handleFormatChange(event: ChangeEvent<HTMLSelectElement>) {
+    setFormatId(event.target.value);
+  }
+
+  function handleLanguageChange(event: ChangeEvent<HTMLSelectElement>) {
+    setLanguageCode(event.target.value as ProductLanguage);
+  }
+
+  function handleVariantChange(event: ChangeEvent<HTMLSelectElement>) {
+    setVariantLabel(event.target.value);
+  }
+
+  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setProductName(event.target.value);
+  }
+
   return (
     <div className="space-y-6">
-      {error ? (
-        <Notice tone="error">{error}</Notice>
-      ) : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {success ? <Notice tone="success">{success}</Notice> : null}
 
-      {success ? (
-        <Notice tone="success">{success}</Notice>
-      ) : null}
-
-      <form action={action} className="space-y-6">
+      <form action={action} encType="multipart/form-data" className="space-y-6">
         {values.id ? <input type="hidden" name="productId" value={values.id} /> : null}
 
         <FormSection
           eyebrow="Core"
           title="Identidad principal del producto"
-          description="Slug, SKU y contenido principal para storefront, admin y scripts."
+          description="Nombre, descripcion y datos base. El slug publico y el SKU interno se generan automaticamente."
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Slug" name="slug" defaultValue={values.slug} required />
-            <Field label="SKU" name="sku" defaultValue={values.sku} required />
             <Field
               label="Nombre"
               name="name"
               defaultValue={values.name}
+              onChange={handleNameChange}
               required
               className="md:col-span-2"
             />
@@ -207,15 +394,25 @@ export function ProductForm({
               required
               className="md:col-span-2"
             />
+            <ReadOnlyValue
+              label="Slug autogenerado"
+              value={generatedIdentifiers.slug || values.slug || "Se generara al completar la estructura."}
+              hint="Se recalcula a partir de marca, expansion, formato, idioma, variante y nombre."
+            />
+            <ReadOnlyValue
+              label="SKU autogenerado"
+              value={generatedIdentifiers.sku || values.sku || "Se generara al completar la estructura."}
+              hint="Se usa para operativa interna y busqueda; no necesitas escribirlo a mano."
+            />
           </div>
         </FormSection>
 
         <FormSection
-          eyebrow="Clasificacion"
-          title="Tipo, marca y categoria"
-          description="La categoria se guarda como `categoryId` y debe pertenecer a la marca elegida."
+          eyebrow="Estructura"
+          title="Marca, expansion, formato e idioma"
+          description="La arquitectura del catalogo sale de BD. Si una combinacion no existe, primero debes crearla en admin."
         >
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <SelectField
               label="Tipo"
               name="productType"
@@ -229,50 +426,132 @@ export function ProductForm({
 
             <SelectField
               label="Marca"
-              name="brandSlug"
-              value={brandSlug}
+              name="brandId"
+              value={brandId}
               onChange={handleBrandChange}
+              options={catalogOptions.brands.map((brand) => ({
+                value: brand.id,
+                label: brand.label,
+              }))}
+            />
+
+            <SelectField
+              label="Categoria storefront"
+              name="categoryId"
+              value={categoryId}
+              onChange={handleCategoryChange}
+              required
+              disabled={availableCategories.length === 0}
               options={[
-                { value: "pokemon", label: "Pokemon" },
-                { value: "one-piece", label: "One Piece" },
-                { value: "riftbound", label: "Riftbound" },
-                { value: "magic", label: "Magic" },
-                { value: "accesorios", label: "Accesorios" },
+                {
+                  value: "",
+                  label:
+                    availableCategories.length > 0
+                      ? "Selecciona una categoria"
+                      : "No hay categorias activas para esta marca",
+                },
+                ...availableCategories.map((category) => ({
+                  value: category.id,
+                  label: category.label,
+                })),
+              ]}
+              hint="Sirve para agrupar y navegar en storefront. No sustituye al formato comercial."
+            />
+
+            <SelectField
+              label="Expansion"
+              name="expansionId"
+              value={expansionId}
+              onChange={handleExpansionChange}
+              required
+              disabled={availableExpansions.length === 0}
+              options={[
+                {
+                  value: "",
+                  label:
+                    availableExpansions.length > 0
+                      ? "Selecciona una expansion"
+                      : "No hay expansiones activas para esta marca",
+                },
+                ...availableExpansions.map((expansion) => ({
+                  value: expansion.id,
+                  label: expansion.label,
+                })),
               ]}
             />
 
-            <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Categoria
-              </span>
-              <select
-                name="categoryId"
-                value={categoryId}
-                onChange={handleCategoryChange}
-                className={selectClassName}
-                disabled={availableCategories.length === 0}
-                required
-              >
-                <option value="">
-                  {availableCategories.length > 0
-                    ? "Selecciona una categoria"
-                    : "No hay categorias activas para esta marca"}
-                </option>
-                {availableCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs leading-5 text-slate-500">
-                {availableCategories.length > 0
-                  ? `${availableCategories.length} categorias activas para ${brandLabel(brandSlug)}.`
-                  : `No hay categorias activas para ${brandLabel(brandSlug)}.`}
-                {selectedCategory?.description
-                  ? ` ${selectedCategory.description}`
-                  : " Si cambias de marca y la categoria anterior ya no aplica, se limpia automaticamente."}
+            <SelectField
+              label="Formato"
+              name="formatId"
+              value={formatId}
+              onChange={handleFormatChange}
+              required
+              disabled={availableFormats.length === 0}
+              options={[
+                {
+                  value: "",
+                  label:
+                    availableFormats.length > 0
+                      ? "Selecciona un formato"
+                      : "No hay formatos activos para esta expansion",
+                },
+                ...availableFormats.map((format) => ({
+                  value: format.id,
+                  label: format.label,
+                })),
+              ]}
+            />
+
+            <SelectField
+              label="Idioma"
+              name="languageCode"
+              value={languageCode}
+              onChange={handleLanguageChange}
+              required
+              disabled={availableLanguages.length === 0}
+              options={[
+                {
+                  value: "",
+                  label:
+                    availableLanguages.length > 0
+                      ? "Selecciona un idioma"
+                      : "No hay idiomas configurados para esta expansion y formato",
+                },
+                ...availableLanguages.map((language) => ({
+                  value: language.code,
+                  label: language.label,
+                })),
+              ]}
+            />
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <SelectField
+              label="Variante"
+              name="variantLabel"
+              value={variantLabel}
+              onChange={handleVariantChange}
+              disabled={!hasExplicitVariants}
+              options={variantSelectOptions}
+            />
+
+            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Regla de seleccion
               </p>
-            </label>
+              <p className="mt-3">
+                Las opciones de formato, idioma y variante dependen de la configuracion activa del
+                catalogo. Si te falta alguna combinacion, creala primero en
+                <span className="text-white"> /admin/catalogo/configuracion</span>.
+              </p>
+              <p className="mt-3 text-xs leading-6 text-slate-500">
+                Marca actual: {getBrandLabel(catalogOptions, brandId)}.
+              </p>
+              <p className="mt-2 text-xs leading-6 text-slate-500">
+                Categoria storefront organiza la navegacion. Formato define el tipo real de
+                producto: ETB, Booster Pack, Bundle, Commander Deck, etc.
+              </p>
+            </div>
           </div>
         </FormSection>
 
@@ -328,27 +607,11 @@ export function ProductForm({
         </FormSection>
 
         <FormSection
-          eyebrow="Attributes"
-          title="Atributos basicos"
-          description="Campos ligeros para singles, sellado, accesorios y lectura editorial del storefront."
+          eyebrow="Atributos"
+          title="Atributos editoriales"
+          description="Deja aqui solo lo secundario: rareza, condicion y badge visual."
         >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <Field
-              label="Expansion"
-              name="expansion"
-              defaultValue={values.attributes.expansion}
-            />
-            <SelectField
-              label="Idioma"
-              name="language"
-              defaultValue={values.attributes.language ?? ""}
-              options={[
-                { value: "", label: "Sin idioma" },
-                { value: "ES", label: "ES" },
-                { value: "EN", label: "EN" },
-                { value: "JP", label: "JP" },
-              ]}
-            />
+          <div className="grid gap-4 md:grid-cols-3">
             <Field label="Rareza" name="rarity" defaultValue={values.attributes.rarity} />
             <SelectField
               label="Condicion"
@@ -367,45 +630,6 @@ export function ProductForm({
         </FormSection>
 
         <FormSection
-          eyebrow="Media V1"
-          title="Rutas simples de portada y galeria"
-          description="No hay uploader todavia. Puedes dejar estos campos vacios al crear y completarlos despues."
-        >
-          <div className="grid gap-4">
-            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Convencion esperada
-              </p>
-              <div className="mt-3 space-y-2 font-mono text-xs text-slate-200">
-                <p>{coverPlaceholder}</p>
-                <p>{galleryPlaceholder}</p>
-                <p>{secondGalleryPlaceholder}</p>
-              </div>
-              <p className="mt-3 text-xs leading-6 text-slate-400">
-                {values.id
-                  ? "Este producto ya tiene id, asi que puedes usar rutas reales basadas en ese UUID."
-                  : "En alta todavia no conoces el UUID final. Puedes dejar la media vacia, crear primero el producto y volver despues para completar los paths exactos."}
-              </p>
-            </div>
-
-            <Field
-              label="Cover image path"
-              name="coverImagePath"
-              defaultValue={values.coverImagePath}
-              placeholder={coverPlaceholder}
-              hint={`Portada canonica recomendada: ${coverPlaceholder}`}
-            />
-            <TextAreaField
-              label="Gallery image paths"
-              name="galleryImagePaths"
-              defaultValue={values.galleryImagePaths.join("\n")}
-              placeholder={`${galleryPlaceholder}\n${secondGalleryPlaceholder}`}
-              hint="Una ruta por linea. Se guardaran en el mismo orden en que las escribas, sin uploader intermedio."
-            />
-          </div>
-        </FormSection>
-
-        <FormSection
           eyebrow="Tags"
           title="Etiquetado simple"
           description="Usa CSV sencillo para acelerar el alta y la edicion."
@@ -414,17 +638,60 @@ export function ProductForm({
             label="Tags"
             name="tags"
             defaultValue={values.tags.join(", ")}
-            placeholder="pokemon, single, chase"
+            placeholder="pokemon, sellado, premium"
             hint="Separadas por coma. El schema las limpia y elimina duplicados."
           />
         </FormSection>
 
+        {mode === "create" ? (
+          <FormSection
+            eyebrow="Media"
+            title="Cover y galeria inicial"
+            description="Puedes dejar el producto listo desde el alta. Si ahora no subes imagenes, podras hacerlo despues desde la ficha."
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <FileField
+                label="Cover"
+                name="coverImage"
+                accept="image/webp,image/png,image/jpeg"
+                hint="Opcional. Sube una unica imagen para la portada principal."
+              />
+              <FileField
+                label="Galeria"
+                name="galleryImages"
+                type="file"
+                multiple
+                accept="image/webp,image/png,image/jpeg"
+                hint="Opcional. Puedes seleccionar varias imagenes; se guardan en el orden de seleccion."
+              />
+            </div>
+
+            <div className="mt-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Uploader inicial
+              </p>
+              <p className="mt-3">
+                La creacion del producto y la subida de media ocurren en el mismo flujo. Si la
+                media falla, el producto se crea igualmente y podras completarla despues desde su
+                ficha.
+              </p>
+              <p className="mt-3 text-xs leading-6 text-slate-500">
+                Formatos V1: webp, png, jpg y jpeg. Limite: 8 MB por archivo.
+              </p>
+            </div>
+          </FormSection>
+        ) : null}
+
         <div className="flex flex-col gap-3 rounded-[28px] border border-white/10 bg-black/20 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-slate-400">
             {mode === "edit" && values.id ? (
-              <span>ID del producto: <span className="text-slate-200">{values.id}</span></span>
+              <span>
+                ID del producto: <span className="text-slate-200">{values.id}</span>
+              </span>
             ) : (
-              <span>Si dejas la media vacia al crear, podras completarla despues desde la edicion.</span>
+              <span>
+                Puedes subir cover y galeria ahora mismo o completarlas despues desde la ficha.
+              </span>
             )}
           </div>
 
@@ -509,6 +776,30 @@ function TextAreaField({
   );
 }
 
+function FileField({
+  label,
+  name,
+  hint,
+  className,
+  type,
+  ...props
+}: ComponentPropsWithoutRef<"input"> & {
+  label: string;
+  name: string;
+  hint?: string;
+  className?: string;
+}) {
+  return (
+    <label className={["space-y-2", className].filter(Boolean).join(" ")}>
+      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        {label}
+      </span>
+      <input name={name} type={type ?? "file"} className={fileInputClassName} {...props} />
+      {hint ? <p className="text-xs leading-5 text-slate-500">{hint}</p> : null}
+    </label>
+  );
+}
+
 function SelectField({
   label,
   name,
@@ -516,6 +807,9 @@ function SelectField({
   defaultValue,
   value,
   onChange,
+  required,
+  disabled,
+  hint,
 }: {
   label: string;
   name: string;
@@ -523,6 +817,9 @@ function SelectField({
   defaultValue?: string;
   value?: string;
   onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
+  required?: boolean;
+  disabled?: boolean;
+  hint?: string;
 }) {
   const selectProps =
     value !== undefined
@@ -534,14 +831,61 @@ function SelectField({
       <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
         {label}
       </span>
-      <select name={name} className={selectClassName} {...selectProps}>
+      <NativeSelect name={name} required={required} disabled={disabled} {...selectProps}>
         {options.map((option) => (
-          <option key={option.value || option.label} value={option.value}>
+          <option
+            key={option.value || option.label}
+            value={option.value}
+            className={selectOptionClassName}
+          >
             {option.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
+      {hint ? <p className="text-xs leading-5 text-slate-500">{hint}</p> : null}
     </label>
+  );
+}
+
+function ReadOnlyValue({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        {label}
+      </span>
+      <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">
+        {value}
+      </div>
+      {hint ? <p className="text-xs leading-5 text-slate-500">{hint}</p> : null}
+    </div>
+  );
+}
+
+function NativeSelect({
+  className,
+  children,
+  ...props
+}: ComponentPropsWithoutRef<"select">) {
+  return (
+    <div className="relative">
+      <select
+        className={[selectClassName, className].filter(Boolean).join(" ")}
+        {...props}
+      >
+        {children}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <ChevronDown className="h-4 w-4 text-slate-400" />
+      </div>
+    </div>
   );
 }
 

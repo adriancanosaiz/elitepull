@@ -32,7 +32,7 @@ export function CartPageClient() {
             Tu seleccion actual
           </h1>
           <p className="mt-3 text-base leading-8 text-slate-300">
-            {summary.itemCount} items preparados para pasar a Stripe Checkout.
+            {summary.itemCount} {summary.itemCount === 1 ? "producto listo" : "productos listos"} para completar tu compra.
           </p>
         </div>
 
@@ -140,7 +140,7 @@ export function CartPageClient() {
               Resumen
             </p>
             <h2 className="mt-3 font-heading text-2xl font-semibold text-white">
-              Pedido V1
+              Resumen del pedido
             </h2>
 
             <div className="mt-6 space-y-4 text-sm text-slate-300">

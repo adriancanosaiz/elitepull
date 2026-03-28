@@ -9,6 +9,27 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      brands: {
+        Row: {
+          id: string;
+          slug: string;
+          label: string;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          label: string;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["brands"]["Insert"]>;
+      };
       categories: {
         Row: {
           id: string;
@@ -34,48 +55,169 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["categories"]["Insert"]>;
       };
-      products: {
+      expansions: {
+        Row: {
+          id: string;
+          brand_id: string;
+          slug: string;
+          label: string;
+          release_status: string;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          brand_id: string;
+          slug: string;
+          label: string;
+          release_status?: string;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["expansions"]["Insert"]>;
+      };
+      expansion_format_availability: {
+        Row: {
+          id: string;
+          expansion_id: string;
+          format_id: string;
+          language_code: string;
+          variant_label: string | null;
+          active: boolean;
+          is_preorder_default: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          expansion_id: string;
+          format_id: string;
+          language_code: string;
+          variant_label?: string | null;
+          active?: boolean;
+          is_preorder_default?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["expansion_format_availability"]["Insert"]>;
+      };
+      inventory: {
+        Row: {
+          product_id: string;
+          available_quantity: number;
+          updated_at: string;
+        };
+        Insert: {
+          product_id: string;
+          available_quantity?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["inventory"]["Insert"]>;
+      };
+      orders: {
+        Row: {
+          id: string;
+          status: string;
+          customer_email: string;
+          customer_name: string | null;
+          amount_total: number;
+          currency: string;
+          items_count: number;
+          notes: string | null;
+          source: string | null;
+          metadata: Json;
+          stripe_checkout_session_id: string | null;
+          stripe_payment_intent_id: string | null;
+          shipping_name: string | null;
+          shipping_phone: string | null;
+          shipping_address_json: Json;
+          billing_address_json: Json;
+          shipping_rate_label: string | null;
+          shipping_rate_amount: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          status: string;
+          customer_email: string;
+          customer_name?: string | null;
+          amount_total: number;
+          currency?: string;
+          items_count?: number;
+          notes?: string | null;
+          source?: string | null;
+          metadata?: Json;
+          stripe_checkout_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          shipping_name?: string | null;
+          shipping_phone?: string | null;
+          shipping_address_json?: Json;
+          billing_address_json?: Json;
+          shipping_rate_label?: string | null;
+          shipping_rate_amount?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
+      };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string | null;
+          product_name_snapshot: string;
+          product_slug_snapshot: string;
+          unit_price: number;
+          quantity: number;
+          line_total: number;
+          product_type_snapshot: string;
+          brand_slug_snapshot: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id?: string | null;
+          product_name_snapshot: string;
+          product_slug_snapshot: string;
+          unit_price: number;
+          quantity: number;
+          line_total: number;
+          product_type_snapshot: string;
+          brand_slug_snapshot: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_items"]["Insert"]>;
+      };
+      product_formats: {
         Row: {
           id: string;
           slug: string;
-          sku: string;
-          name: string;
-          description: string;
-          product_type: string;
-          brand_slug: string;
-          category_id: string;
-          price: number;
-          compare_at_price: number | null;
-          featured: boolean;
-          is_preorder: boolean;
+          label: string;
           active: boolean;
-          main_image_path: string | null;
-          attributes: Json;
-          tags: string[];
+          sort_order: number;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           slug: string;
-          sku: string;
-          name: string;
-          description: string;
-          product_type: string;
-          brand_slug: string;
-          category_id: string;
-          price: number;
-          compare_at_price?: number | null;
-          featured?: boolean;
-          is_preorder?: boolean;
+          label: string;
           active?: boolean;
-          main_image_path?: string | null;
-          attributes?: Json;
-          tags?: string[];
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["product_formats"]["Insert"]>;
       };
       product_images: {
         Row: {
@@ -98,18 +240,77 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["product_images"]["Insert"]>;
       };
-      inventory: {
+      product_languages: {
         Row: {
-          product_id: string;
-          available_quantity: number;
+          code: string;
+          label: string;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
           updated_at: string;
         };
         Insert: {
-          product_id: string;
-          available_quantity?: number;
+          code: string;
+          label: string;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["inventory"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["product_languages"]["Insert"]>;
+      };
+      products: {
+        Row: {
+          id: string;
+          slug: string;
+          sku: string;
+          name: string;
+          description: string;
+          product_type: string;
+          brand_slug: string;
+          brand_id: string;
+          category_id: string;
+          expansion_id: string;
+          format_id: string;
+          language_code: string;
+          variant_label: string | null;
+          price: number;
+          compare_at_price: number | null;
+          featured: boolean;
+          is_preorder: boolean;
+          active: boolean;
+          main_image_path: string | null;
+          attributes: Json;
+          tags: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          sku: string;
+          name: string;
+          description: string;
+          product_type: string;
+          brand_slug: string;
+          brand_id: string;
+          category_id: string;
+          expansion_id: string;
+          format_id: string;
+          language_code: string;
+          variant_label?: string | null;
+          price: number;
+          compare_at_price?: number | null;
+          featured?: boolean;
+          is_preorder?: boolean;
+          active?: boolean;
+          main_image_path?: string | null;
+          attributes?: Json;
+          tags?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
       };
       profiles: {
         Row: {

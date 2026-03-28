@@ -23,12 +23,14 @@ export function FilterSidebar({
   brands,
   categories,
   expansions,
+  formats,
   languages,
   price,
 }: {
   brands: CollectionFilterOption[];
   categories: CollectionFilterOption[];
   expansions: CollectionFilterOption[];
+  formats: CollectionFilterOption[];
   languages: CollectionFilterOption[];
   price: CollectionResponse["filters"]["price"];
 }) {
@@ -46,6 +48,7 @@ export function FilterSidebar({
   function updateParams(mutator: (params: URLSearchParams) => void) {
     const params = new URLSearchParams(searchParams.toString());
     mutator(params);
+    params.delete("page");
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
@@ -105,28 +108,38 @@ export function FilterSidebar({
   }
 
   return (
-    <aside className="surface-card h-fit p-5 lg:sticky lg:top-28">
+    <aside className="surface-card relative h-fit overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(14,18,29,0.96),rgba(9,12,19,0.9))] p-5 shadow-[0_20px_48px_rgba(4,8,18,0.18)] lg:sticky lg:top-28">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_70%)]" />
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="relative">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Filtros
+            Navegacion
           </p>
           <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
             Refina la coleccion
           </h2>
+          <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
+            Ajusta marca, categoria, expansion y disponibilidad sin salir del listing.
+          </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => router.push(pathname, { scroll: false })}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="relative rounded-full border-white/[0.12] bg-black/[0.16]"
+          onClick={() => router.push(pathname, { scroll: false })}
+        >
           Limpiar
         </Button>
       </div>
 
-      <div className="mt-6 space-y-6">
+      <div className="relative mt-6 space-y-4">
         <FilterBlock title="Marca">
           <PillWrap>
             {brands.map((brand) => (
               <FilterPill
                 key={brand.value}
                 active={isActive("brand", brand.value)}
+                count={brand.count}
                 onClick={() => toggleMultiParam("brand", brand.value)}
               >
                 {brand.label}
@@ -141,6 +154,7 @@ export function FilterSidebar({
               <FilterPill
                 key={category.value}
                 active={isActive("category", category.value)}
+                count={category.count}
                 onClick={() => toggleMultiParam("category", category.value)}
               >
                 {category.label}
@@ -156,9 +170,27 @@ export function FilterSidebar({
                 <FilterPill
                   key={expansion.value}
                   active={isActive("expansion", expansion.value)}
+                  count={expansion.count}
                   onClick={() => toggleMultiParam("expansion", expansion.value)}
                 >
                   {expansion.label}
+                </FilterPill>
+              ))}
+            </PillWrap>
+          </FilterBlock>
+        ) : null}
+
+        {formats.length > 0 ? (
+          <FilterBlock title="Formato">
+            <PillWrap>
+              {formats.map((format) => (
+                <FilterPill
+                  key={format.value}
+                  active={isActive("format", format.value)}
+                  count={format.count}
+                  onClick={() => toggleMultiParam("format", format.value)}
+                >
+                  {format.label}
                 </FilterPill>
               ))}
             </PillWrap>
@@ -172,6 +204,7 @@ export function FilterSidebar({
                 <FilterPill
                   key={language.value}
                   active={isActive("language", language.value)}
+                  count={language.count}
                   onClick={() => toggleMultiParam("language", language.value)}
                 >
                   {language.label}
@@ -238,7 +271,7 @@ function FilterBlock({
   children: ReactNode;
 }) {
   return (
-    <div>
+    <div className="rounded-[22px] border border-white/[0.08] bg-black/[0.16] p-4">
       <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
         {title}
       </p>
@@ -248,15 +281,17 @@ function FilterBlock({
 }
 
 function PillWrap({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-2">{children}</div>;
+  return <div className="flex flex-wrap gap-2.5">{children}</div>;
 }
 
 function FilterPill({
   active,
+  count,
   children,
   onClick,
 }: {
   active: boolean;
+  count?: number;
   children: ReactNode;
   onClick: () => void;
 }) {
@@ -264,13 +299,24 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition-[border-color,background-color,color,box-shadow]",
         active
-          ? "rounded-full border border-primary/35 bg-primary/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary"
-          : "rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
-      }
+          ? "border-primary/35 bg-primary/15 text-primary shadow-[0_8px_18px_rgba(234,179,8,0.12)]"
+          : "border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white",
+      ].join(" ")}
     >
-      {children}
+      <span>{children}</span>
+      {typeof count === "number" ? (
+        <span
+          className={[
+            "inline-flex min-w-6 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px]",
+            active ? "bg-primary/18 text-primary" : "bg-black/[0.22] text-slate-400",
+          ].join(" ")}
+        >
+          {count}
+        </span>
+      ) : null}
     </button>
   );
 }

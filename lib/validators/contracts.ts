@@ -1,33 +1,6 @@
 import { z } from "zod";
 
-const brandSlugSchema = z.enum([
-  "pokemon",
-  "one-piece",
-  "riftbound",
-  "magic",
-  "accesorios",
-  "preventa",
-]);
-
 const productTypeSchema = z.enum(["sealed", "single", "accessory"]);
-const productCategorySlugSchema = z.enum([
-  "sobres",
-  "etb",
-  "blister-3-sobres",
-  "booster-packs",
-  "ediciones-especiales",
-  "sobres-individuales",
-  "cajas",
-  "commander-decks",
-  "booster-normales",
-  "booster-coleccion",
-  "fundas",
-  "deck-boxes",
-  "binders",
-  "toploaders",
-  "dados-tapetes",
-  "cartas-individuales",
-]);
 const productLanguageSchema = z.enum(["ES", "EN", "JP"]);
 const productConditionSchema = z.enum(["NM", "EX", "LP", "GD"]);
 const sortOptionSchema = z.enum([
@@ -39,13 +12,13 @@ const sortOptionSchema = z.enum([
 ]);
 
 export const productReferenceSchema = z.object({
-  slug: brandSlugSchema,
+  slug: z.string().min(1),
   label: z.string().min(1),
   href: z.string().min(1),
 });
 
 export const categoryReferenceSchema = z.object({
-  slug: productCategorySlugSchema,
+  slug: z.string().min(1),
   label: z.string().min(1),
   href: z.string().min(1).optional(),
 });
@@ -65,7 +38,11 @@ export const productCardItemSchema = z.object({
   featured: z.boolean(),
   isPreorder: z.boolean(),
   expansion: z.string().min(1).optional(),
+  expansionSlug: z.string().min(1).optional(),
+  format: z.string().min(1).optional(),
+  formatSlug: z.string().min(1).optional(),
   language: productLanguageSchema.optional(),
+  variant: z.string().min(1).optional(),
   rarity: z.string().min(1).optional(),
   condition: productConditionSchema.optional(),
   badge: z.string().min(1).optional(),
@@ -91,10 +68,12 @@ export const collectionFilterOptionSchema = z.object({
 });
 
 export const collectionQuerySchema = z.object({
+  page: z.number().int().positive(),
   sort: sortOptionSchema,
-  brand: z.array(brandSlugSchema),
-  category: z.array(productCategorySlugSchema),
+  brand: z.array(z.string().min(1)),
+  category: z.array(z.string().min(1)),
   expansion: z.array(z.string().min(1)),
+  format: z.array(z.string().min(1)),
   language: z.array(productLanguageSchema),
   priceMin: z.number().nonnegative().optional(),
   priceMax: z.number().nonnegative().optional(),
@@ -107,10 +86,18 @@ export const collectionResponseSchema = z.object({
   items: z.array(productCardItemSchema),
   total: z.number().int().nonnegative(),
   query: collectionQuerySchema,
+  pagination: z.object({
+    page: z.number().int().positive(),
+    pageSize: z.number().int().positive(),
+    pageCount: z.number().int().nonnegative(),
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+  }),
   filters: z.object({
     brands: z.array(collectionFilterOptionSchema),
     categories: z.array(collectionFilterOptionSchema),
     expansions: z.array(collectionFilterOptionSchema),
+    formats: z.array(collectionFilterOptionSchema),
     languages: z.array(collectionFilterOptionSchema),
     price: z.object({
       min: z.number().nonnegative(),

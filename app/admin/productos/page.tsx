@@ -157,6 +157,8 @@ function mapListSuccessMessage(code?: string) {
       return "Producto creado correctamente.";
     case "updated":
       return "Producto actualizado correctamente.";
+    case "deleted":
+      return "Producto eliminado correctamente.";
     case "status-updated":
       return "Estado del producto actualizado.";
     case "stock-updated":

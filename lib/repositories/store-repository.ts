@@ -43,7 +43,12 @@ const PRODUCT_SELECT = `
   description,
   product_type,
   brand_slug,
+  brand_id,
   category_id,
+  expansion_id,
+  format_id,
+  language_code,
+  variant_label,
   price,
   compare_at_price,
   featured,
@@ -54,6 +59,22 @@ const PRODUCT_SELECT = `
   tags,
   created_at,
   updated_at,
+  brand:brands!products_brand_id_fkey (
+    id,
+    slug,
+    label
+  ),
+  expansion:expansions!products_expansion_id_fkey (
+    id,
+    slug,
+    label,
+    release_status
+  ),
+  format:product_formats!products_format_id_fkey (
+    id,
+    slug,
+    label
+  ),
   category:categories!products_category_id_fkey (
     id,
     slug,
@@ -306,7 +327,9 @@ export async function getRelatedProducts(
       .filter(
         (candidate) =>
           candidate.id !== product.id &&
-          (candidate.brand === product.brand || candidate.category === product.category),
+          (candidate.brand === product.brand ||
+            candidate.expansionSlug === product.expansionSlug ||
+            candidate.category === product.category),
       )
       .slice(0, limit),
   ).map((item) => productCardItemSchema.parse(item));

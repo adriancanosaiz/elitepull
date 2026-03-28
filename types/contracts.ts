@@ -1,5 +1,4 @@
 import type {
-  BrandSlug,
   ProductCategorySlug,
   ProductCondition,
   ProductLanguage,
@@ -8,7 +7,7 @@ import type {
 } from "@/types/store";
 
 export interface ProductReference {
-  slug: BrandSlug;
+  slug: string;
   label: string;
   href: string;
 }
@@ -34,7 +33,11 @@ export interface ProductCardItem {
   featured: boolean;
   isPreorder: boolean;
   expansion?: string;
+  expansionSlug?: string;
+  format?: string;
+  formatSlug?: string;
   language?: ProductLanguage;
+  variant?: string;
   rarity?: string;
   condition?: ProductCondition;
   badge?: string;
@@ -60,10 +63,12 @@ export interface CollectionFilterOption {
 }
 
 export interface CollectionQuery {
+  page: number;
   sort: SortOption;
-  brand: BrandSlug[];
-  category: ProductCategorySlug[];
+  brand: string[];
+  category: string[];
   expansion: string[];
+  format: string[];
   language: ProductLanguage[];
   priceMin?: number;
   priceMax?: number;
@@ -76,10 +81,18 @@ export interface CollectionResponse {
   items: CollectionItem[];
   total: number;
   query: CollectionQuery;
+  pagination: {
+    page: number;
+    pageSize: number;
+    pageCount: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
   filters: {
     brands: CollectionFilterOption[];
     categories: CollectionFilterOption[];
     expansions: CollectionFilterOption[];
+    formats: CollectionFilterOption[];
     languages: CollectionFilterOption[];
     price: {
       min: number;

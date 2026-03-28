@@ -7,6 +7,7 @@ import {
 } from "@/data/products";
 import { filterProducts, getListingFilterOptions, parseListingFilters } from "@/lib/catalog";
 import { adaptProductsToCollectionItems } from "@/lib/adapters/product-adapter";
+import { COLLECTION_PAGE_SIZE } from "@/lib/routes/query-params";
 import type { CollectionFilterOption, CollectionResponse } from "@/types/contracts";
 import type { Product } from "@/types/store";
 
@@ -31,14 +32,28 @@ export function buildCollectionResponse(
   searchParams: SearchParamsInput,
 ): CollectionResponse {
   const query = parseListingFilters(searchParams);
-  const items = filterProducts(baseProducts, query);
+  const filteredItems = filterProducts(baseProducts, query);
+  const pageCount =
+    filteredItems.length > 0 ? Math.ceil(filteredItems.length / COLLECTION_PAGE_SIZE) : 0;
+  const currentPage =
+    pageCount > 0 ? Math.min(Math.max(query.page, 1), pageCount) : 1;
+  const sliceStart = (currentPage - 1) * COLLECTION_PAGE_SIZE;
+  const paginatedItems = filteredItems.slice(
+    sliceStart,
+    sliceStart + COLLECTION_PAGE_SIZE,
+  );
   const filterOptions = getListingFilterOptions(baseProducts);
 
   const brandCounts = countValues(baseProducts.map((product) => product.brand));
   const categoryCounts = countValues(baseProducts.map((product) => product.category));
   const expansionCounts = countValues(
     baseProducts
-      .map((product) => product.expansion)
+      .map((product) => product.expansionSlug)
+      .filter((expansion): expansion is string => Boolean(expansion)),
+  );
+  const formatCounts = countValues(
+    baseProducts
+      .map((product) => product.formatSlug)
       .filter((expansion): expansion is string => Boolean(expansion)),
   );
   const languageCounts = countValues(
@@ -48,14 +63,24 @@ export function buildCollectionResponse(
   );
 
   return {
-    items: adaptProductsToCollectionItems(items),
-    total: items.length,
-    query,
+    items: adaptProductsToCollectionItems(paginatedItems),
+    total: filteredItems.length,
+    query: {
+      ...query,
+      page: currentPage,
+    },
+    pagination: {
+      page: currentPage,
+      pageSize: COLLECTION_PAGE_SIZE,
+      pageCount,
+      hasNextPage: pageCount > 0 && currentPage < pageCount,
+      hasPreviousPage: currentPage > 1,
+    },
     filters: {
       brands: sortFilterOptions(
         filterOptions.brands.map((brand) => ({
           value: brand.slug,
-          label: brand.shortName,
+          label: brand.label,
           count: brandCounts.get(brand.slug) ?? 0,
         })),
       ),
@@ -68,9 +93,16 @@ export function buildCollectionResponse(
       ),
       expansions: sortFilterOptions(
         filterOptions.expansions.map((expansion) => ({
-          value: expansion,
-          label: expansion,
-          count: expansionCounts.get(expansion) ?? 0,
+          value: expansion.slug,
+          label: expansion.label,
+          count: expansionCounts.get(expansion.slug) ?? 0,
+        })),
+      ),
+      formats: sortFilterOptions(
+        filterOptions.formats.map((format) => ({
+          value: format.slug,
+          label: format.label,
+          count: formatCounts.get(format.slug) ?? 0,
         })),
       ),
       languages: sortFilterOptions(

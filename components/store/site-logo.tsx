@@ -23,7 +23,7 @@ export function SiteLogo({
         </div>
         {!compact ? (
           <p className="text-[10px] uppercase tracking-[0.34em] text-slate-500">
-            Collector Vault
+            TCG Collector Vault
           </p>
         ) : null}
       </div>

@@ -79,10 +79,14 @@ export function ProductsTable({
                     <div className="space-y-1 text-xs text-slate-400">
                       <p>Slug: {product.slug}</p>
                       <p>SKU: {product.sku}</p>
+                      <p>
+                        {product.expansionLabel} · {product.formatLabel} · {product.languageCode}
+                        {product.variantLabel ? ` · ${product.variantLabel}` : ""}
+                      </p>
                     </div>
                   </div>
                 </td>
-                <td className="px-5 py-5 text-slate-200">{brandLabel(product.brandSlug)}</td>
+                <td className="px-5 py-5 text-slate-200">{product.brandLabel}</td>
                 <td className="px-5 py-5 text-slate-200">{product.categoryLabel}</td>
                 <td className="px-5 py-5 text-slate-200">
                   <div className="space-y-1">
@@ -144,8 +148,12 @@ export function ProductsTable({
                 <div className="mt-2 space-y-1 text-xs text-slate-400">
                   <p>Slug: {product.slug}</p>
                   <p>SKU: {product.sku}</p>
-                  <p>Marca: {brandLabel(product.brandSlug)}</p>
+                  <p>Marca: {product.brandLabel}</p>
                   <p>Categoria: {product.categoryLabel}</p>
+                  <p>
+                    {product.expansionLabel} · {product.formatLabel} · {product.languageCode}
+                    {product.variantLabel ? ` · ${product.variantLabel}` : ""}
+                  </p>
                 </div>
               </div>
 
@@ -197,23 +205,6 @@ function formatPrice(value: number) {
     style: "currency",
     currency: "EUR",
   }).format(value);
-}
-
-function brandLabel(brandSlug: string) {
-  switch (brandSlug) {
-    case "pokemon":
-      return "Pokemon";
-    case "one-piece":
-      return "One Piece";
-    case "riftbound":
-      return "Riftbound";
-    case "magic":
-      return "Magic";
-    case "accesorios":
-      return "Accesorios";
-    default:
-      return brandSlug;
-  }
 }
 
 function StockQuickForm({

@@ -1,8 +1,23 @@
 import { ListingPage } from "@/components/store/listing-page";
-import { brandsBySlug } from "@/data/brands";
 import { getCollectionData } from "@/lib/repositories/store-repository";
+import { getStoreBrandBySlug } from "@/lib/repositories/store-taxonomy-repository";
 import { buildCollectionRepositoryInput } from "@/lib/routes/collection-input";
 import type { SearchParamsInput } from "@/lib/routes/query-params";
+import { buildPageMetadata } from "@/lib/site-config";
+
+export const metadata = buildPageMetadata({
+  title: "Accesorios TCG",
+  description:
+    "Descubre fundas, deck boxes, binders, toploaders y accesorios para proteger y organizar tu colección TCG.",
+  path: "/accesorios",
+  keywords: [
+    "accesorios tcg",
+    "fundas cartas",
+    "deck boxes",
+    "binders cartas",
+    "toploaders",
+  ],
+});
 
 export default async function AccessoriesPage({
   searchParams,
@@ -10,7 +25,7 @@ export default async function AccessoriesPage({
   searchParams: Promise<SearchParamsInput>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const brand = brandsBySlug.accesorios;
+  const brand = await getStoreBrandBySlug("accesorios");
   const collection = await getCollectionData(
     buildCollectionRepositoryInput({
       searchParams: resolvedSearchParams,
@@ -21,19 +36,14 @@ export default async function AccessoriesPage({
   return (
     <ListingPage
       title="Accesorios"
-      description={brand.description}
-      eyebrow="Proteccion y setup"
+      description={brand?.description ?? "Accesorios para proteger y organizar tu coleccion TCG."}
       collection={collection}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
         { label: "Accesorios" },
       ]}
-      brand={brand}
+      brand={brand ?? undefined}
       resetHref="/accesorios"
-      categoryPills={brand.categories.map((category) => ({
-        label: category.label,
-        href: category.href,
-      }))}
     />
   );
 }
