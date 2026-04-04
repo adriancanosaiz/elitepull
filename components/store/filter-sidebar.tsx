@@ -114,34 +114,37 @@ export function FilterSidebar({
   return (
     <aside
       className={[
-        "surface-card relative h-fit overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(14,18,29,0.96),rgba(9,12,19,0.9))] shadow-[0_20px_48px_rgba(4,8,18,0.18)]",
-        compact ? "p-4" : "p-5 lg:sticky lg:top-28",
+        compact
+          ? "relative h-fit"
+          : "surface-card relative h-fit overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(14,18,29,0.96),rgba(9,12,19,0.9))] p-5 shadow-[0_20px_48px_rgba(4,8,18,0.18)] lg:sticky lg:top-28",
       ].join(" ")}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_70%)]" />
-      <div className="flex items-start justify-between gap-3">
-        <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Navegacion
-          </p>
-          <h2 className="mt-2 font-heading text-xl font-semibold text-white sm:text-2xl">
-            Refina la coleccion
-          </h2>
-          <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
-            Ajusta marca, categoria, expansion y disponibilidad sin salir del listing.
-          </p>
+      {!compact ? <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_70%)]" /> : null}
+      {!compact ? (
+        <div className="flex items-start justify-between gap-3">
+          <div className="relative">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+              Navegacion
+            </p>
+            <h2 className="mt-2 font-heading text-xl font-semibold text-white sm:text-2xl">
+              Refina la coleccion
+            </h2>
+            <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
+              Ajusta marca, categoria, expansion y disponibilidad sin salir del listing.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="relative rounded-full border-white/[0.12] bg-black/[0.16]"
+            onClick={() => router.push(pathname, { scroll: false })}
+          >
+            Limpiar
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="relative rounded-full border-white/[0.12] bg-black/[0.16]"
-          onClick={() => router.push(pathname, { scroll: false })}
-        >
-          Limpiar
-        </Button>
-      </div>
+      ) : null}
 
-      <div className="relative mt-5 space-y-3.5 sm:mt-6 sm:space-y-4">
+      <div className={["relative space-y-3.5 sm:space-y-4", compact ? "" : "mt-5 sm:mt-6"].join(" ")}>
         <FilterBlock title="Marca" defaultOpen={true}>
           <PillWrap>
             {brands.map((brand) => (

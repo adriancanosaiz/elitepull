@@ -102,6 +102,19 @@ export function MobileSearchModal({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -129,74 +142,91 @@ export function MobileSearchModal({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm xl:hidden"
+            transition={{ duration: 0.24 }}
+            className="fixed inset-0 z-[60] bg-[rgba(3,6,14,0.78)] backdrop-blur-md xl:hidden"
             onClick={onClose}
           />
 
-          {/* Modal panel — slides up from bottom */}
-          <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", stiffness: 340, damping: 36, mass: 0.9 }}
-            className="fixed inset-x-0 bottom-0 z-[61] xl:hidden"
-            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-          >
-            <div className="mx-3 mb-[calc(72px+0.5rem)] overflow-hidden rounded-[24px] border border-white/[0.1] bg-[linear-gradient(180deg,rgba(12,16,26,0.99),rgba(7,9,16,0.99))] shadow-[0_-24px_64px_rgba(2,6,23,0.6)] backdrop-blur-2xl">
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full bg-white/20" />
+          <div className="fixed inset-0 z-[61] flex items-end xl:hidden">
+            <motion.div
+              initial={{ y: "100%", opacity: 0.9 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0.9 }}
+              transition={{ type: "spring", stiffness: 340, damping: 38, mass: 0.9 }}
+              className="relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.12] bg-[linear-gradient(180deg,rgba(12,16,26,0.995),rgba(7,9,16,0.995))] shadow-[0_-30px_80px_rgba(2,6,23,0.64)] backdrop-blur-2xl"
+              style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_72%)]" />
+
+              <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.98),rgba(12,16,26,0.92))] px-5 pb-4 pt-3 backdrop-blur-2xl">
+                <div className="flex justify-center">
+                  <div className="h-1 w-10 rounded-full bg-white/20" />
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Navegación
+                    </p>
+                    <h2 className="mt-1 font-heading text-xl font-semibold text-white">
+                      Buscar
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 active:opacity-60"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="mt-4">
+                  <div className="flex items-center gap-3 rounded-[20px] border border-white/[0.12] bg-white/[0.06] px-4 py-3">
+                    <Search className="h-4 w-4 shrink-0 text-primary/80" />
+                    <input
+                      ref={inputRef}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="min-w-0 flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-400 focus:outline-none"
+                      placeholder="Busca Pokemon, Magic, cartas..."
+                      aria-label="Buscar en la tienda"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                    />
+                    {hasQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => setQuery("")}
+                        className="shrink-0 rounded-full p-1 text-slate-400 active:opacity-60"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                  </div>
+                </form>
               </div>
 
-              {/* Search input */}
-              <form onSubmit={handleSubmit} className="px-4 pt-2 pb-3">
-                <div className="flex items-center gap-3 rounded-[20px] border border-white/[0.12] bg-white/[0.06] px-4 py-3">
-                  <Search className="h-4 w-4 shrink-0 text-primary/80" />
-                  <input
-                    ref={inputRef}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="min-w-0 flex-1 bg-transparent text-[15px] text-white placeholder:text-slate-400 focus:outline-none"
-                    placeholder={`Busca Pokémon, Magic, cartas...`}
-                    aria-label="Buscar en la tienda"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                  />
-                  {hasQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setQuery("")}
-                      className="shrink-0 rounded-full p-1 text-slate-400 active:opacity-60"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </form>
-
-              {/* Results */}
-              {!hasQuery && (
-                <p className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  Sugerencias rápidas
+              {!hasQuery ? (
+                <p className="px-5 pb-2 pt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Marcas y categorías
                 </p>
-              )}
+              ) : null}
 
-              <div className="max-h-[55svh] overflow-y-auto px-2 pb-2">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3">
                 {results.length > 0 ? (
                   results.map((result) => (
                     <button
                       key={result.id}
                       type="button"
                       onClick={() => navigate(result.href)}
-                      className="flex w-full items-center gap-3 rounded-[16px] px-3 py-3 text-left transition-colors active:bg-white/[0.08]"
+                      className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-left transition-colors active:bg-white/[0.08]"
                     >
                       {result.kind === "brand" && result.brand ? (
                         <BrandGlyph brand={result.brand} size="sm" />
@@ -219,43 +249,47 @@ export function MobileSearchModal({
                     </button>
                   ))
                 ) : (
-                  <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+                  <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
                     <Search className="h-5 w-5 text-slate-600" />
-                    <p className="text-sm font-medium text-slate-300">Sin resultados para &quot;{query}&quot;</p>
+                    <p className="text-sm font-medium text-slate-300">
+                      Sin resultados para &quot;{query}&quot;
+                    </p>
                     <p className="text-xs text-slate-500">Prueba con otro término</p>
                   </div>
                 )}
               </div>
 
-              {/* Quick suggestions row */}
-              <div className="flex flex-wrap gap-2 border-t border-white/[0.06] px-4 pt-3 pb-2">
-                {searchSuggestions.slice(0, 4).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setQuery(s)}
-                    className={cn(
-                      "rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5",
-                      "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300",
-                      "active:opacity-60 transition-opacity",
-                      query === s && "border-primary/30 bg-primary/10 text-primary",
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
+              <div className="border-t border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.88),rgba(9,12,19,0.98))] px-4 pb-1 pt-3 backdrop-blur-2xl">
+                <div className="flex flex-wrap gap-2">
+                  {searchSuggestions.slice(0, 4).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setQuery(s)}
+                      className={cn(
+                        "rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5",
+                        "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300",
+                        "active:opacity-60 transition-opacity",
+                        query === s && "border-primary/30 bg-primary/10 text-primary",
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => navigate(getCatalogRoute())}
-                  className="ml-auto flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary active:opacity-60"
+                  className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-[18px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] px-4 text-sm font-semibold text-slate-950 shadow-[0_14px_32px_rgba(214,186,131,0.22)] active:opacity-90"
                 >
-                  <Sparkles className="h-3 w-3" />
-                  Ver todo
-                  <ArrowRight className="h-3 w-3" />
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Ver catálogo completo
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

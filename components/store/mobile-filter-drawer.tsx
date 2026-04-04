@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SlidersHorizontal, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 import { FilterSidebar } from "@/components/store/filter-sidebar";
 import { cn } from "@/lib/utils";
@@ -25,11 +26,30 @@ function getActiveFilterCount(collection: CollectionResponse) {
 
 export function MobileFilterDrawer({ collection }: { collection: CollectionResponse }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
   const activeCount = getActiveFilterCount(collection);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  function clearFilters() {
+    router.push(pathname, { scroll: false });
+    setOpen(false);
+  }
 
   return (
     <>
-      {/* Trigger button — pill style */}
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -54,54 +74,59 @@ export function MobileFilterDrawer({ collection }: { collection: CollectionRespo
         </span>
       </button>
 
-      {/* Bottom sheet */}
       <AnimatePresence>
         {open && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm xl:hidden"
+              transition={{ duration: 0.24 }}
+              className="fixed inset-0 z-[60] bg-[rgba(3,6,14,0.74)] backdrop-blur-md xl:hidden"
               onClick={() => setOpen(false)}
             />
 
-            {/* Sheet panel */}
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 340, damping: 36, mass: 0.85 }}
-              className="fixed inset-x-0 bottom-0 z-[61] xl:hidden"
-              style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-            >
-              <div className="mx-2 mb-[76px] max-h-[80svh] overflow-hidden rounded-[24px] border border-white/[0.1] bg-[linear-gradient(180deg,rgba(12,16,26,0.99),rgba(7,9,16,0.99))] shadow-[0_-24px_64px_rgba(2,6,23,0.55)] backdrop-blur-2xl">
-                {/* Handle */}
-                <div className="flex justify-center pt-3">
-                  <div className="h-1 w-10 rounded-full bg-white/20" />
-                </div>
+            <div className="fixed inset-0 z-[61] flex items-end xl:hidden">
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", stiffness: 340, damping: 38, mass: 0.88 }}
+                className="relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.12] bg-[linear-gradient(180deg,rgba(12,16,26,0.995),rgba(7,9,16,0.995))] shadow-[0_-30px_80px_rgba(2,6,23,0.64)] backdrop-blur-2xl"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_72%)]" />
 
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 pb-3 pt-3">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Catálogo
-                    </p>
-                    <h2 className="mt-1 font-heading text-lg font-semibold text-white">Filtros</h2>
+                <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.98),rgba(12,16,26,0.92))] px-5 pb-4 pt-3 backdrop-blur-2xl">
+                  <div className="flex justify-center">
+                    <div className="h-1 w-10 rounded-full bg-white/20" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-slate-400 active:opacity-60"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+
+                  <div className="mt-3 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                        Catálogo
+                      </p>
+                      <h2 className="mt-1 font-heading text-xl font-semibold text-white">
+                        Filtros
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 active:opacity-60"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-400">
+                    <span>{activeCount > 0 ? `${activeCount} filtros activos` : "Sin filtros activos"}</span>
+                    <span>{collection.total} resultados</span>
+                  </div>
                 </div>
 
-                {/* Filter content */}
-                <div className="overflow-y-auto px-4 pb-4" style={{ maxHeight: "calc(80svh - 100px)" }}>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
                   <FilterSidebar
                     brands={collection.filters.brands}
                     categories={collection.filters.categories}
@@ -112,8 +137,27 @@ export function MobileFilterDrawer({ collection }: { collection: CollectionRespo
                     compact
                   />
                 </div>
-              </div>
-            </motion.div>
+
+                <div className="border-t border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.88),rgba(9,12,19,0.98))] px-4 pb-1 pt-3 backdrop-blur-2xl">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="inline-flex h-12 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white active:opacity-60"
+                    >
+                      Limpiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex h-12 min-w-0 flex-1 items-center justify-center rounded-[18px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] px-4 text-sm font-semibold text-slate-950 shadow-[0_14px_32px_rgba(214,186,131,0.22)] active:opacity-90"
+                    >
+                      Ver {collection.total} resultados
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
