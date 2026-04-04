@@ -128,7 +128,6 @@ export function ListingPage({
             brands={collection.filters.brands}
             categories={collection.filters.categories}
             expansions={collection.filters.expansions}
-            formats={collection.filters.formats}
             languages={collection.filters.languages}
             price={collection.filters.price}
           />

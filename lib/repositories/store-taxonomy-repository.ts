@@ -23,10 +23,15 @@ type PublicBrandRow = Pick<
   "id" | "slug" | "label" | "active" | "sort_order"
 >;
 
-type PublicCategoryRow = Pick<
-  Database["public"]["Tables"]["categories"]["Row"],
-  "id" | "slug" | "label" | "description" | "brand_slug" | "sort_order" | "active"
+type PublicFormatRow = Pick<
+  Database["public"]["Tables"]["product_formats"]["Row"],
+  "id" | "slug" | "label" | "sort_order" | "active"
 >;
+
+type PublicProductFormatRow = {
+  brand_slug: string;
+  format: PublicFormatRow | null;
+};
 
 function humanizeSlug(value: string) {
   return value
@@ -38,15 +43,43 @@ function humanizeSlug(value: string) {
 
 function buildBrandCategories(
   brandSlug: string,
-  rows: PublicCategoryRow[],
+  rows: PublicFormatRow[],
 ): BrandCategory[] {
-  return rows.map((category) => ({
-    id: category.id,
-    slug: category.slug,
-    label: category.label,
-    description: category.description ?? `Explora ${category.label} en ${humanizeSlug(brandSlug)}.`,
-    href: getCategoryRoute(brandSlug, category.slug),
-  }));
+  const preset = brandsBySlug[brandSlug];
+
+  return rows.map((format) => {
+    const presetCategory = preset?.categories.find((entry) => entry.slug === format.slug);
+
+    return {
+      id: format.id,
+      slug: format.slug,
+      label: format.label,
+      description:
+        presetCategory?.description ??
+        `Explora ${format.label} en ${humanizeSlug(brandSlug)}.`,
+      href: presetCategory?.href ?? getCategoryRoute(brandSlug, format.slug),
+    };
+  });
+}
+
+function buildBrandCategoriesFromProducts(
+  products: PublicProductFormatRow[],
+  brandSlug: string,
+) {
+  const seen = new Map<string, PublicFormatRow>();
+
+  for (const product of products) {
+    if (product.brand_slug !== brandSlug || !product.format?.active) {
+      continue;
+    }
+
+    if (!seen.has(product.format.slug)) {
+      seen.set(product.format.slug, product.format);
+    }
+  }
+
+  return Array.from(seen.values())
+    .sort((left, right) => left.sort_order - right.sort_order || left.label.localeCompare(right.label, "es"));
 }
 
 function buildBrandPresentation(
@@ -91,7 +124,7 @@ const getPublicTaxonomy = cache(async () => {
     return null;
   }
 
-  const [{ data: brands, error: brandsError }, { data: categories, error: categoriesError }] =
+  const [{ data: brands, error: brandsError }, { data: products, error: productsError }] =
     await Promise.all([
       client
         .from("brands")
@@ -99,25 +132,34 @@ const getPublicTaxonomy = cache(async () => {
         .eq("active", true)
         .order("sort_order", { ascending: true }),
       client
-        .from("categories")
-        .select("id, slug, label, description, brand_slug, sort_order, active")
+        .from("products")
+        .select(`
+          brand_slug,
+          format:product_formats!products_format_id_fkey (
+            id,
+            slug,
+            label,
+            sort_order,
+            active
+          )
+        `)
         .eq("active", true)
-        .order("sort_order", { ascending: true }),
+        .not("format_id", "is", null),
     ]);
 
   if (brandsError) {
     throw new Error(`[store-taxonomy] No se pudieron cargar las marcas: ${brandsError.message}`);
   }
 
-  if (categoriesError) {
+  if (productsError) {
     throw new Error(
-      `[store-taxonomy] No se pudieron cargar las categorias activas: ${categoriesError.message}`,
+      `[store-taxonomy] No se pudieron cargar los formatos publicos: ${productsError.message}`,
     );
   }
 
   return {
     brands: (brands ?? []) as PublicBrandRow[],
-    categories: (categories ?? []) as PublicCategoryRow[],
+    products: (products ?? []) as PublicProductFormatRow[],
   };
 });
 
@@ -136,7 +178,7 @@ export async function getStoreBrandBySlug(brandSlug: string): Promise<Brand | nu
 
   const categories = buildBrandCategories(
     brandSlug,
-    taxonomy.categories.filter((category) => category.brand_slug === brandSlug),
+    buildBrandCategoriesFromProducts(taxonomy.products, brandSlug),
   );
 
   return buildBrandPresentation(brandRow, categories);
@@ -153,20 +195,14 @@ export async function getStoreCategoryByBrandAndSlug(
     return brand?.categories.find((category) => category.slug === categorySlug) ?? null;
   }
 
-  const category = taxonomy.categories.find(
-    (entry) => entry.brand_slug === brandSlug && entry.slug === categorySlug,
-  );
+  const category = buildBrandCategories(
+    brandSlug,
+    buildBrandCategoriesFromProducts(taxonomy.products, brandSlug),
+  ).find((entry) => entry.slug === categorySlug);
 
   if (!category) {
     return null;
   }
 
-  return {
-    id: category.id,
-    slug: category.slug,
-    label: category.label,
-    description:
-      category.description ?? `Explora ${category.label} dentro de ${humanizeSlug(brandSlug)}.`,
-    href: getCategoryRoute(brandSlug, category.slug),
-  };
+  return category;
 }

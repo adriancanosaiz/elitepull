@@ -47,6 +47,7 @@ export interface ProductCardItem {
 
 export interface ProductDetail extends ProductCardItem {
   images: string[];
+  imageAlts?: string[];
   stockLabel: string;
   details: Array<{
     label: string;

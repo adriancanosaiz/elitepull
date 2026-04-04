@@ -52,6 +52,7 @@ export const productCardItemSchema = z.object({
 
 export const productDetailSchema = productCardItemSchema.extend({
   images: z.array(z.string().min(1)).min(1),
+  imageAlts: z.array(z.string().min(1)).optional(),
   stockLabel: z.string().min(1),
   details: z.array(
     z.object({

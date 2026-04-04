@@ -84,6 +84,7 @@ export default async function ProductPage({
             <StoreReveal className="mt-5 grid gap-5 xl:mt-6 xl:grid-cols-[1.08fr_0.92fr] xl:items-start">
               <ProductGallery
                 images={product.images}
+                imageAlts={product.imageAlts}
                 name={product.name}
                 fallbackSrc={getProductFallbackImage(product.type)}
               />

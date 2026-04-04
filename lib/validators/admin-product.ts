@@ -19,6 +19,18 @@ function normalizeOptionalString(value: unknown) {
   return trimmedValue.length > 0 ? trimmedValue : undefined;
 }
 
+function normalizeRequiredString(value: unknown) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return value.trim();
+}
+
 function parseFormBoolean(value: unknown) {
   if (value === true || value === "true" || value === "on") {
     return true;
@@ -84,6 +96,26 @@ const optionalTextField = z.preprocess(
   z.string().min(1).optional(),
 );
 
+function createRequiredTextField(message: string) {
+  return z.preprocess(
+    normalizeRequiredString,
+    z.string(message).trim().min(1, message),
+  );
+}
+
+function createRequiredUuidField(message: string) {
+  return createRequiredTextField(message).pipe(createUuidLikeSchema(message));
+}
+
+function createRequiredEnumField<const TValues extends readonly [string, ...string[]]>(
+  values: TValues,
+  message: string,
+) {
+  return createRequiredTextField(message)
+    .refine((value): value is TValues[number] => values.includes(value), message)
+    .transform((value) => value as TValues[number]);
+}
+
 const optionalPriceField = z.preprocess(
   parseOptionalNumber,
   z.number().nonnegative("El precio no puede ser negativo.").optional(),
@@ -125,18 +157,25 @@ export const adminProductSchema = z
     ),
     slug: optionalTextField,
     sku: optionalTextField,
-    name: z.string().trim().min(1, "El nombre es obligatorio."),
-    description: z.string().trim().min(1, "La descripcion es obligatoria."),
-    productType: productTypeSchema,
-    brandId: createUuidLikeSchema("La marca seleccionada no es valida."),
-    categoryId: createUuidLikeSchema("La categoria seleccionada no es valida."),
-    expansionId: createUuidLikeSchema("La expansion seleccionada no es valida."),
-    formatId: createUuidLikeSchema("El formato seleccionado no es valido."),
-    languageCode: productLanguageSchema,
+    name: createRequiredTextField("El nombre es obligatorio."),
+    description: createRequiredTextField("La descripcion es obligatoria."),
+    productType: createRequiredEnumField(
+      ["sealed", "single", "accessory"],
+      "Selecciona el tipo de producto.",
+    ),
+    brandId: createRequiredUuidField("Selecciona una marca valida."),
+    expansionId: createRequiredUuidField("Selecciona una expansion valida."),
+    formatId: createRequiredUuidField("Selecciona un formato valido."),
+    languageCode: createRequiredEnumField(
+      ["ES", "EN", "JP"],
+      "Selecciona un idioma valido.",
+    ),
     variantLabel: optionalTextField,
     price: z.preprocess(
       parseOptionalNumber,
-      z.number().nonnegative("El precio no puede ser negativo."),
+      z
+        .number("Introduce un precio valido.")
+        .nonnegative("El precio no puede ser negativo."),
     ),
     compareAtPrice: optionalPriceField,
     featured: z.preprocess(parseFormBoolean, z.boolean()),
@@ -145,7 +184,7 @@ export const adminProductSchema = z
     stock: z.preprocess(
       parseOptionalNumber,
       z
-        .number()
+        .number("Introduce un stock valido.")
         .int("El stock debe ser un entero.")
         .nonnegative("El stock no puede ser negativo."),
     ),

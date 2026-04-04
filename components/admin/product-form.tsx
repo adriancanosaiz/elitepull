@@ -18,10 +18,7 @@ import {
 } from "@/lib/admin/catalog-identifiers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type {
-  AdminCategoryOption,
-  AdminProductDetail,
-} from "@/lib/admin/products";
+import type { AdminProductDetail } from "@/lib/admin/products";
 import type {
   AdminProductCatalogOptions,
 } from "@/lib/admin/catalog-taxonomy";
@@ -46,7 +43,6 @@ type ProductFormValues = {
   description: string;
   productType: "sealed" | "single" | "accessory";
   brandId: string;
-  categoryId: string;
   expansionId: string;
   formatId: string;
   languageCode: ProductLanguage;
@@ -84,7 +80,6 @@ function buildInitialValues(
       description: "",
       productType: "sealed",
       brandId: getDefaultBrandId(catalogOptions),
-      categoryId: "",
       expansionId: "",
       formatId: "",
       languageCode: "ES",
@@ -114,7 +109,6 @@ function buildInitialValues(
     description: product.description,
     productType: product.productType,
     brandId: product.brandId,
-    categoryId: product.categoryId,
     expansionId: product.expansionId,
     formatId: product.formatId,
     languageCode: product.languageCode,
@@ -219,10 +213,11 @@ function matchesInitialAvailabilitySelection(
   );
 }
 
+import { AdminProductImageManager } from "@/components/admin/product-image-manager";
+
 export function ProductForm({
   mode,
   action,
-  categories,
   catalogOptions,
   product,
   error,
@@ -230,7 +225,6 @@ export function ProductForm({
 }: {
   mode: "create" | "edit";
   action: (formData: FormData) => void | Promise<void>;
-  categories: AdminCategoryOption[];
   catalogOptions: AdminProductCatalogOptions;
   product?: AdminProductDetail | null;
   error?: string;
@@ -238,16 +232,13 @@ export function ProductForm({
 }) {
   const values = buildInitialValues(product, catalogOptions);
   const [brandId, setBrandId] = useState(values.brandId);
-  const [categoryId, setCategoryId] = useState(values.categoryId);
   const [expansionId, setExpansionId] = useState(values.expansionId);
   const [formatId, setFormatId] = useState(values.formatId);
   const [languageCode, setLanguageCode] = useState<ProductLanguage>(values.languageCode);
   const [variantLabel, setVariantLabel] = useState(values.variantLabel);
   const [productName, setProductName] = useState(values.name);
 
-  const availableCategories = categories.filter(
-    (category) => category.brandId === brandId || category.id === values.categoryId,
-  );
+  // ... calculation state continues ...
   const availableExpansions = catalogOptions.expansions.filter(
     (expansion) => expansion.brandId === brandId && (expansion.active || expansion.id === values.expansionId),
   );
@@ -278,6 +269,14 @@ export function ProductForm({
     formatId,
     languageCode,
   );
+  const canSubmitCatalogStructure =
+    Boolean(brandId) &&
+    availableExpansions.length > 0 &&
+    Boolean(expansionId) &&
+    availableFormats.length > 0 &&
+    Boolean(formatId) &&
+    availableLanguages.length > 0 &&
+    Boolean(languageCode);
   const hasExplicitVariants = variantOptions.some((variant) => variant.length > 0);
   const variantSelectOptions = hasExplicitVariants
     ? [
@@ -299,12 +298,6 @@ export function ProductForm({
     variantLabel,
     name: productName,
   });
-
-  useEffect(() => {
-    if (!availableCategories.some((category) => category.id === categoryId)) {
-      setCategoryId(availableCategories[0]?.id ?? "");
-    }
-  }, [availableCategories, categoryId]);
 
   useEffect(() => {
     if (!availableExpansions.some((expansion) => expansion.id === expansionId)) {
@@ -341,10 +334,6 @@ export function ProductForm({
     setBrandId(event.target.value);
   }
 
-  function handleCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
-    setCategoryId(event.target.value);
-  }
-
   function handleExpansionChange(event: ChangeEvent<HTMLSelectElement>) {
     setExpansionId(event.target.value);
   }
@@ -370,17 +359,25 @@ export function ProductForm({
       {error ? <Notice tone="error">{error}</Notice> : null}
       {success ? <Notice tone="success">{success}</Notice> : null}
 
+      {mode === "edit" && values.id ? (
+         <AdminProductImageManager 
+            productId={values.id} 
+            coverImagePath={values.coverImagePath} 
+            galleryImagePaths={values.galleryImagePaths} 
+         /> 
+      ) : null}
+
       <form action={action} encType="multipart/form-data" className="space-y-6">
         {values.id ? <input type="hidden" name="productId" value={values.id} /> : null}
 
         <FormSection
-          eyebrow="Core"
-          title="Identidad principal del producto"
-          description="Nombre, descripcion y datos base. El slug publico y el SKU interno se generan automaticamente."
+          eyebrow="Información básica"
+          title="Nombre y descripción del producto"
+          description="Escribe el nombre y descripción tal como los verán los clientes en la tienda. El resto (identificadores internos) se generan solos."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <Field
-              label="Nombre"
+              label="Nombre del producto"
               name="name"
               defaultValue={values.name}
               onChange={handleNameChange}
@@ -388,31 +385,31 @@ export function ProductForm({
               className="md:col-span-2"
             />
             <TextAreaField
-              label="Descripcion"
+              label="Descripción"
               name="description"
               defaultValue={values.description}
               required
               className="md:col-span-2"
             />
             <ReadOnlyValue
-              label="Slug autogenerado"
-              value={generatedIdentifiers.slug || values.slug || "Se generara al completar la estructura."}
-              hint="Se recalcula a partir de marca, expansion, formato, idioma, variante y nombre."
+              label="URL del producto (se genera solo)"
+              value={generatedIdentifiers.slug || values.slug || "Se generará automáticamente cuando rellenes la estructura."}
+              hint="La dirección web del producto. No tienes que escribirla tú."
             />
             <ReadOnlyValue
-              label="SKU autogenerado"
-              value={generatedIdentifiers.sku || values.sku || "Se generara al completar la estructura."}
-              hint="Se usa para operativa interna y busqueda; no necesitas escribirlo a mano."
+              label="Código interno (se genera solo)"
+              value={generatedIdentifiers.sku || values.sku || "Se generará automáticamente cuando rellenes la estructura."}
+              hint="Código para uso interno. Se genera solo a partir del nombre y la estructura."
             />
           </div>
         </FormSection>
 
         <FormSection
-          eyebrow="Estructura"
-          title="Marca, expansion, formato e idioma"
-          description="La arquitectura del catalogo sale de BD. Si una combinacion no existe, primero debes crearla en admin."
+          eyebrow="Estructura del catálogo"
+          title="¿A qué marca, expansión y formato pertenece?"
+          description="Primero elige la marca (Pokémon, One Piece…), luego la expansión y el formato. Si no ves la opción que buscas, tendrás que crearla antes en el apartado Catálogo."
         >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <SelectField
               label="Tipo"
               name="productType"
@@ -433,29 +430,6 @@ export function ProductForm({
                 value: brand.id,
                 label: brand.label,
               }))}
-            />
-
-            <SelectField
-              label="Categoria storefront"
-              name="categoryId"
-              value={categoryId}
-              onChange={handleCategoryChange}
-              required
-              disabled={availableCategories.length === 0}
-              options={[
-                {
-                  value: "",
-                  label:
-                    availableCategories.length > 0
-                      ? "Selecciona una categoria"
-                      : "No hay categorias activas para esta marca",
-                },
-                ...availableCategories.map((category) => ({
-                  value: category.id,
-                  label: category.label,
-                })),
-              ]}
-              hint="Sirve para agrupar y navegar en storefront. No sustituye al formato comercial."
             />
 
             <SelectField
@@ -537,28 +511,32 @@ export function ProductForm({
 
             <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Regla de seleccion
+                Cómo funciona
               </p>
               <p className="mt-3">
-                Las opciones de formato, idioma y variante dependen de la configuracion activa del
-                catalogo. Si te falta alguna combinacion, creala primero en
-                <span className="text-white"> /admin/catalogo/configuracion</span>.
+                Selecciona primero la <span className="text-white">marca</span>, luego la expansión y el formato. Los idiomas y variantes disponibles se filtran solos según lo que hayas configurado.
               </p>
               <p className="mt-3 text-xs leading-6 text-slate-500">
-                Marca actual: {getBrandLabel(catalogOptions, brandId)}.
+                Marca seleccionada: {getBrandLabel(catalogOptions, brandId)}.
               </p>
               <p className="mt-2 text-xs leading-6 text-slate-500">
-                Categoria storefront organiza la navegacion. Formato define el tipo real de
-                producto: ETB, Booster Pack, Bundle, Commander Deck, etc.
+                Si no ves el formato o idioma que necesitas, ve a <span className="text-white">Catálogo → Configuración</span> y añádelo allí primero.
               </p>
             </div>
           </div>
+
+          {!canSubmitCatalogStructure ? (
+            <div className="mt-4 rounded-[24px] border border-amber-400/20 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100">
+              No se puede crear el producto todavía. Completa una estructura válida de marca,
+              expansión, formato e idioma antes de guardar.
+            </div>
+          ) : null}
         </FormSection>
 
         <FormSection
-          eyebrow="Pricing"
-          title="Precio y stock"
-          description="Configuracion simple de precio actual, precio comparado y stock disponible."
+          eyebrow="Precio y disponibilidad"
+          title="¿Cuánto cuesta y cuántas unidades tienes?"
+          description="Introduce el precio de venta y el stock disponible. El precio comparado es el precio anterior (tachado) que se muestra en la tienda cuando hay descuento."
         >
           <div className="grid gap-4 md:grid-cols-3">
             <Field
@@ -591,15 +569,15 @@ export function ProductForm({
         </FormSection>
 
         <FormSection
-          eyebrow="Flags"
-          title="Estado editorial"
-          description="Control rapido para storefront, visibilidad y campañas de preventa."
+          eyebrow="Visibilidad"
+          title="¿Cómo aparece en la tienda?"
+          description="Controla si el producto es visible, si aparece destacado en portada y si está en modo preventa (los clientes pueden verlo pero el pedido se gestiona diferente)."
         >
           <div className="grid gap-4 md:grid-cols-3">
-            <CheckboxField label="Activo" name="active" defaultChecked={values.active} />
-            <CheckboxField label="Featured" name="featured" defaultChecked={values.featured} />
+            <CheckboxField label="Visible en la tienda" name="active" defaultChecked={values.active} />
+            <CheckboxField label="Destacado en portada" name="featured" defaultChecked={values.featured} />
             <CheckboxField
-              label="Preventa"
+              label="En preventa"
               name="isPreorder"
               defaultChecked={values.isPreorder}
             />
@@ -607,76 +585,75 @@ export function ProductForm({
         </FormSection>
 
         <FormSection
-          eyebrow="Atributos"
-          title="Atributos editoriales"
-          description="Deja aqui solo lo secundario: rareza, condicion y badge visual."
+          eyebrow="Detalles adicionales"
+          title="Rareza, condición y etiqueta"
+          description="Campos opcionales para cartas individuales o productos con condición específica. La mayoría de productos sellados se pueden dejar en blanco."
         >
           <div className="grid gap-4 md:grid-cols-3">
-            <Field label="Rareza" name="rarity" defaultValue={values.attributes.rarity} />
+            <Field label="Rareza" name="rarity" defaultValue={values.attributes.rarity} placeholder="Ej: Rare, Ultra Rare" />
             <SelectField
-              label="Condicion"
+              label="Condición"
               name="condition"
               defaultValue={values.attributes.condition ?? ""}
               options={[
-                { value: "", label: "Sin condicion" },
-                { value: "NM", label: "NM" },
-                { value: "EX", label: "EX" },
-                { value: "LP", label: "LP" },
-                { value: "GD", label: "GD" },
+                { value: "", label: "Sin condición" },
+                { value: "NM", label: "NM — Near Mint" },
+                { value: "EX", label: "EX — Excellent" },
+                { value: "LP", label: "LP — Lightly Played" },
+                { value: "GD", label: "GD — Good" },
               ]}
             />
-            <Field label="Badge" name="badge" defaultValue={values.attributes.badge} />
+            <Field label="Etiqueta visual" name="badge" defaultValue={values.attributes.badge} placeholder="Ej: Nuevo, Oferta" />
           </div>
         </FormSection>
 
         <FormSection
-          eyebrow="Tags"
-          title="Etiquetado simple"
-          description="Usa CSV sencillo para acelerar el alta y la edicion."
+          eyebrow="Etiquetas"
+          title="Palabras clave del producto"
+          description="Añade etiquetas separadas por coma para facilitar la búsqueda interna. Es opcional."
         >
           <Field
-            label="Tags"
+            label="Etiquetas"
             name="tags"
             defaultValue={values.tags.join(", ")}
-            placeholder="pokemon, sellado, premium"
-            hint="Separadas por coma. El schema las limpia y elimina duplicados."
+            placeholder="pokemon, sellado, booster, preventa"
+            hint="Sepáralas con comas. Se limpian automáticamente."
           />
         </FormSection>
 
         {mode === "create" ? (
           <FormSection
-            eyebrow="Media"
-            title="Cover y galeria inicial"
-            description="Puedes dejar el producto listo desde el alta. Si ahora no subes imagenes, podras hacerlo despues desde la ficha."
+            eyebrow="Imágenes"
+            title="Foto principal y galería"
+            description="Sube la imagen de portada del producto y fotos adicionales. También puedes añadirlas después desde la ficha del producto."
           >
             <div className="grid gap-4 xl:grid-cols-2">
               <FileField
-                label="Cover"
+                label="Foto principal (portada)"
                 name="coverImage"
                 accept="image/webp,image/png,image/jpeg"
-                hint="Opcional. Sube una unica imagen para la portada principal."
+                hint="Opcional ahora — puedes subirla después. Esta imagen aparece en el listado de la tienda."
               />
               <FileField
-                label="Galeria"
+                label="Galería de fotos"
                 name="galleryImages"
                 type="file"
                 multiple
                 accept="image/webp,image/png,image/jpeg"
-                hint="Opcional. Puedes seleccionar varias imagenes; se guardan en el orden de seleccion."
+                hint="Opcional. Selecciona varias fotos a la vez para mostrarlas en la ficha del producto."
               />
             </div>
 
             <div className="mt-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Uploader inicial
+                Nota sobre las imágenes
               </p>
               <p className="mt-3">
-                La creacion del producto y la subida de media ocurren en el mismo flujo. Si la
-                media falla, el producto se crea igualmente y podras completarla despues desde su
-                ficha.
+                Si ahora no tienes las fotos, no pasa nada — el producto se crea igual y podrás
+                añadir las imágenes después desde la ficha de edición.
               </p>
               <p className="mt-3 text-xs leading-6 text-slate-500">
-                Formatos V1: webp, png, jpg y jpeg. Limite: 8 MB por archivo.
+                Formatos admitidos: webp, png, jpg. Tamaño máximo: 8 MB por imagen.
               </p>
             </div>
           </FormSection>
@@ -685,21 +662,23 @@ export function ProductForm({
         <div className="flex flex-col gap-3 rounded-[28px] border border-white/10 bg-black/20 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-slate-400">
             {mode === "edit" && values.id ? (
-              <span>
-                ID del producto: <span className="text-slate-200">{values.id}</span>
+              <span className="text-xs text-slate-600">
+                ID interno: <span className="text-slate-500">{values.id}</span>
               </span>
             ) : (
               <span>
-                Puedes subir cover y galeria ahora mismo o completarlas despues desde la ficha.
+                {canSubmitCatalogStructure
+                  ? "Rellena los campos obligatorios y pulsa el botón para crear el producto."
+                  : "Falta una estructura válida de catálogo antes de poder guardar."}
               </span>
             )}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild variant="outline" size="lg">
-              <Link href="/admin/productos">Volver al listado</Link>
+              <Link href="/admin/productos">Cancelar y volver</Link>
             </Button>
-            <FormSubmitButton mode={mode} />
+            <FormSubmitButton mode={mode} disabled={!canSubmitCatalogStructure} />
           </div>
         </div>
       </form>
@@ -934,17 +913,19 @@ function Notice({
 
 function FormSubmitButton({
   mode,
+  disabled = false,
 }: {
   mode: "create" | "edit";
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" size="lg" disabled={pending}>
+    <Button type="submit" size="lg" disabled={pending || disabled}>
       {pending
         ? mode === "create"
-          ? "Creando..."
-          : "Guardando..."
+          ? "Creando producto…"
+          : "Guardando cambios…"
         : mode === "create"
           ? "Crear producto"
           : "Guardar cambios"}

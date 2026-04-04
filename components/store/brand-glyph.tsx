@@ -16,7 +16,7 @@ import { brandPalettes } from "@/data/brand-palettes";
 import { cn } from "@/lib/utils";
 import type { BrandSlug } from "@/types/store";
 
-const brandGlyphConfig: Record<
+export const brandGlyphConfig: Record<
   BrandSlug,
   {
     icon: LucideIcon;

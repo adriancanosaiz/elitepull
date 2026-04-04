@@ -7,16 +7,18 @@ const selectClassName =
   "flex h-11 w-full appearance-none rounded-2xl border border-white/10 bg-slate-950/90 [color-scheme:dark] px-4 pr-11 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors duration-200 focus-visible:border-primary/40 focus-visible:bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50";
 
 export function AdminCatalogPageHeader({
+  eyebrow,
   title,
   description,
 }: {
+  eyebrow?: string;
   title: string;
   description: string;
 }) {
   return (
     <section className="rounded-[30px] border border-white/10 bg-black/20 p-6 md:p-7">
       <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-200/75">
-        Catalogo maestro
+        {eyebrow ?? "Catálogo"}
       </p>
       <h1 className="mt-3 font-heading text-3xl font-semibold text-white">{title}</h1>
       <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">{description}</p>

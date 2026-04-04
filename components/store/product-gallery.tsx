@@ -22,10 +22,12 @@ import { cn } from "@/lib/utils";
 
 export function ProductGallery({
   images,
+  imageAlts,
   name,
   fallbackSrc,
 }: {
   images: string[];
+  imageAlts?: string[];
   name: string;
   fallbackSrc: string;
 }) {
@@ -88,6 +90,12 @@ export function ProductGallery({
     glowY.set(relativeY * 100);
   }
 
+  const activeImageIndex = Math.max(
+    images.findIndex((image) => image === activeImage),
+    0,
+  );
+  const activeImageAlt = imageAlts?.[activeImageIndex] ?? name;
+
   return (
     <div className="space-y-3 sm:space-y-4">
       <div className="surface-card relative overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(16,20,30,0.96),rgba(9,12,19,0.88))] p-3 shadow-[0_24px_60px_rgba(4,8,18,0.24)] sm:p-4">
@@ -148,7 +156,7 @@ export function ProductGallery({
                 <StoreMediaImage
                   src={activeImage}
                   fallbackSrc={fallbackSrc}
-                  alt={name}
+                  alt={activeImageAlt}
                   width={900}
                   height={1100}
                   sizes="(min-width: 1280px) 560px, (min-width: 768px) 50vw, 92vw"
@@ -191,7 +199,7 @@ export function ProductGallery({
             <StoreMediaImage
               src={image}
               fallbackSrc={fallbackSrc}
-              alt={`${name} miniatura ${index + 1}`}
+              alt={imageAlts?.[index] ?? `${name} miniatura ${index + 1}`}
               width={220}
               height={260}
               sizes="(min-width: 768px) 120px, 22vw"

@@ -1,12 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 
-import { BrandGlyph } from "@/components/store/brand-glyph";
 import { brands } from "@/data/brands";
+import { brandMedia } from "@/data/brand-media";
+import { brandPalettes } from "@/data/brand-palettes";
 import { cn } from "@/lib/utils";
 
 const primaryBrands = brands.filter(
@@ -116,19 +118,29 @@ export function MegaMenu() {
                         onClick={() => setOpen(false)}
                         className="flex items-start justify-between gap-3"
                       >
-                        <div className="flex min-w-0 items-start gap-3">
-                          <BrandGlyph brand={brand.slug} size="md" />
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/90">
-                              {brand.shortName}
-                            </p>
-                            <h3 className="mt-1 truncate font-heading text-lg font-semibold text-white">
+                        <div className="min-w-0 flex-1">
+                          {brandMedia[brand.slug]?.logo ? (
+                            <div
+                              className="relative h-16 w-full max-w-[220px]"
+                              style={{ filter: brandPalettes[brand.slug]?.logoShadow }}
+                            >
+                              <Image
+                                src={brandMedia[brand.slug]!.logo!}
+                                alt={`${brand.name} logo`}
+                                fill
+                                sizes="220px"
+                                className="object-contain object-left"
+                              />
+                            </div>
+                          ) : (
+                            <h3 className="font-heading text-lg font-semibold text-white">
                               {brand.name}
                             </h3>
-                            <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-300/82">
-                              {brand.spotlight}
-                            </p>
-                          </div>
+                          )}
+
+                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300/82">
+                            {brand.spotlight}
+                          </p>
                         </div>
 
                         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-black/20 text-white transition-transform group-hover:translate-x-0.5">

@@ -19,18 +19,18 @@ export function OrdersTable({
         </p>
         <h2 className="mt-4 font-heading text-2xl font-semibold text-white">
           {selectedStatus
-            ? "No hay pedidos para este estado"
-            : "Todavia no hay pedidos registrados"}
+            ? "No hay pedidos con este estado"
+            : "Todavía no ha llegado ningún pedido"}
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-300">
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-300">
           {selectedStatus
-            ? "Prueba con otro filtro o vuelve a ver todos los pedidos del checkout V1."
-            : "Cuando entren pagos desde Stripe Checkout, aqui veras el listado operativo de pedidos."}
+            ? "Prueba con otro filtro o pulsa 'Todos' para ver todos los pedidos."
+            : "Cuando un cliente complete una compra, aparecerá aquí automáticamente."}
         </p>
         {selectedStatus ? (
           <div className="mt-6">
             <Button asChild variant="outline">
-              <Link href="/admin/pedidos">Ver todos</Link>
+              <Link href="/admin/pedidos">Ver todos los pedidos</Link>
             </Button>
           </div>
         ) : null}
@@ -40,16 +40,17 @@ export function OrdersTable({
 
   return (
     <>
+      {/* Tabla desktop */}
       <div className="hidden overflow-hidden rounded-[30px] border border-white/10 bg-black/20 xl:block">
         <table className="min-w-full divide-y divide-white/10 text-sm">
           <thead className="bg-white/[0.03]">
-            <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              <th className="px-5 py-4">ID</th>
+            <tr className="text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              <th className="px-5 py-4">Nº Pedido</th>
               <th className="px-5 py-4">Fecha</th>
-              <th className="px-5 py-4">Email</th>
+              <th className="px-5 py-4">Cliente</th>
               <th className="px-5 py-4">Total</th>
               <th className="px-5 py-4">Estado</th>
-              <th className="px-5 py-4">Items</th>
+              <th className="px-5 py-4">Artículos</th>
               <th className="px-5 py-4 text-right">Detalle</th>
             </tr>
           </thead>
@@ -57,16 +58,16 @@ export function OrdersTable({
             {orders.map((order) => (
               <tr key={order.id} className="align-top">
                 <td className="px-5 py-5">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <p className="font-semibold uppercase tracking-[0.16em] text-white">
-                      {formatShortOrderId(order.id)}
+                      #{formatShortOrderId(order.id)}
                     </p>
-                    <p className="text-xs text-slate-500">{order.id}</p>
+                    <p className="text-xs text-slate-600">{order.id.slice(0, 18)}…</p>
                   </div>
                 </td>
                 <td className="px-5 py-5 text-slate-200">{formatAdminDate(order.createdAt)}</td>
                 <td className="px-5 py-5">
-                  <div className="space-y-1 text-slate-200">
+                  <div className="space-y-0.5 text-slate-200">
                     <p>{order.customerEmail}</p>
                     {order.customerName ? (
                       <p className="text-xs text-slate-500">{order.customerName}</p>
@@ -79,10 +80,12 @@ export function OrdersTable({
                 <td className="px-5 py-5">
                   <OrderStatusBadge status={order.status} />
                 </td>
-                <td className="px-5 py-5 text-slate-200">{order.itemsCount}</td>
+                <td className="px-5 py-5 text-slate-200">
+                  {order.itemsCount} {order.itemsCount === 1 ? "artículo" : "artículos"}
+                </td>
                 <td className="px-5 py-5 text-right">
                   <Button asChild size="sm">
-                    <Link href={`/admin/pedidos/${order.id}`}>Ver detalle</Link>
+                    <Link href={`/admin/pedidos/${order.id}`}>Abrir</Link>
                   </Button>
                 </td>
               </tr>
@@ -91,6 +94,7 @@ export function OrdersTable({
         </table>
       </div>
 
+      {/* Cards móvil/tablet */}
       <div className="grid gap-4 xl:hidden">
         {orders.map((order) => (
           <article
@@ -100,22 +104,20 @@ export function OrdersTable({
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <p className="font-semibold uppercase tracking-[0.16em] text-white">
-                  {formatShortOrderId(order.id)}
+                  #{formatShortOrderId(order.id)}
                 </p>
-                <div className="mt-2 space-y-1 text-xs text-slate-400">
+                <div className="mt-2 space-y-0.5 text-xs text-slate-400">
                   <p>{order.customerEmail}</p>
                   <p>{formatAdminDate(order.createdAt)}</p>
-                  <p>{order.itemsCount} items</p>
+                  <p>{order.itemsCount} {order.itemsCount === 1 ? "artículo" : "artículos"}</p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <OrderStatusBadge status={order.status} />
-              </div>
+              <OrderStatusBadge status={order.status} />
             </div>
 
             <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="text-sm text-slate-200">
+              <div className="text-sm font-medium text-slate-200">
                 Total: {formatOrderPrice(order.amountTotal, order.currency)}
               </div>
 

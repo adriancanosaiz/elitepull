@@ -69,6 +69,7 @@ export interface Product {
   badge?: string;
   image: string;
   images: string[];
+  imageAlts?: string[];
   tags: string[];
 }
 
@@ -76,6 +77,7 @@ export interface PromoBanner {
   id: string;
   title: string;
   subtitle: string;
+  mobileSubtitle?: string;
   description: string;
   ctaLabel: string;
   href: string;

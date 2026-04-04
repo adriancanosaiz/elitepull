@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "../lib/supabase/database.types";
+import { buildAutomaticProductImageAlt } from "../lib/product-media-alt.ts";
 import {
   catalogImportSchema,
   type CatalogImport,
@@ -14,6 +15,8 @@ import {
   getProductCoverPath,
   getProductGalleryImagePath,
 } from "../lib/supabase/storage.ts";
+
+type ProductMediaExtension = "webp" | "png" | "jpg" | "jpeg" | "avif";
 
 const envSchema = z.object({
   supabaseUrl: z.string().trim().url("Missing valid SUPABASE URL"),
@@ -44,12 +47,60 @@ async function readCatalog(filePath: string) {
   return catalogImportSchema.parse(JSON.parse(file)) as CatalogImport;
 }
 
-function getCategoryKey(brandSlug: string, slug: string) {
-  return `${brandSlug}::${slug}`;
-}
-
 function mapProductStatusToActive(product: ProductImport) {
   return product.status !== "draft";
+}
+
+function normalizeOptionalString(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function buildExpansionSlug(value: string | undefined) {
+  if (!value) {
+    return "general";
+  }
+
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "general"
+  );
+}
+
+function resolveProductLanguage(product: ProductImport) {
+  const rawLanguage = normalizeOptionalString(product.attributes.language)?.toUpperCase();
+
+  if (rawLanguage === "ES" || rawLanguage === "EN" || rawLanguage === "JP") {
+    return rawLanguage;
+  }
+
+  return "ES";
+}
+
+function resolveVariantLabel(product: ProductImport) {
+  return (
+    normalizeOptionalString(product.attributes.variantLabel) ??
+    normalizeOptionalString(product.attributes.variant_label) ??
+    normalizeOptionalString(product.attributes.variant)
+  );
+}
+
+function resolveImageExtension(fileName: string): ProductMediaExtension {
+  const extension = path.extname(fileName).replace(/^\./, "").toLowerCase();
+
+  if (
+    extension === "webp" ||
+    extension === "png" ||
+    extension === "jpg" ||
+    extension === "jpeg" ||
+    extension === "avif"
+  ) {
+    return extension;
+  }
+
+  throw new Error(`[import-catalog] Unsupported image extension: ${fileName}`);
 }
 
 async function syncProductImages(
@@ -59,8 +110,12 @@ async function syncProductImages(
   const productImagesTable = client.from("product_images") as any;
   const desiredRows = product.media.gallery.map((image, index) => ({
     product_id: product.id,
-    storage_path: getProductGalleryImagePath(product.id, index + 1),
-    alt_text: image.alt ?? null,
+    storage_path: getProductGalleryImagePath(
+      product.id,
+      index + 1,
+      resolveImageExtension(image.file),
+    ),
+    alt_text: buildAutomaticProductImageAlt(product.name, index + 1),
     sort_order: index + 1,
     is_primary: false,
   }));
@@ -121,53 +176,80 @@ async function main() {
       persistSession: false,
     },
   }) as SupabaseClient<Database>;
-  const categoriesTable = client.from("categories") as any;
   const productsTable = client.from("products") as any;
   const inventoryTable = client.from("inventory") as any;
+  const [{ data: brands, error: brandsError }, { data: formats, error: formatsError }, { data: expansions, error: expansionsError }, { data: languages, error: languagesError }] =
+    await Promise.all([
+      client.from("brands").select("id, slug").eq("active", true),
+      client.from("product_formats").select("id, slug").eq("active", true),
+      client.from("expansions").select("id, brand_id, slug").eq("active", true),
+      client.from("product_languages").select("code").eq("active", true),
+    ]);
 
-  const categoryRows = catalog.categories.map((category) => ({
-    id: category.id,
-    slug: category.slug,
-    label: category.label,
-    description: category.description,
-    brand_slug: category.brandSlug,
-    sort_order: category.sortOrder,
-    active: category.active,
-  }));
-
-  const { error: categoriesError } = await categoriesTable.upsert(categoryRows, {
-    onConflict: "id",
-  });
-
-  if (categoriesError) {
-    throw new Error(`[import-catalog] Failed to upsert categories: ${categoriesError.message}`);
+  if (brandsError) {
+    throw new Error(`[import-catalog] Failed to read brands: ${brandsError.message}`);
   }
 
-  const { data: persistedCategories, error: persistedCategoriesError } = await categoriesTable
-    .select("id, brand_slug, slug")
-    .in(
-      "id",
-      catalog.categories.map((category) => category.id),
-    );
-
-  if (persistedCategoriesError) {
-    throw new Error(
-      `[import-catalog] Failed to fetch persisted categories: ${persistedCategoriesError.message}`,
-    );
+  if (formatsError) {
+    throw new Error(`[import-catalog] Failed to read formats: ${formatsError.message}`);
   }
 
-  const categoryIdByKey = new Map<string, string>();
-
-  for (const category of persistedCategories ?? []) {
-    categoryIdByKey.set(getCategoryKey(category.brand_slug, category.slug), category.id);
+  if (expansionsError) {
+    throw new Error(`[import-catalog] Failed to read expansions: ${expansionsError.message}`);
   }
+
+  if (languagesError) {
+    throw new Error(`[import-catalog] Failed to read languages: ${languagesError.message}`);
+  }
+
+  const brandRows = (brands ?? []) as Array<Pick<Database["public"]["Tables"]["brands"]["Row"], "id" | "slug">>;
+  const formatRows = (formats ?? []) as Array<
+    Pick<Database["public"]["Tables"]["product_formats"]["Row"], "id" | "slug">
+  >;
+  const expansionRows = (expansions ?? []) as Array<
+    Pick<Database["public"]["Tables"]["expansions"]["Row"], "id" | "brand_id" | "slug">
+  >;
+  const languageRows = (languages ?? []) as Array<
+    Pick<Database["public"]["Tables"]["product_languages"]["Row"], "code">
+  >;
+
+  const brandIdBySlug = new Map(brandRows.map((brand) => [brand.slug, brand.id]));
+  const formatIdBySlug = new Map(formatRows.map((format) => [format.slug, format.id]));
+  const expansionIdByKey = new Map(
+    expansionRows.map((expansion) => [`${expansion.brand_id}::${expansion.slug}`, expansion.id]),
+  );
+  const activeLanguageCodes = new Set(languageRows.map((language) => language.code));
 
   const productRows = catalog.products.map((product) => {
-    const categoryId = categoryIdByKey.get(getCategoryKey(product.brandSlug, product.categorySlug));
+    const brandId = brandIdBySlug.get(product.brandSlug);
+    const formatId = formatIdBySlug.get(product.formatSlug);
+    const expansionSlug = buildExpansionSlug(
+      normalizeOptionalString(product.attributes.expansion) ?? "General",
+    );
+    const languageCode = resolveProductLanguage(product);
+    const expansionId = brandId ? expansionIdByKey.get(`${brandId}::${expansionSlug}`) : undefined;
 
-    if (!categoryId) {
+    if (!brandId) {
       throw new Error(
-        `[import-catalog] Missing category for product ${product.slug}: ${product.brandSlug}/${product.categorySlug}`,
+        `[import-catalog] Missing active brand for product ${product.slug}: ${product.brandSlug}`,
+      );
+    }
+
+    if (!formatId) {
+      throw new Error(
+        `[import-catalog] Missing active format for product ${product.slug}: ${product.formatSlug}`,
+      );
+    }
+
+    if (!expansionId) {
+      throw new Error(
+        `[import-catalog] Missing active expansion for product ${product.slug}: ${product.brandSlug}/${expansionSlug}`,
+      );
+    }
+
+    if (!activeLanguageCodes.has(languageCode)) {
+      throw new Error(
+        `[import-catalog] Missing active language for product ${product.slug}: ${languageCode}`,
       );
     }
 
@@ -179,13 +261,20 @@ async function main() {
       description: product.description,
       product_type: product.productType,
       brand_slug: product.brandSlug,
-      category_id: categoryId,
+      brand_id: brandId,
+      expansion_id: expansionId,
+      format_id: formatId,
+      language_code: languageCode,
+      variant_label: resolveVariantLabel(product) ?? null,
       price: product.price,
       compare_at_price: product.compareAtPrice ?? null,
       featured: product.featured,
       is_preorder: product.isPreorder,
       active: mapProductStatusToActive(product),
-      main_image_path: getProductCoverPath(product.id),
+      main_image_path: getProductCoverPath(
+        product.id,
+        resolveImageExtension(product.media.coverFile),
+      ),
       attributes: product.attributes,
       tags: product.tags,
     };
@@ -219,7 +308,7 @@ async function main() {
   }
 
   console.log(
-    `[import-catalog] OK. categories=${catalog.categories.length} products=${catalog.products.length} galleryImages=${galleryImageCount} inventory=${inventoryRows.length}`,
+    `[import-catalog] OK. products=${catalog.products.length} galleryImages=${galleryImageCount} inventory=${inventoryRows.length}`,
   );
 }
 

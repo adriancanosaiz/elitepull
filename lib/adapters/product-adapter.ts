@@ -30,12 +30,15 @@ function adaptBrand(product: Product) {
 
 function adaptCategory(product: Product) {
   const brand = brandsBySlug[product.brand];
-  const category = brand?.categories.find((entry) => entry.slug === product.category);
+  const categorySlug = product.formatSlug ?? product.category;
+  const category = brand?.categories.find((entry) => entry.slug === categorySlug);
+  const label =
+    product.format ?? product.categoryLabel ?? category?.label ?? getCategoryLabel(categorySlug);
 
   return {
-    slug: product.category,
-    label: product.categoryLabel ?? category?.label ?? getCategoryLabel(product.category),
-    href: category?.href ?? getCategoryRoute(product.brand, product.category),
+    slug: categorySlug,
+    label,
+    href: category?.href ?? getCategoryRoute(product.brand, categorySlug),
   };
 }
 
@@ -121,6 +124,7 @@ export function adaptProductToDetail(product: Product): ProductDetail {
   return {
     ...adaptProductToCardItem(product),
     images: product.images,
+    imageAlts: product.imageAlts,
     stockLabel: getStockLabel(product),
     details,
   };

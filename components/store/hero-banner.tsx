@@ -57,8 +57,8 @@ export function HeroBanner({
   const marqueeLogos = [...heroLogos, ...heroLogos];
 
   return (
-    <section className="app-container pb-0 pt-1.5 sm:pb-8 sm:pt-8 md:pb-12 md:pt-10">
-      <div className="surface-panel vault-sheen relative min-h-[calc(100svh-3.5rem)] overflow-hidden sm:min-h-0 xl:min-h-[540px]">
+    <section className="app-container pb-0 pt-1 sm:pb-8 sm:pt-8 md:pb-12 md:pt-10">
+      <div className="surface-panel vault-sheen relative h-[calc(100dvh-8.45rem-env(safe-area-inset-bottom))] overflow-hidden sm:h-auto sm:min-h-0 xl:min-h-[540px]">
         <div
           className={cn(
             "absolute inset-0 bg-gradient-to-br opacity-70",
@@ -70,12 +70,12 @@ export function HeroBanner({
         <div className="vault-grid absolute inset-0 opacity-[0.07]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_82%_16%,rgba(124,231,227,0.18),transparent_22%),linear-gradient(115deg,transparent_18%,rgba(255,255,255,0.05)_50%,transparent_82%)]" />
 
-        <div className="relative grid h-full gap-4 px-4 py-5 sm:gap-8 sm:px-8 sm:py-8 lg:grid-cols-[0.92fr_1.08fr] lg:grid-rows-1 lg:items-stretch">
+        <div className="relative flex h-full flex-col gap-4 px-4 pb-3 pt-8 sm:grid sm:gap-8 sm:px-8 sm:py-8 lg:grid-cols-[0.92fr_1.08fr] lg:grid-rows-1 lg:items-stretch">
           <motion.div
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={heroIntroTransition}
-            className="flex max-w-xl flex-col items-center gap-6 text-center sm:items-start sm:text-left lg:h-full lg:max-w-2xl lg:justify-between lg:gap-8"
+            className="flex max-w-xl flex-col items-center gap-4 text-center sm:items-start sm:text-left lg:h-full lg:max-w-2xl lg:justify-between lg:gap-8"
           >
             <div>
               <motion.h1
@@ -90,7 +90,15 @@ export function HeroBanner({
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
                 animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ ...heroIntroTransition, delay: 0.18 }}
-                className="mx-auto mt-3 max-w-[30rem] text-balance text-[0.93rem] leading-7 text-slate-100/88 line-clamp-2 sm:line-clamp-none sm:mx-0 sm:mt-5 sm:max-w-xl sm:text-base sm:leading-8"
+                className="mx-auto mt-4 max-w-[30rem] text-balance text-[0.93rem] leading-7 text-slate-100/88 sm:hidden"
+              >
+                {banner.mobileSubtitle ?? banner.subtitle}
+              </motion.p>
+              <motion.p
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ ...heroIntroTransition, delay: 0.18 }}
+                className="mx-auto mt-4 hidden max-w-[30rem] text-balance text-[0.93rem] leading-7 text-slate-100/88 sm:mx-0 sm:mt-5 sm:block sm:max-w-xl sm:text-base sm:leading-8"
               >
                 {banner.subtitle}
               </motion.p>
@@ -146,57 +154,92 @@ export function HeroBanner({
             initial={shouldReduceMotion ? false : { opacity: 0, y: 18, scale: 0.992, filter: "blur(12px)" }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             transition={{ ...heroIntroTransition, delay: 0.26 }}
-            className="grid grid-rows-[1fr_auto] gap-4 pt-1 h-[calc(100svh-4rem-220px)] sm:h-[380px] sm:grid-rows-[1fr_auto] sm:gap-6 sm:pt-3 md:h-[430px] lg:h-full lg:min-h-[430px] lg:pt-0 xl:min-h-[500px]"
+            className="mt-2 flex min-h-0 flex-1 flex-col gap-3 sm:mt-0 sm:grid sm:h-[380px] sm:grid-rows-[1fr_auto] sm:gap-6 sm:pt-3 md:h-[430px] lg:h-full lg:min-h-[430px] lg:pt-0 xl:min-h-[500px]"
           >
-            <div className="relative mx-auto w-full max-w-[320px] items-center justify-center flex sm:max-w-[580px] md:max-w-[620px] lg:max-w-[660px] xl:max-w-[700px]">
-              {heroCards.length === 4 ? (
-                <div className="relative h-[160px] w-full overflow-visible sm:h-[282px] md:h-[330px] lg:h-[346px] xl:h-[382px]">
-                  {heroCards.map((card, index) => (
-                    <div
-                      key={`${card.brand}-${card.src}`}
-                      className={cn("absolute", heroCardOffsets[index])}
-                    >
-                      <motion.div
-                        animate={
-                          shouldReduceMotion
-                            ? undefined
-                            : {
-                                y: [0, index % 2 === 0 ? -10 : -6, 0],
-                              }
-                        }
-                        transition={
-                          shouldReduceMotion
-                            ? undefined
-                            : {
-                                duration: index % 2 === 0 ? 7.4 : 8.2,
-                                ease: storefrontMotionEase,
-                                repeat: Number.POSITIVE_INFINITY,
-                              }
-                        }
-                        className={cn(
-                          "relative aspect-[660/920]",
-                          index % 2 === 0 ? "hero-card-float" : "hero-card-float-delay",
-                        )}
+            <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 sm:contents">
+              <div className="relative mx-auto flex w-full max-w-[320px] items-center justify-center sm:max-w-[580px] md:max-w-[620px] lg:ml-auto lg:mr-0 lg:max-w-[660px] xl:max-w-[700px]">
+                {heroCards.length === 4 ? (
+                  <div className="relative h-[154px] w-full overflow-visible sm:h-[282px] md:h-[330px] lg:h-[346px] xl:h-[382px]">
+                    {heroCards.map((card, index) => (
+                      <div
+                        key={`${card.brand}-${card.src}`}
+                        className={cn("absolute", heroCardOffsets[index])}
+                      >
+                        <motion.div
+                          animate={
+                            shouldReduceMotion
+                              ? undefined
+                              : {
+                                  y: [0, index % 2 === 0 ? -10 : -6, 0],
+                                }
+                          }
+                          transition={
+                            shouldReduceMotion
+                              ? undefined
+                              : {
+                                  duration: index % 2 === 0 ? 7.4 : 8.2,
+                                  ease: storefrontMotionEase,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                }
+                          }
+                          className={cn(
+                            "relative aspect-[660/920]",
+                            index % 2 === 0 ? "hero-card-float" : "hero-card-float-delay",
+                          )}
+                        >
+                          <Image
+                            src={card.src}
+                            alt={card.alt}
+                            fill
+                            className="object-contain object-center drop-shadow-[0_14px_26px_rgba(2,6,23,0.24)]"
+                            sizes="(min-width: 1280px) 230px, (min-width: 1024px) 30vw, (min-width: 768px) 34vw, 38vw"
+                            quality={70}
+                            priority={index === 1}
+                          />
+                        </motion.div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {heroLogos.length > 0 ? (
+                <div
+                  className="relative mt-5 overflow-hidden sm:hidden"
+                  style={{
+                    WebkitMaskImage:
+                      "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    maskImage:
+                      "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+                  }}
+                >
+                  <div className="hero-logo-marquee flex items-center gap-4">
+                    {marqueeLogos.map((card, index) => (
+                      <div
+                        key={`${card.brand}-mobile-logo-${index}`}
+                        className="relative flex h-[4.8rem] min-w-[196px] items-center justify-center px-1"
+                        style={{
+                          filter: `drop-shadow(${brandPalettes[card.slug].logoShadow})`,
+                        }}
                       >
                         <Image
-                          src={card.src}
-                          alt={card.alt}
+                          src={card.logo}
+                          alt={`${card.brand} logo`}
                           fill
-                          className="object-contain object-center drop-shadow-[0_14px_26px_rgba(2,6,23,0.24)]"
-                          sizes="(min-width: 1280px) 230px, (min-width: 1024px) 30vw, (min-width: 768px) 34vw, 38vw"
-                          quality={70}
-                          priority={index === 1}
+                          className="object-contain object-center opacity-95"
+                          sizes="196px"
+                          quality={72}
                         />
-                      </motion.div>
-                    </div>
-                  ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
 
             {heroLogos.length > 0 ? (
               <div
-                className="relative overflow-hidden"
+                className="relative hidden overflow-hidden sm:block"
                 style={{
                   WebkitMaskImage:
                     "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
@@ -204,11 +247,11 @@ export function HeroBanner({
                     "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
                 }}
               >
-                <div className="hero-logo-marquee flex items-center gap-4 sm:gap-10 md:gap-12">
+                <div className="hero-logo-marquee flex items-center gap-10 md:gap-12">
                   {marqueeLogos.map((card, index) => (
                     <div
-                      key={`${card.brand}-logo-${index}`}
-                      className="relative flex h-[4.65rem] min-w-[184px] items-center justify-center px-1 sm:h-[4rem] sm:min-w-[185px] sm:items-end sm:px-0 md:h-[4.5rem] md:min-w-[220px] xl:h-[6rem] xl:min-w-[280px]"
+                      key={`${card.brand}-desktop-logo-${index}`}
+                      className="relative flex h-[4rem] min-w-[185px] items-end justify-center px-0 md:h-[4.5rem] md:min-w-[220px] xl:h-[6rem] xl:min-w-[280px]"
                       style={{
                         filter: `drop-shadow(${brandPalettes[card.slug].logoShadow})`,
                       }}
@@ -217,8 +260,8 @@ export function HeroBanner({
                         src={card.logo}
                         alt={`${card.brand} logo`}
                         fill
-                        className="object-contain object-center opacity-95 sm:object-bottom"
-                        sizes="(min-width: 1280px) 280px, (min-width: 768px) 220px, 184px"
+                        className="object-contain object-bottom opacity-95"
+                        sizes="(min-width: 1280px) 280px, (min-width: 768px) 220px, 185px"
                         quality={72}
                       />
                     </div>
@@ -231,7 +274,7 @@ export function HeroBanner({
               initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(8px)" }}
               animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ ...heroIntroTransition, delay: 0.54 }}
-              className="mx-auto flex w-full max-w-sm flex-col gap-3 sm:hidden"
+              className="mx-auto flex w-full max-w-sm flex-col gap-3 pt-0.5 sm:hidden"
             >
               <Button
                 asChild

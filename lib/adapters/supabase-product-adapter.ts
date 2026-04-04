@@ -1,4 +1,5 @@
 import type { Database } from "@/lib/supabase/database.types";
+import { buildAutomaticProductImageAlt } from "@/lib/product-media-alt";
 import {
   normalizeProductMediaPath,
   resolveProductMediaUrl,
@@ -26,14 +27,9 @@ type FormatRow = Pick<
   "id" | "slug" | "label"
 >;
 
-type CategoryRow = Pick<
-  Database["public"]["Tables"]["categories"]["Row"],
-  "id" | "slug" | "label" | "brand_slug"
->;
-
 type ProductImageRow = Pick<
   Database["public"]["Tables"]["product_images"]["Row"],
-  "storage_path" | "sort_order" | "is_primary"
+  "storage_path" | "sort_order" | "is_primary" | "alt_text"
 >;
 
 type InventoryRow = Pick<
@@ -45,7 +41,6 @@ export type SupabaseProductRecord = Database["public"]["Tables"]["products"]["Ro
   brand: BrandRow | null;
   expansion: ExpansionRow | null;
   format: FormatRow | null;
-  category: CategoryRow | null;
   images: ProductImageRow[] | null;
   inventory: InventoryRow | InventoryRow[] | null;
 };
@@ -88,32 +83,48 @@ function parseOptionalNumber(value: number | string | null | undefined) {
 
 function buildProductImages(record: SupabaseProductRecord, productType: Product["type"]) {
   const normalizedCoverPath = normalizeProductMediaPath(record.main_image_path);
-  const galleryPaths = (record.images ?? [])
+  const galleryEntries = (record.images ?? [])
     .slice()
     .sort((left, right) => left.sort_order - right.sort_order)
-    .map((image) => normalizeProductMediaPath(image.storage_path))
-    .filter((path): path is string => Boolean(path));
+    .map((image) => ({
+      path: normalizeProductMediaPath(image.storage_path),
+      altText: image.alt_text?.trim() || "",
+      sortOrder: image.sort_order,
+    }))
+    .filter((image): image is { path: string; altText: string; sortOrder: number } =>
+      Boolean(image.path),
+    );
 
-  const uniquePaths: string[] = [];
+  const uniqueImages: Array<{ path: string; altText: string }> = [];
 
   if (normalizedCoverPath) {
-    uniquePaths.push(normalizedCoverPath);
+    uniqueImages.push({
+      path: normalizedCoverPath,
+      altText: record.name,
+    });
   }
 
-  for (const galleryPath of galleryPaths) {
-    if (!uniquePaths.includes(galleryPath)) {
-      uniquePaths.push(galleryPath);
+  for (const galleryEntry of galleryEntries) {
+    if (!uniqueImages.some((image) => image.path === galleryEntry.path)) {
+      uniqueImages.push({
+        path: galleryEntry.path,
+        altText: galleryEntry.altText || buildAutomaticProductImageAlt(record.name, galleryEntry.sortOrder),
+      });
     }
   }
 
-  const resolvedImages = uniquePaths
-    .map((path) => resolveProductMediaUrl(path))
-    .filter((path): path is string => Boolean(path));
+  const resolvedImages = uniqueImages
+    .map((image) => ({
+      src: resolveProductMediaUrl(image.path),
+      altText: image.altText || record.name,
+    }))
+    .filter((image): image is { src: string; altText: string } => Boolean(image.src));
 
   if (resolvedImages.length > 0) {
     return {
-      image: resolvedImages[0],
-      images: resolvedImages,
+      image: resolvedImages[0].src,
+      images: resolvedImages.map((image) => image.src),
+      imageAlts: resolvedImages.map((image) => image.altText),
     };
   }
 
@@ -122,6 +133,7 @@ function buildProductImages(record: SupabaseProductRecord, productType: Product[
   return {
     image: fallbackImage,
     images: [fallbackImage],
+    imageAlts: [record.name],
   };
 }
 
@@ -138,8 +150,8 @@ export function adaptSupabaseProductRecord(record: SupabaseProductRecord): Produ
     name: record.name,
     brand: record.brand?.slug ?? record.brand_slug,
     brandLabel: record.brand?.label ?? record.brand_slug,
-    category: record.category?.slug ?? "ediciones-especiales",
-    categoryLabel: record.category?.label ?? "General",
+    category: record.format?.slug ?? "general",
+    categoryLabel: record.format?.label ?? "General",
     description: record.description,
     price: parseNumber(record.price),
     compareAtPrice: parseOptionalNumber(record.compare_at_price),
@@ -150,8 +162,8 @@ export function adaptSupabaseProductRecord(record: SupabaseProductRecord): Produ
     expansionSlug: record.expansion?.slug ?? "general",
     expansionReleaseStatus:
       (record.expansion?.release_status as Product["expansionReleaseStatus"]) ?? "live",
-    format: record.format?.label ?? record.category?.label ?? "General",
-    formatSlug: record.format?.slug ?? record.category?.slug ?? "general",
+    format: record.format?.label ?? "General",
+    formatSlug: record.format?.slug ?? "general",
     language: (record.language_code as Product["language"]) ?? "ES",
     variant: record.variant_label ?? undefined,
     rarity: attributes.rarity,
@@ -159,6 +171,7 @@ export function adaptSupabaseProductRecord(record: SupabaseProductRecord): Produ
     badge: attributes.badge,
     image: media.image,
     images: media.images,
+    imageAlts: media.imageAlts,
     tags: Array.isArray(record.tags) ? record.tags : [],
   };
 }

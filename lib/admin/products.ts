@@ -1,10 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import {
-  PRODUCT_MEDIA_BUCKET,
-  normalizeProductMediaPath,
-} from "@/lib/supabase/storage";
+import { PRODUCT_MEDIA_BUCKET, normalizeProductMediaPath } from "@/lib/supabase/storage";
 import { requireAdminAccess } from "@/lib/auth/admin";
 import {
   buildGeneratedProductSku,
@@ -16,11 +13,6 @@ import type {
   AdminProductInput,
 } from "@/lib/validators/admin-product";
 import type { ProductLanguage, ProductType } from "@/types/store";
-
-type CategoryRow = Pick<
-  Database["public"]["Tables"]["categories"]["Row"],
-  "id" | "slug" | "label" | "description" | "brand_slug" | "sort_order" | "active"
->;
 
 type BrandRow = Pick<
   Database["public"]["Tables"]["brands"]["Row"],
@@ -34,7 +26,7 @@ type ExpansionRow = Pick<
 
 type FormatRow = Pick<
   Database["public"]["Tables"]["product_formats"]["Row"],
-  "id" | "slug" | "label" | "active"
+  "id" | "slug" | "label" | "sort_order" | "active"
 >;
 
 type LanguageRow = Pick<
@@ -69,7 +61,6 @@ type AdminProductRecord = ProductRow & {
   brand: BrandRow | null;
   expansion: ExpansionRow | null;
   format: FormatRow | null;
-  category: CategoryRow | null;
   inventory: InventoryRow | InventoryRow[] | null;
   images: ProductImageRow[] | null;
 };
@@ -79,16 +70,6 @@ const adminProductsEnvSchema = z.object({
   serviceRoleKey: z.string().trim().min(1, "Falta SUPABASE_SERVICE_ROLE_KEY."),
 });
 
-export type AdminCategoryOption = {
-  id: string;
-  brandId: string;
-  brandSlug: string;
-  slug: string;
-  label: string;
-  description: string | null;
-  sortOrder: number;
-};
-
 export type AdminProductListItem = {
   id: string;
   slug: string;
@@ -97,7 +78,6 @@ export type AdminProductListItem = {
   brandId: string;
   brandSlug: string;
   brandLabel: string;
-  categoryId: string;
   categoryLabel: string;
   categorySlug: string;
   expansionId: string;
@@ -156,7 +136,6 @@ const ADMIN_PRODUCT_SELECT = `
   product_type,
   brand_slug,
   brand_id,
-  category_id,
   expansion_id,
   format_id,
   language_code,
@@ -189,14 +168,6 @@ const ADMIN_PRODUCT_SELECT = `
     id,
     slug,
     label,
-    active
-  ),
-  category:categories!products_category_id_fkey (
-    id,
-    slug,
-    label,
-    description,
-    brand_slug,
     sort_order,
     active
   ),
@@ -307,10 +278,6 @@ function getAdminProductErrorMessage(error: unknown, fallbackMessage: string) {
   }
 
   if (supabaseError.code === "23503") {
-    if (fullMessage.includes("category")) {
-      return "La categoria seleccionada no existe o no esta disponible para esa marca.";
-    }
-
     if (fullMessage.includes("brand")) {
       return "La marca seleccionada ya no existe o no esta activa.";
     }
@@ -376,9 +343,8 @@ function mapAdminProductListItem(record: AdminProductRecord): AdminProductListIt
     brandId: record.brand_id,
     brandSlug: record.brand?.slug ?? record.brand_slug,
     brandLabel: record.brand?.label ?? record.brand_slug,
-    categoryId: record.category_id,
-    categoryLabel: record.category?.label ?? "Sin categoria",
-    categorySlug: record.category?.slug ?? "",
+    categoryLabel: record.format?.label ?? "General",
+    categorySlug: record.format?.slug ?? "general",
     expansionId: record.expansion_id,
     expansionLabel: record.expansion?.label ?? "General",
     expansionSlug: record.expansion?.slug ?? "general",
@@ -416,9 +382,8 @@ function mapAdminProductDetail(record: AdminProductRecord): AdminProductDetail {
     brandId: record.brand_id,
     brandSlug: record.brand?.slug ?? record.brand_slug,
     brandLabel: record.brand?.label ?? record.brand_slug,
-    categoryId: record.category_id,
-    categoryLabel: record.category?.label ?? "Sin categoria",
-    categorySlug: record.category?.slug ?? "",
+    categoryLabel: record.format?.label ?? "General",
+    categorySlug: record.format?.slug ?? "general",
     expansionId: record.expansion_id,
     expansionLabel: record.expansion?.label ?? "General",
     expansionSlug: record.expansion?.slug ?? "general",
@@ -464,30 +429,6 @@ async function getValidatedBrand(
   return data as BrandRow;
 }
 
-async function getValidatedAdminCategory(
-  client: SupabaseClient<Database>,
-  categoryId: string,
-  brandSlug: string,
-) {
-  const { data, error } = await client
-    .from("categories")
-    .select("id, slug, label, description, brand_slug, sort_order, active")
-    .eq("id", categoryId)
-    .eq("brand_slug", brandSlug)
-    .eq("active", true)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`[admin-products] No se pudo validar la categoria: ${error.message}`);
-  }
-
-  if (!data) {
-    throw new Error("La categoria seleccionada no existe o no esta activa para esa marca.");
-  }
-
-  return data as CategoryRow;
-}
-
 async function getValidatedExpansion(
   client: SupabaseClient<Database>,
   expansionId: string,
@@ -518,7 +459,7 @@ async function getValidatedFormat(
 ) {
   const { data, error } = await client
     .from("product_formats")
-    .select("id, slug, label, active")
+    .select("id, slug, label, sort_order, active")
     .eq("id", formatId)
     .eq("active", true)
     .maybeSingle();
@@ -693,7 +634,7 @@ async function getAdminProductMutationMeta(
       slug,
       brand_slug,
       is_preorder,
-      category:categories!products_category_id_fkey (
+      format:product_formats!products_format_id_fkey (
         slug
       )
     `)
@@ -711,14 +652,14 @@ async function getAdminProductMutationMeta(
     slug: string;
     brand_slug: string;
     is_preorder: boolean;
-    category: { slug: string } | null;
+    format: { slug: string } | null;
   };
 
   return {
     id: row.id,
     slug: row.slug,
     brandSlug: row.brand_slug,
-    categorySlug: row.category?.slug ?? "",
+    categorySlug: row.format?.slug ?? "",
     isPreorder: row.is_preorder,
   };
 }
@@ -738,7 +679,7 @@ async function getAdminProductDeletionMeta(
       brand_slug,
       is_preorder,
       main_image_path,
-      category:categories!products_category_id_fkey (
+      format:product_formats!products_format_id_fkey (
         slug
       ),
       images:product_images (
@@ -760,7 +701,7 @@ async function getAdminProductDeletionMeta(
     brand_slug: string;
     is_preorder: boolean;
     main_image_path: string | null;
-    category: { slug: string } | null;
+    format: { slug: string } | null;
     images: Array<{ storage_path: string | null }> | null;
   };
 
@@ -774,7 +715,7 @@ async function getAdminProductDeletionMeta(
       id: row.id,
       slug: row.slug,
       brandSlug: row.brand_slug,
-      categorySlug: row.category?.slug ?? "",
+      categorySlug: row.format?.slug ?? "",
       isPreorder: row.is_preorder,
     },
     storagePaths: [...new Set(storagePaths)],
@@ -805,7 +746,6 @@ async function validateAdminProductSelections(
   input: AdminProductInput,
 ) {
   const brand = await getValidatedBrand(client, input.brandId);
-  const category = await getValidatedAdminCategory(client, input.categoryId, brand.slug);
   const expansion = await getValidatedExpansion(client, input.expansionId, brand.id);
   const format = await getValidatedFormat(client, input.formatId);
   await getValidatedLanguage(client, input.languageCode);
@@ -818,7 +758,6 @@ async function validateAdminProductSelections(
 
   return {
     brand,
-    category,
     expansion,
     format,
   };
@@ -871,64 +810,12 @@ export async function getAdminProductById(id: string) {
   return mapAdminProductDetail(data as AdminProductRecord);
 }
 
-export async function getAdminCategories() {
-  await requireAdminAccess();
-
-  const client = createAdminProductsServiceClient();
-  const [brandRows, categoryRows] = await Promise.all([
-    client
-      .from("brands")
-      .select("id, slug, label, active")
-      .eq("active", true),
-    (client.from("categories") as any)
-      .select("id, brand_slug, slug, label, description, sort_order")
-      .eq("active", true)
-      .order("brand_slug", { ascending: true })
-      .order("sort_order", { ascending: true }),
-  ]);
-
-  if (brandRows.error) {
-    throw new Error(`[admin-products] No se pudieron cargar las marcas: ${brandRows.error.message}`);
-  }
-
-  if (categoryRows.error) {
-    throw new Error(
-      `[admin-products] No se pudieron cargar las categorias: ${categoryRows.error.message}`,
-    );
-  }
-
-  const brandIdBySlug = new Map(
-    ((brandRows.data ?? []) as BrandRow[]).map((brand) => [brand.slug, brand.id]),
-  );
-
-  const rows = (categoryRows.data ?? []) as Array<{
-    id: string;
-    brand_slug: string;
-    slug: string;
-    label: string;
-    description: string | null;
-    sort_order: number;
-  }>;
-
-  return rows
-    .map((category) => ({
-      id: category.id,
-      brandId: brandIdBySlug.get(category.brand_slug) ?? "",
-      brandSlug: category.brand_slug,
-      slug: category.slug,
-      label: category.label,
-      description: category.description,
-      sortOrder: category.sort_order,
-    }))
-    .filter((category) => category.brandId.length > 0) as AdminCategoryOption[];
-}
-
 export async function createAdminProduct(input: AdminProductInput) {
   await requireAdminAccess();
 
   const client = createAdminProductsServiceClient();
   const productId = input.id ?? crypto.randomUUID();
-  const { brand, category, expansion, format } = await validateAdminProductSelections(client, input);
+  const { brand, expansion, format } = await validateAdminProductSelections(client, input);
   const productsTable = client.from("products") as any;
 
   const productPayload: Database["public"]["Tables"]["products"]["Insert"] = {
@@ -954,7 +841,6 @@ export async function createAdminProduct(input: AdminProductInput) {
     product_type: input.productType,
     brand_slug: brand.slug,
     brand_id: brand.id,
-    category_id: category.id,
     expansion_id: expansion.id,
     format_id: format.id,
     language_code: input.languageCode,
@@ -988,7 +874,7 @@ export async function createAdminProduct(input: AdminProductInput) {
     id: productId,
     slug: productPayload.slug,
     brandSlug: brand.slug,
-    categorySlug: category.slug,
+    categorySlug: format.slug,
     isPreorder: input.isPreorder,
   } satisfies AdminProductMutationResult;
 }
@@ -1002,7 +888,7 @@ export async function updateAdminProduct(input: AdminProductInput) {
 
   const client = createAdminProductsServiceClient();
   await ensureAdminProductExists(client, input.id);
-  const { brand, category, expansion, format } = await validateAdminProductSelections(client, input);
+  const { brand, expansion, format } = await validateAdminProductSelections(client, input);
   const productsTable = client.from("products") as any;
   const nextSlug = buildGeneratedProductSlug({
     brandSlug: brand.slug,
@@ -1029,7 +915,6 @@ export async function updateAdminProduct(input: AdminProductInput) {
     product_type: input.productType,
     brand_slug: brand.slug,
     brand_id: brand.id,
-    category_id: category.id,
     expansion_id: expansion.id,
     format_id: format.id,
     language_code: input.languageCode,
@@ -1063,7 +948,7 @@ export async function updateAdminProduct(input: AdminProductInput) {
     id: input.id,
     slug: nextSlug,
     brandSlug: brand.slug,
-    categorySlug: category.slug,
+    categorySlug: format.slug,
     isPreorder: input.isPreorder,
   } satisfies AdminProductMutationResult;
 }

@@ -72,7 +72,9 @@ export function getProductsByBrand(brandSlug: BrandSlug) {
 }
 
 export function getProductsByCategory(categorySlug: ProductCategorySlug) {
-  return products.filter((product) => product.category === categorySlug);
+  return products.filter(
+    (product) => (product.formatSlug ?? product.category) === categorySlug,
+  );
 }
 
 export function getRelatedProducts(product: Product, limit = 4) {
@@ -81,7 +83,8 @@ export function getRelatedProducts(product: Product, limit = 4) {
       (candidate) =>
         candidate.id !== product.id &&
         (candidate.brand === product.brand ||
-          candidate.category === product.category ||
+          (candidate.formatSlug ?? candidate.category) ===
+            (product.formatSlug ?? product.category) ||
           candidate.expansionSlug === product.expansionSlug),
     )
     .slice(0, limit);
@@ -92,25 +95,20 @@ export function parseListingFilters(searchParams: SearchParamsInput): ListingFil
 }
 
 export function filterProducts(input: Product[], filters: ListingFilters) {
+  const formatFilters = [...new Set([...filters.category, ...filters.format])];
+
   const filtered = input.filter((product) => {
     if (filters.brand.length > 0 && !filters.brand.includes(product.brand)) {
       return false;
     }
 
-    if (filters.category.length > 0 && !filters.category.includes(product.category)) {
+    if (formatFilters.length > 0 && !formatFilters.includes(product.formatSlug ?? product.category)) {
       return false;
     }
 
     if (
       filters.expansion.length > 0 &&
       (!product.expansionSlug || !filters.expansion.includes(product.expansionSlug))
-    ) {
-      return false;
-    }
-
-    if (
-      filters.format.length > 0 &&
-      (!product.formatSlug || !filters.format.includes(product.formatSlug))
     ) {
       return false;
     }
@@ -185,7 +183,6 @@ export function getListingFilterOptions(input: Product[]) {
   const brandsMap = new Map<string, { slug: string; label: string }>();
   const categoriesMap = new Map<string, { slug: string; label: string }>();
   const expansionsMap = new Map<string, string>();
-  const formatsMap = new Map<string, string>();
   const languages = new Set<ProductLanguage>();
 
   for (const product of input) {
@@ -193,17 +190,14 @@ export function getListingFilterOptions(input: Product[]) {
       slug: product.brand,
       label: product.brandLabel ?? humanizeSlug(product.brand),
     });
-    categoriesMap.set(product.category, {
-      slug: product.category,
-      label: product.categoryLabel ?? getCategoryLabel(product.category),
+    const categorySlug = product.formatSlug ?? product.category;
+    categoriesMap.set(categorySlug, {
+      slug: categorySlug,
+      label: product.format ?? product.categoryLabel ?? getCategoryLabel(categorySlug),
     });
 
     if (product.expansionSlug && product.expansion) {
       expansionsMap.set(product.expansionSlug, product.expansion);
-    }
-
-    if (product.formatSlug && product.format) {
-      formatsMap.set(product.formatSlug, product.format);
     }
 
     if (product.language) {
@@ -215,7 +209,7 @@ export function getListingFilterOptions(input: Product[]) {
     brands: Array.from(brandsMap.values()),
     categories: Array.from(categoriesMap.values()),
     expansions: Array.from(expansionsMap.entries()).map(([slug, label]) => ({ slug, label })),
-    formats: Array.from(formatsMap.entries()).map(([slug, label]) => ({ slug, label })),
+    formats: [],
     languages: Array.from(languages),
     price: {
       min: prices.length > 0 ? Math.min(...prices) : 0,
@@ -245,7 +239,7 @@ export function getScopedCollection(options: {
       return false;
     }
 
-    if (options.category && product.category !== options.category) {
+    if (options.category && (product.formatSlug ?? product.category) !== options.category) {
       return false;
     }
 

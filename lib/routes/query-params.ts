@@ -100,6 +100,13 @@ export function parseCollectionFilters(searchParams: SearchParamsInput): Listing
   const sort: SortOption = sortOptionValues.includes(requestedSort as SortOption)
     ? (requestedSort as SortOption)
     : "featured";
+  const categoryFilters = parseNormalizedList(
+    getSearchParamValue(searchParams, collectionQueryParamKeys.category),
+  );
+  const legacyFormatFilters = parseNormalizedList(
+    getSearchParamValue(searchParams, collectionQueryParamKeys.format),
+  );
+  const mergedFormatFilters = [...new Set([...categoryFilters, ...legacyFormatFilters])];
 
   return {
     page: parsePage(getSearchParamValue(searchParams, collectionQueryParamKeys.page)),
@@ -107,15 +114,11 @@ export function parseCollectionFilters(searchParams: SearchParamsInput): Listing
     brand: parseNormalizedList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.brand),
     ),
-    category: parseNormalizedList(
-      getSearchParamValue(searchParams, collectionQueryParamKeys.category),
-    ),
+    category: mergedFormatFilters,
     expansion: parseNormalizedList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.expansion),
     ),
-    format: parseNormalizedList(
-      getSearchParamValue(searchParams, collectionQueryParamKeys.format),
-    ),
+    format: [],
     language: parseLanguageList(
       getSearchParamValue(searchParams, collectionQueryParamKeys.language),
     ),
@@ -152,10 +155,6 @@ export function buildCollectionQueryString(filters: Partial<ListingFilters>) {
 
   if (filters.expansion?.length) {
     params.set(collectionQueryParamKeys.expansion, filters.expansion.join(","));
-  }
-
-  if (filters.format?.length) {
-    params.set(collectionQueryParamKeys.format, filters.format.join(","));
   }
 
   if (filters.language?.length) {

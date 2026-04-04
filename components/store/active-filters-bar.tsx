@@ -44,9 +44,6 @@ export function ActiveFiltersBar({
   const expansionLabels = new Map(
     filters.expansions.map((expansion) => [expansion.value, expansion.label]),
   );
-  const formatLabels = new Map(
-    filters.formats.map((format) => [format.value, format.label]),
-  );
   const languageLabels = new Map(
     filters.languages.map((language) => [language.value, language.label]),
   );
@@ -63,7 +60,7 @@ export function ActiveFiltersBar({
     })),
     ...query.category.map((category) => ({
       key: `category-${category}`,
-      label: `Categoria: ${categoryLabels.get(category) ?? category}`,
+      label: `Formato: ${categoryLabels.get(category) ?? category}`,
       href: buildHref(basePath, {
         ...query,
         category: withoutValue(query.category, category),
@@ -76,15 +73,6 @@ export function ActiveFiltersBar({
       href: buildHref(basePath, {
         ...query,
         expansion: withoutValue(query.expansion, expansion),
-        page: 1,
-      }),
-    })),
-    ...query.format.map((format) => ({
-      key: `format-${format}`,
-      label: `Formato: ${formatLabels.get(format) ?? format}`,
-      href: buildHref(basePath, {
-        ...query,
-        format: withoutValue(query.format, format),
         page: 1,
       }),
     })),

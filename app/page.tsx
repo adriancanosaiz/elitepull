@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { homeHeroBanner } from "@/data/banners";
 import { brands } from "@/data/brands";
 import { BrandCard } from "@/components/store/brand-card";
+import { SupportModuleCard } from "@/components/store/support-module-card";
 import { HeroBanner } from "@/components/store/hero-banner";
 import { SectionHeading } from "@/components/store/section-heading";
 import { StoreReveal } from "@/components/store/store-reveal";
@@ -55,14 +56,16 @@ export default async function HomePage() {
             <StoreViewportMount
               key={brand.id}
               from={index % 2 === 0 ? "left" : "right"}
-              placeholderClassName="min-h-[100svh] sm:min-h-[540px] lg:min-h-[520px]"
+              className="w-full"
+              placeholderClassName="min-h-[84svh] sm:min-h-[540px] lg:min-h-[520px]"
             >
-              {/* Each brand card fills screen on mobile */}
-              <div className="flex min-h-[calc(100svh-56px)] items-center py-4 sm:min-h-0 sm:py-0">
-                <BrandCard
-                  brand={brand}
-                  imageSide={index % 2 === 0 ? "left" : "right"}
-                />
+              <div className="w-full py-2 sm:py-0">
+                <div className="w-full">
+                  <BrandCard
+                    brand={brand}
+                    imageSide={index % 2 === 0 ? "left" : "right"}
+                  />
+                </div>
               </div>
             </StoreViewportMount>
           ))}
@@ -82,9 +85,9 @@ export default async function HomePage() {
               <StoreViewportMount
                 key={brand.id}
                 from="up"
-                placeholderClassName="min-h-[420px]"
+                placeholderClassName="min-h-[160px]"
               >
-                <BrandCard brand={brand} compact />
+                <SupportModuleCard brand={brand} />
               </StoreViewportMount>
             ))}
           </div>

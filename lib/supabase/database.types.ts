@@ -30,31 +30,6 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["brands"]["Insert"]>;
       };
-      categories: {
-        Row: {
-          id: string;
-          slug: string;
-          label: string;
-          description: string | null;
-          brand_slug: string;
-          sort_order: number;
-          active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          slug: string;
-          label: string;
-          description?: string | null;
-          brand_slug: string;
-          sort_order?: number;
-          active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["categories"]["Insert"]>;
-      };
       expansions: {
         Row: {
           id: string;
@@ -269,7 +244,6 @@ export interface Database {
           product_type: string;
           brand_slug: string;
           brand_id: string;
-          category_id: string;
           expansion_id: string;
           format_id: string;
           language_code: string;
@@ -294,7 +268,6 @@ export interface Database {
           product_type: string;
           brand_slug: string;
           brand_id: string;
-          category_id: string;
           expansion_id: string;
           format_id: string;
           language_code: string;

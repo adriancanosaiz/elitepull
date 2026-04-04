@@ -578,3 +578,16 @@ export async function saveAdminCatalogAvailabilityBatch(
     skippedCount,
   };
 }
+
+export async function deleteAdminCatalogAvailability(id: string) {
+  await requireAdminAccess();
+
+  const client = createAdminCatalogServiceClient();
+  const { error } = await client.from("expansion_format_availability").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(
+      getCatalogErrorMessage(error, "No se pudo eliminar la configuracion de catalogo."),
+    );
+  }
+}

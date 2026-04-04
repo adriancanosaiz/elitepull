@@ -15,6 +15,10 @@ import {
 import {
   replaceAdminProductGallery,
   uploadAdminProductCover,
+  deleteAdminProductCover,
+  deleteAdminProductGalleryImage,
+  appendAdminProductGalleryImages,
+  type AdminProductMediaMutationResult,
 } from "@/lib/admin/product-media";
 import { adminProductSchema } from "@/lib/validators/admin-product";
 import { createUuidLikeSchema } from "@/lib/validators/uuid-like";
@@ -68,7 +72,35 @@ function buildRedirectUrl(basePath: string, params: Record<string, string | unde
 
 function getFirstErrorMessage(error: unknown) {
   if (error instanceof z.ZodError) {
-    return error.issues[0]?.message ?? "Revisa los campos del formulario.";
+    const firstIssue = error.issues[0];
+
+    if (!firstIssue) {
+      return "Revisa los campos del formulario.";
+    }
+
+    if (
+      firstIssue.message.toLowerCase().includes("expected string") ||
+      firstIssue.message.toLowerCase().includes("received null")
+    ) {
+      const fieldPath = String(firstIssue.path[0] ?? "");
+      const fieldLabels: Record<string, string> = {
+        name: "nombre",
+        description: "descripcion",
+        productType: "tipo de producto",
+        brandId: "marca",
+        expansionId: "expansion",
+        formatId: "formato",
+        languageCode: "idioma",
+        price: "precio",
+        stock: "stock",
+      };
+
+      if (fieldLabels[fieldPath]) {
+        return `Revisa el campo ${fieldLabels[fieldPath]}.`;
+      }
+    }
+
+    return firstIssue.message;
   }
 
   if (error instanceof Error) {
@@ -114,7 +146,6 @@ function parseAdminProductFormData(formData: FormData, forcedId?: string) {
     description: formData.get("description"),
     productType: formData.get("productType"),
     brandId: formData.get("brandId"),
-    categoryId: formData.get("categoryId"),
     expansionId: formData.get("expansionId"),
     formatId: formData.get("formatId"),
     languageCode: formData.get("languageCode"),
@@ -198,12 +229,12 @@ export async function createAdminProductAction(formData: FormData) {
     }
 
     revalidateAdminProductPaths(result);
-    targetPath = buildRedirectUrl(`/admin/productos/${result.id}`, {
+    targetPath = buildRedirectUrl("/admin/productos", {
       success: coverImage || galleryImages.length > 0 ? "created-with-media" : "created",
     });
   } catch (error) {
     if (createdProduct) {
-      targetPath = buildRedirectUrl(`/admin/productos/${createdProduct.id}`, {
+      targetPath = buildRedirectUrl("/admin/productos", {
         success: "created",
         error: `Producto creado, pero la subida inicial de media no ha terminado bien: ${getFirstErrorMessage(error)}`,
       });
@@ -314,6 +345,95 @@ export async function deleteAdminProductAction(formData: FormData) {
     targetPath = buildRedirectUrl(redirectTo, {
       error: getFirstErrorMessage(error),
     });
+  }
+  redirect(targetPath);
+}
+
+function revalidateAdminMediaPaths(result: AdminProductMediaMutationResult) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/productos");
+  revalidatePath(`/admin/productos/${result.productId}`);
+  revalidatePath("/");
+  revalidatePath("/catalogo");
+  revalidatePath("/preventa");
+  revalidatePath("/marca/pokemon");
+  revalidatePath("/marca/one-piece");
+  revalidatePath("/marca/riftbound");
+  revalidatePath("/marca/magic");
+  revalidatePath("/accesorios");
+  revalidatePath(`/producto/${result.slug}`);
+}
+
+export async function uploadStandaloneAdminProductCoverAction(formData: FormData) {
+  const requestedId = typeof formData.get("productId") === "string" ? String(formData.get("productId")).trim() : "";
+  let targetPath = requestedId ? `/admin/productos/${requestedId}` : "/admin/productos";
+
+  try {
+    const productId = resolveAdminProductId(formData);
+    const coverImage = getUploadedFile(formData, "coverImage");
+    if (!coverImage) throw new Error("Selecciona una imagen de portada valida.");
+
+    const result = await uploadAdminProductCover(productId, coverImage);
+    revalidateAdminMediaPaths(result);
+    targetPath = buildRedirectUrl(targetPath, { success: "cover-uploaded" });
+  } catch (error) {
+    targetPath = buildRedirectUrl(targetPath, { error: getFirstErrorMessage(error) });
+  }
+
+  redirect(targetPath);
+}
+
+export async function deleteAdminProductCoverAction(formData: FormData) {
+  const requestedId = typeof formData.get("productId") === "string" ? String(formData.get("productId")).trim() : "";
+  let targetPath = requestedId ? `/admin/productos/${requestedId}` : "/admin/productos";
+
+  try {
+    const productId = resolveAdminProductId(formData);
+    const result = await deleteAdminProductCover(productId);
+    
+    revalidateAdminMediaPaths(result);
+    targetPath = buildRedirectUrl(targetPath, { success: "cover-deleted" });
+  } catch (error) {
+    targetPath = buildRedirectUrl(targetPath, { error: getFirstErrorMessage(error) });
+  }
+
+  redirect(targetPath);
+}
+
+export async function appendAdminProductGalleryImagesAction(formData: FormData) {
+  const requestedId = typeof formData.get("productId") === "string" ? String(formData.get("productId")).trim() : "";
+  let targetPath = requestedId ? `/admin/productos/${requestedId}` : "/admin/productos";
+
+  try {
+    const productId = resolveAdminProductId(formData);
+    const galleryImages = getUploadedFiles(formData, "galleryImages");
+    
+    if (galleryImages.length === 0) throw new Error("Selecciona al menos una imagen valida para la galeria.");
+
+    const result = await appendAdminProductGalleryImages(productId, galleryImages);
+    revalidateAdminMediaPaths(result);
+    targetPath = buildRedirectUrl(targetPath, { success: "gallery-updated" });
+  } catch (error) {
+    targetPath = buildRedirectUrl(targetPath, { error: getFirstErrorMessage(error) });
+  }
+
+  redirect(targetPath);
+}
+
+export async function deleteAdminProductGalleryImageAction(formData: FormData) {
+  const requestedId = typeof formData.get("productId") === "string" ? String(formData.get("productId")).trim() : "";
+  let targetPath = requestedId ? `/admin/productos/${requestedId}` : "/admin/productos";
+
+  try {
+    const productId = resolveAdminProductId(formData);
+    const storagePath = formData.get("storagePath");
+    if (typeof storagePath !== "string" || !storagePath) throw new Error("Falta la ruta original de la imagen.");
+
+    const result = await deleteAdminProductGalleryImage(productId, storagePath);
+    revalidateAdminMediaPaths(result);
+    targetPath = buildRedirectUrl(targetPath, { success: "gallery-image-deleted" });
+  } catch (error) {
+    targetPath = buildRedirectUrl(targetPath, { error: getFirstErrorMessage(error) });
   }
 
   redirect(targetPath);

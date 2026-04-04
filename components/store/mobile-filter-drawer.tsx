@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { FilterSidebar } from "@/components/store/filter-sidebar";
+import { buildCollectionQueryString } from "@/lib/routes/query-params";
 import { cn } from "@/lib/utils";
-import type { CollectionResponse } from "@/types/contracts";
+import type { CollectionQuery, CollectionResponse } from "@/types/contracts";
 
-function getActiveFilterCount(collection: CollectionResponse) {
-  const { query } = collection;
+function getActiveFilterCount(query: CollectionQuery) {
   return (
     query.brand.length +
     query.category.length +
@@ -24,11 +25,55 @@ function getActiveFilterCount(collection: CollectionResponse) {
   );
 }
 
+function cloneQuery(query: CollectionQuery): CollectionQuery {
+  return {
+    ...query,
+    brand: [...query.brand],
+    category: [...query.category],
+    expansion: [...query.expansion],
+    format: [...query.format],
+    language: [...query.language],
+  };
+}
+
+function createEmptyQuery(query: CollectionQuery): CollectionQuery {
+  return {
+    ...cloneQuery(query),
+    page: 1,
+    brand: [],
+    category: [],
+    expansion: [],
+    format: [],
+    language: [],
+    priceMin: undefined,
+    priceMax: undefined,
+    inStock: false,
+    isPreorder: false,
+    featured: false,
+  };
+}
+
 export function MobileFilterDrawer({ collection }: { collection: CollectionResponse }) {
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [draftQuery, setDraftQuery] = useState<CollectionQuery>(() => cloneQuery(collection.query));
   const pathname = usePathname();
   const router = useRouter();
-  const activeCount = getActiveFilterCount(collection);
+  const activeCount = getActiveFilterCount(collection.query);
+  const draftActiveCount = getActiveFilterCount(draftQuery);
+  const appliedQueryString = buildCollectionQueryString({
+    ...collection.query,
+    page: 1,
+  });
+  const draftQueryString = buildCollectionQueryString({
+    ...draftQuery,
+    page: 1,
+  });
+  const hasPendingChanges = appliedQueryString !== draftQueryString;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -43,8 +88,24 @@ export function MobileFilterDrawer({ collection }: { collection: CollectionRespo
     };
   }, [open]);
 
+  useEffect(() => {
+    if (open) {
+      return;
+    }
+
+    setDraftQuery(cloneQuery(collection.query));
+  }, [collection.query, open]);
+
   function clearFilters() {
-    router.push(pathname, { scroll: false });
+    setDraftQuery(createEmptyQuery(collection.query));
+  }
+
+  function applyFilters() {
+    const query = buildCollectionQueryString({
+      ...draftQuery,
+      page: 1,
+    });
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
     setOpen(false);
   }
 
@@ -74,93 +135,113 @@ export function MobileFilterDrawer({ collection }: { collection: CollectionRespo
         </span>
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.24 }}
-              className="fixed inset-0 z-[60] bg-[rgba(3,6,14,0.74)] backdrop-blur-md xl:hidden"
-              onClick={() => setOpen(false)}
-            />
-
-            <div className="fixed inset-0 z-[61] flex items-end xl:hidden">
-              <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ type: "spring", stiffness: 340, damping: 38, mass: 0.88 }}
-                className="relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.12] bg-[linear-gradient(180deg,rgba(12,16,26,0.995),rgba(7,9,16,0.995))] shadow-[0_-30px_80px_rgba(2,6,23,0.64)] backdrop-blur-2xl"
-                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-              >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_72%)]" />
-
-                <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.98),rgba(12,16,26,0.92))] px-5 pb-4 pt-3 backdrop-blur-2xl">
-                  <div className="flex justify-center">
-                    <div className="h-1 w-10 rounded-full bg-white/20" />
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                        Catálogo
-                      </p>
-                      <h2 className="mt-1 font-heading text-xl font-semibold text-white">
-                        Filtros
-                      </h2>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setOpen(false)}
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 active:opacity-60"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-400">
-                    <span>{activeCount > 0 ? `${activeCount} filtros activos` : "Sin filtros activos"}</span>
-                    <span>{collection.total} resultados</span>
-                  </div>
-                </div>
-
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
-                  <FilterSidebar
-                    brands={collection.filters.brands}
-                    categories={collection.filters.categories}
-                    expansions={collection.filters.expansions}
-                    formats={collection.filters.formats}
-                    languages={collection.filters.languages}
-                    price={collection.filters.price}
-                    compact
+      {mounted
+        ? createPortal(
+            <AnimatePresence>
+              {open && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.24 }}
+                    className="fixed inset-0 z-[60] bg-[rgba(3,6,14,0.74)] backdrop-blur-md xl:hidden"
+                    onClick={() => setOpen(false)}
                   />
-                </div>
 
-                <div className="border-t border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.88),rgba(9,12,19,0.98))] px-4 pb-1 pt-3 backdrop-blur-2xl">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="inline-flex h-12 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white active:opacity-60"
+                  <div className="pointer-events-none fixed inset-0 z-[61] flex items-end xl:hidden">
+                    <motion.div
+                      initial={{ y: "100%" }}
+                      animate={{ y: 0 }}
+                      exit={{ y: "100%" }}
+                      transition={{ type: "spring", stiffness: 340, damping: 38, mass: 0.88 }}
+                      className="pointer-events-auto relative flex h-[94dvh] max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.12] bg-[linear-gradient(180deg,rgba(12,16,26,0.995),rgba(7,9,16,0.995))] shadow-[0_-30px_80px_rgba(2,6,23,0.64)] backdrop-blur-2xl"
+                      style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
                     >
-                      Limpiar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setOpen(false)}
-                      className="inline-flex h-12 min-w-0 flex-1 items-center justify-center rounded-[18px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] px-4 text-sm font-semibold text-slate-950 shadow-[0_14px_32px_rgba(214,186,131,0.22)] active:opacity-90"
-                    >
-                      Ver {collection.total} resultados
-                    </button>
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_72%)]" />
+
+                      <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.98),rgba(12,16,26,0.92))] px-5 pb-4 pt-3 backdrop-blur-2xl">
+                        <div className="flex justify-center">
+                          <div className="h-1 w-10 rounded-full bg-white/20" />
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                              Catálogo
+                            </p>
+                            <h2 className="mt-1 font-heading text-xl font-semibold text-white">
+                              Filtros
+                            </h2>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setOpen(false)}
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 active:opacity-60"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-400">
+                          <span>
+                            {draftActiveCount > 0
+                              ? `${draftActiveCount} filtros seleccionados`
+                              : "Sin filtros seleccionados"}
+                          </span>
+                          <span>{hasPendingChanges ? "Pendientes de aplicar" : "Sin cambios"}</span>
+                        </div>
+                      </div>
+
+                      <div
+                        className="min-h-0 flex-1 overflow-y-scroll overscroll-y-contain px-4 pb-8 pt-4"
+                        style={{
+                          WebkitOverflowScrolling: "touch",
+                          overscrollBehaviorY: "contain",
+                          touchAction: "pan-y",
+                        }}
+                      >
+                        <FilterSidebar
+                          brands={collection.filters.brands}
+                          categories={collection.filters.categories}
+                          expansions={collection.filters.expansions}
+                          languages={collection.filters.languages}
+                          price={collection.filters.price}
+                          compact
+                          value={draftQuery}
+                          onChange={setDraftQuery}
+                          onClear={clearFilters}
+                          showClearAction={false}
+                        />
+                      </div>
+
+                      <div className="border-t border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,26,0.88),rgba(9,12,19,0.98))] px-4 pb-1 pt-3 backdrop-blur-2xl">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={clearFilters}
+                            disabled={draftActiveCount === 0}
+                            className="inline-flex h-12 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white transition-opacity disabled:cursor-default disabled:opacity-45 active:opacity-60"
+                          >
+                            Limpiar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={hasPendingChanges ? applyFilters : () => setOpen(false)}
+                            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center rounded-[18px] bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] px-4 text-sm font-semibold text-slate-950 shadow-[0_14px_32px_rgba(214,186,131,0.22)] active:opacity-90"
+                          >
+                            {hasPendingChanges ? "Ver resultados" : "Cerrar filtros"}
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
-                </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
+                </>
+              )}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

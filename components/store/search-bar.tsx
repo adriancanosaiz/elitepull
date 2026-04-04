@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Layers, Search, Sparkles, Tag } from "lucide-react";
+import { ChevronRight, Layers, Search, Sparkles, Tag, Clock3, Shield } from "lucide-react";
 
-import { BrandGlyph } from "@/components/store/brand-glyph";
+import Image from "next/image";
+import { BrandGlyph, brandGlyphConfig } from "@/components/store/brand-glyph";
 import { brands } from "@/data/brands";
 import { searchSuggestions } from "@/data/site";
 import { getCatalogRoute } from "@/lib/routes/store-routes";
@@ -20,7 +21,7 @@ type SearchTarget = {
   href: string;
   brand?: BrandSlug;
   keywords: string[];
-  kind: "brand" | "category";
+  kind: "brand" | "format";
 };
 
 const searchTargets: SearchTarget[] = [
@@ -41,7 +42,7 @@ const searchTargets: SearchTarget[] = [
       href: category.href,
       brand: brand.slug,
       keywords: [brand.name, brand.shortName, category.label, category.slug, category.description],
-      kind: "category" as const,
+      kind: "format" as const,
     })),
   ),
 ];
@@ -262,14 +263,30 @@ export function SearchBar({
                     )}
                   >
                     {result.kind === "brand" && result.brand ? (
-                      <BrandGlyph brand={result.brand} size="sm" />
+                      result.brand === "preventa" ? (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-white/[0.04]">
+                          <Clock3 className="h-4 w-4 text-primary/80" />
+                        </span>
+                      ) : result.brand === "accesorios" ? (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-white/[0.04]">
+                          <Shield className="h-4 w-4 text-primary/80" />
+                        </span>
+                      ) : brandGlyphConfig[result.brand]?.assetSrc ? (
+                        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+                          <Image
+                            src={brandGlyphConfig[result.brand].assetSrc!}
+                            alt={result.brand}
+                            fill
+                            sizes="40px"
+                            className="object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                          />
+                        </span>
+                      ) : (
+                        <BrandGlyph brand={result.brand} size="sm" />
+                      )
                     ) : (
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-white/[0.04]">
-                        {result.kind === "brand" ? (
-                          <Layers className="h-4 w-4 text-primary/80" />
-                        ) : (
-                          <Tag className="h-4 w-4 text-accent/80" />
-                        )}
+                        <Tag className="h-4 w-4 text-accent/80" />
                       </span>
                     )}
                     <div className="min-w-0 flex-1">

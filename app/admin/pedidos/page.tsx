@@ -16,13 +16,14 @@ type AdminOrdersPageSearchParams = Promise<{
 const ORDER_STATUS_OPTIONS: Array<{
   value?: CheckoutOrderStatus;
   label: string;
+  description: string;
 }> = [
-  { value: undefined, label: "Todos" },
-  { value: "pending_checkout", label: "Pendiente checkout" },
-  { value: "checkout_created", label: "Checkout creado" },
-  { value: "paid", label: "Pagado" },
-  { value: "cancelled", label: "Cancelado" },
-  { value: "payment_failed", label: "Pago fallido" },
+  { value: undefined, label: "Todos", description: "Ver todos los pedidos" },
+  { value: "pending_checkout", label: "Sin completar", description: "El cliente no llegó al pago" },
+  { value: "checkout_created", label: "En proceso", description: "Checkout abierto, esperando pago" },
+  { value: "paid", label: "Pagados", description: "Pago confirmado por Stripe" },
+  { value: "cancelled", label: "Cancelados", description: "Pedido cancelado" },
+  { value: "payment_failed", label: "Pago fallido", description: "El pago no se completó" },
 ];
 
 export default async function AdminOrdersPage({
@@ -42,57 +43,64 @@ export default async function AdminOrdersPage({
 
   const orders = filteredOrders ?? allOrders;
   const paidCount = allOrders.filter((order) => order.status === "paid").length;
-  const checkoutCreatedCount = allOrders.filter(
-    (order) => order.status === "checkout_created",
+  const pendingCount = allOrders.filter(
+    (order) => order.status === "pending_checkout" || order.status === "checkout_created",
   ).length;
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_360px]">
+      {/* Header */}
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_320px]">
         <div className="rounded-[30px] border border-white/10 bg-black/20 p-6 md:p-7">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-200/75">
             Pedidos
           </p>
           <h1 className="mt-3 font-heading text-3xl font-semibold text-white">
-            Lectura operativa de checkout V1
+            Pedidos recibidos
           </h1>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-            Desde aqui puedes revisar pedidos creados por Stripe Checkout, su estado actual,
-            el email del comprador y el total confirmado sin tocar aun flujos avanzados.
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
+            Aquí aparecen todos los pedidos que han llegado a la tienda. Puedes ver el estado
+            de cada uno, el cliente que lo hizo y el importe total.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
-          <MetricCard label="Pedidos" value={String(allOrders.length)} description="Total registrado" />
-          <MetricCard label="Pagados" value={String(paidCount)} description="Confirmados por webhook" />
-          <MetricCard
-            label="Checkout"
-            value={String(checkoutCreatedCount)}
-            description="Pendientes de confirmacion final"
+          <QuickStat
+            label="Total pedidos"
+            value={String(allOrders.length)}
+            description="registrados en la tienda"
+          />
+          <QuickStat
+            label="Pagados"
+            value={String(paidCount)}
+            description="pago confirmado por Stripe"
+          />
+          <QuickStat
+            label="Pendientes"
+            value={String(pendingCount)}
+            description="sin confirmar o en proceso"
           />
         </div>
       </section>
 
+      {/* Filtros */}
       <section className="rounded-[30px] border border-white/10 bg-black/20 p-5 md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Filtro rapido
+              Filtrar por estado
             </p>
-            <h2 className="mt-3 font-heading text-2xl font-semibold text-white">
-              Estado del pedido
+            <h2 className="mt-2 font-heading text-xl font-semibold text-white">
+              ¿Qué pedidos quieres ver?
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-              Filtra por `status` para ver pagos completados, checkouts abiertos o pedidos cancelados.
-            </p>
           </div>
-
           <p className="text-sm text-slate-400">
-            {orders.length} {orders.length === 1 ? "pedido visible" : "pedidos visibles"}
+            {orders.length} {orders.length === 1 ? "pedido" : "pedidos"}
+            {selectedStatus ? " filtrados" : " en total"}
           </p>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-2">
           {ORDER_STATUS_OPTIONS.map((option) => {
             const isActive = option.value === selectedStatus || (!option.value && !selectedStatus);
             const href = option.value ? `/admin/pedidos?status=${option.value}` : "/admin/pedidos";
@@ -101,6 +109,7 @@ export default async function AdminOrdersPage({
               <Link
                 key={option.label}
                 href={href}
+                title={option.description}
                 className={[
                   "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
                   isActive
@@ -113,33 +122,24 @@ export default async function AdminOrdersPage({
             );
           })}
         </div>
-      </section>
 
-      {selectedStatus ? (
-        <section className="rounded-[24px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">
-          <span className="mr-3 text-slate-400">Filtro activo:</span>
-          <OrderStatusBadge status={selectedStatus} />
-        </section>
-      ) : null}
+        {selectedStatus ? (
+          <div className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+            <span>Filtrando por:</span>
+            <OrderStatusBadge status={selectedStatus} />
+            <Link href="/admin/pedidos" className="ml-1 text-xs underline underline-offset-2 hover:text-white">
+              Quitar filtro
+            </Link>
+          </div>
+        ) : null}
+      </section>
 
       <OrdersTable orders={orders} selectedStatus={selectedStatus} />
-
-      <section className="rounded-[28px] border border-white/10 bg-black/20 p-5 text-sm leading-7 text-slate-300">
-        <p>
-          El listado es solo lectura en esta V1. El siguiente paso natural sera exponer acciones
-          operativas simples desde el detalle sin rehacer el circuito de checkout.
-        </p>
-        <div className="mt-4">
-          <Button asChild variant="outline">
-            <Link href="/admin">Volver al dashboard</Link>
-          </Button>
-        </div>
-      </section>
     </div>
   );
 }
 
-function MetricCard({
+function QuickStat({
   label,
   value,
   description,
@@ -154,7 +154,7 @@ function MetricCard({
         {label}
       </p>
       <p className="mt-3 font-heading text-2xl font-semibold text-white">{value}</p>
-      <p className="mt-3 text-sm leading-6 text-slate-300">{description}</p>
+      <p className="mt-2 text-xs leading-5 text-slate-500">{description}</p>
     </div>
   );
 }

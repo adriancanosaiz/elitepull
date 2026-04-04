@@ -44,7 +44,6 @@ const PRODUCT_SELECT = `
   product_type,
   brand_slug,
   brand_id,
-  category_id,
   expansion_id,
   format_id,
   language_code,
@@ -75,16 +74,11 @@ const PRODUCT_SELECT = `
     slug,
     label
   ),
-  category:categories!products_category_id_fkey (
-    id,
-    slug,
-    label,
-    brand_slug
-  ),
   images:product_images (
     storage_path,
     sort_order,
-    is_primary
+    is_primary,
+    alt_text
   ),
   inventory:inventory (
     available_quantity
@@ -149,7 +143,7 @@ function scopeProducts(products: Product[], input: CollectionRepositoryInput) {
       return false;
     }
 
-    if (input.category && product.category !== input.category) {
+    if (input.category && (product.formatSlug ?? product.category) !== input.category) {
       return false;
     }
 

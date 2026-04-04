@@ -51,11 +51,6 @@ export function buildCollectionResponse(
       .map((product) => product.expansionSlug)
       .filter((expansion): expansion is string => Boolean(expansion)),
   );
-  const formatCounts = countValues(
-    baseProducts
-      .map((product) => product.formatSlug)
-      .filter((expansion): expansion is string => Boolean(expansion)),
-  );
   const languageCounts = countValues(
     baseProducts
       .map((product) => product.language)
@@ -98,13 +93,7 @@ export function buildCollectionResponse(
           count: expansionCounts.get(expansion.slug) ?? 0,
         })),
       ),
-      formats: sortFilterOptions(
-        filterOptions.formats.map((format) => ({
-          value: format.slug,
-          label: format.label,
-          count: formatCounts.get(format.slug) ?? 0,
-        })),
-      ),
+      formats: [],
       languages: sortFilterOptions(
         filterOptions.languages.map((language) => ({
           value: language,

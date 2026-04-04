@@ -4,6 +4,7 @@ export const homeHeroBanner: PromoBanner = {
   id: "hero-home",
   title: "Tu colección llevada al siguiente nivel",
   subtitle: "Encuentra desde Elite Trainer Boxes (ETB) hasta los singles más buscados con disponibilidad inmediata.",
+  mobileSubtitle: "ETB, producto sellado y singles top en un solo catálogo con stock real.",
   description:
     "El inventario definitivo de Pokémon, One Piece y Magic. Explora nuestro catálogo oficial con stock garantizado y protección premium.",
   ctaLabel: "Explorar catalogo",

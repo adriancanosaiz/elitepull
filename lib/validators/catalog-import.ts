@@ -49,7 +49,8 @@ export const productImportSchema = z.object({
   description: z.string().trim().min(1, "Product description is required"),
   productType: productTypeSchema,
   brandSlug: brandSlugSchema,
-  categorySlug: z.string().trim().min(1, "Product categorySlug is required"),
+  formatSlug: z.string().trim().min(1, "Product formatSlug is required").optional(),
+  categorySlug: z.string().trim().min(1, "Product categorySlug is required").optional(),
   price: z.number().nonnegative("Product price must be >= 0"),
   compareAtPrice: z.number().nonnegative("compareAtPrice must be >= 0").optional(),
   featured: z.boolean().optional().default(false),
@@ -59,42 +60,35 @@ export const productImportSchema = z.object({
   tags: z.array(z.string().trim().min(1)).optional().default([]),
   attributes: z.record(z.string(), z.unknown()).optional().default({}),
   media: productMediaImportSchema,
-});
+})
+  .superRefine((product, ctx) => {
+    if (!product.formatSlug && !product.categorySlug) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["formatSlug"],
+        message: "Product formatSlug is required",
+      });
+    }
+  })
+  .transform((product) => {
+    const formatSlug = product.formatSlug ?? product.categorySlug ?? "";
+    const { categorySlug: _legacyCategorySlug, ...rest } = product;
+
+    return {
+      ...rest,
+      formatSlug,
+    };
+  });
 
 export const catalogImportSchema = z
   .object({
-    categories: z.array(categoryImportSchema),
+    categories: z.array(categoryImportSchema).optional().default([]),
     products: z.array(productImportSchema),
   })
   .superRefine((catalog, ctx) => {
-    const categoryKeys = new Set<string>();
-    const categoryIds = new Set<string>();
     const productIds = new Set<string>();
     const productSlugs = new Set<string>();
     const productSkus = new Set<string>();
-
-    for (const [index, category] of catalog.categories.entries()) {
-      const categoryKey = `${category.brandSlug}::${category.slug}`;
-
-      if (categoryKeys.has(categoryKey)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["categories", index, "slug"],
-          message: `Duplicate category ${categoryKey}`,
-        });
-      }
-
-      if (categoryIds.has(category.id)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["categories", index, "id"],
-          message: `Duplicate category id ${category.id}`,
-        });
-      }
-
-      categoryKeys.add(categoryKey);
-      categoryIds.add(category.id);
-    }
 
     for (const [index, product] of catalog.products.entries()) {
       if (productIds.has(product.id)) {
@@ -126,16 +120,6 @@ export const catalogImportSchema = z
           code: "custom",
           path: ["products", index, "compareAtPrice"],
           message: "compareAtPrice cannot be lower than price",
-        });
-      }
-
-      const categoryKey = `${product.brandSlug}::${product.categorySlug}`;
-
-      if (!categoryKeys.has(categoryKey)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["products", index, "categorySlug"],
-          message: `Missing category ${categoryKey} for product ${product.slug}`,
         });
       }
 

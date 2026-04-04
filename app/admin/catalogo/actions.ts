@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import {
+  deleteAdminCatalogAvailability,
   saveAdminCatalogAvailability,
   saveAdminCatalogAvailabilityBatch,
   saveAdminCatalogBrand,
@@ -299,6 +300,24 @@ export async function saveAdminCatalogAvailabilityBatchAction(formData: FormData
 
     revalidateAdminCatalogPaths();
     targetPath = buildRedirectUrl("/admin/catalogo/configuracion", { success: "saved" });
+  } catch (error) {
+    targetPath = buildRedirectUrl("/admin/catalogo/configuracion", {
+      error: getFirstErrorMessage(error),
+    });
+  }
+
+  redirect(targetPath);
+}
+
+export async function deleteAdminCatalogAvailabilityAction(formData: FormData) {
+  let targetPath = "/admin/catalogo/configuracion";
+
+  try {
+    const id = createUuidLikeSchema("El id no es valido.").parse(formData.get("id"));
+
+    await deleteAdminCatalogAvailability(id);
+    revalidateAdminCatalogPaths();
+    targetPath = buildRedirectUrl("/admin/catalogo/configuracion", { success: "eliminado" });
   } catch (error) {
     targetPath = buildRedirectUrl("/admin/catalogo/configuracion", {
       error: getFirstErrorMessage(error),

@@ -27,26 +27,26 @@ export function ProductsTable({
     return (
       <div className="rounded-[30px] border border-dashed border-white/12 bg-black/20 p-10 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-          {searchQuery?.trim() ? "Sin resultados" : "Catalogo vacio"}
+          {searchQuery?.trim() ? "Sin resultados" : "Catálogo vacío"}
         </p>
         <h2 className="mt-4 font-heading text-2xl font-semibold text-white">
           {searchQuery?.trim()
-            ? `No hemos encontrado coincidencias para "${searchQuery.trim()}"`
-            : "Todavia no hay productos en este listado"}
+            ? `No encontramos "${searchQuery.trim()}" en el catálogo`
+            : "Todavía no hay ningún producto"}
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-300">
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-300">
           {searchQuery?.trim()
-            ? "Prueba con otro nombre, slug o SKU, o limpia la busqueda para revisar todo el catalogo."
-            : "Crea el primer producto desde el admin y usa despues la edicion para completar media, featured, preventa y stock."}
+            ? "Prueba con otro nombre o limpia la búsqueda para ver todos los productos."
+            : "Crea tu primer producto pulsando el botón de abajo. Solo tardas unos minutos."}
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {searchQuery?.trim() ? (
             <Button asChild variant="outline">
-              <Link href="/admin/productos">Limpiar busqueda</Link>
+              <Link href="/admin/productos">Ver todos los productos</Link>
             </Button>
           ) : null}
           <Button asChild>
-            <Link href="/admin/productos/nuevo">Nuevo producto</Link>
+            <Link href="/admin/productos/nuevo">Añadir primer producto</Link>
           </Button>
         </div>
       </div>
@@ -55,39 +55,34 @@ export function ProductsTable({
 
   return (
     <>
+      {/* Tabla desktop */}
       <div className="hidden overflow-hidden rounded-[30px] border border-white/10 bg-black/20 xl:block">
         <table className="min-w-full divide-y divide-white/10 text-sm">
           <thead className="bg-white/[0.03]">
-            <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              <th className="px-5 py-4">Nombre</th>
+            <tr className="text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              <th className="px-5 py-4">Producto</th>
               <th className="px-5 py-4">Marca</th>
-              <th className="px-5 py-4">Categoria</th>
               <th className="px-5 py-4">Precio</th>
               <th className="px-5 py-4">Stock</th>
-              <th className="px-5 py-4">Estado</th>
-              <th className="px-5 py-4">Featured</th>
+              <th className="px-5 py-4">Visible</th>
+              <th className="px-5 py-4">Destacado</th>
               <th className="px-5 py-4">Preventa</th>
-              <th className="px-5 py-4 text-right">Editar</th>
+              <th className="px-5 py-4 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/8">
             {products.map((product) => (
               <tr key={product.id} className="align-top">
                 <td className="px-5 py-5">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <p className="font-semibold text-white">{product.name}</p>
-                    <div className="space-y-1 text-xs text-slate-400">
-                      <p>Slug: {product.slug}</p>
-                      <p>SKU: {product.sku}</p>
-                      <p>
-                        {product.expansionLabel} · {product.formatLabel} · {product.languageCode}
-                        {product.variantLabel ? ` · ${product.variantLabel}` : ""}
-                      </p>
+                    <div className="space-y-0.5 text-xs text-slate-500">
+                      <p>{product.expansionLabel} · {product.formatLabel} · {product.languageCode}</p>
+                      {product.variantLabel ? <p>Variante: {product.variantLabel}</p> : null}
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-5 text-slate-200">{product.brandLabel}</td>
-                <td className="px-5 py-5 text-slate-200">{product.categoryLabel}</td>
                 <td className="px-5 py-5 text-slate-200">
                   <div className="space-y-1">
                     <p>{formatPrice(product.price)}</p>
@@ -136,6 +131,7 @@ export function ProductsTable({
         </table>
       </div>
 
+      {/* Cards móvil/tablet */}
       <div className="grid gap-4 xl:hidden">
         {products.map((product) => (
           <article
@@ -145,15 +141,10 @@ export function ProductsTable({
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <p className="font-semibold text-white">{product.name}</p>
-                <div className="mt-2 space-y-1 text-xs text-slate-400">
-                  <p>Slug: {product.slug}</p>
-                  <p>SKU: {product.sku}</p>
+                <div className="mt-2 space-y-0.5 text-xs text-slate-400">
                   <p>Marca: {product.brandLabel}</p>
-                  <p>Categoria: {product.categoryLabel}</p>
-                  <p>
-                    {product.expansionLabel} · {product.formatLabel} · {product.languageCode}
-                    {product.variantLabel ? ` · ${product.variantLabel}` : ""}
-                  </p>
+                  <p>{product.expansionLabel} · {product.formatLabel} · {product.languageCode}</p>
+                  {product.variantLabel ? <p>Variante: {product.variantLabel}</p> : null}
                 </div>
               </div>
 
@@ -248,7 +239,7 @@ function StockQuickFields({
         className={compact ? "h-9 w-24 rounded-xl" : "h-9 w-28 rounded-xl"}
       />
       <Button type="submit" size="sm" variant="outline" disabled={pending}>
-        {pending ? "Guardando..." : compact ? "Guardar" : "Guardar stock"}
+        {pending ? "Guardando…" : "Guardar"}
       </Button>
     </>
   );
@@ -278,7 +269,7 @@ function ToggleActiveButton({ active }: { active: boolean }) {
 
   return (
     <Button type="submit" size="sm" variant="outline" disabled={pending}>
-      {pending ? "Actualizando..." : active ? "Desactivar" : "Activar"}
+      {pending ? "Actualizando…" : active ? "Ocultar" : "Publicar"}
     </Button>
   );
 }

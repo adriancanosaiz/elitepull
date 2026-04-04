@@ -20,7 +20,7 @@ type SearchTarget = {
   href: string;
   brand?: BrandSlug;
   keywords: string[];
-  kind: "brand" | "category";
+  kind: "brand" | "format";
 };
 
 const searchTargets: SearchTarget[] = [
@@ -41,7 +41,7 @@ const searchTargets: SearchTarget[] = [
       href: category.href,
       brand: brand.slug,
       keywords: [brand.name, brand.shortName, category.label, category.slug, category.description],
-      kind: "category" as const,
+      kind: "format" as const,
     })),
   ),
 ];
@@ -151,13 +151,13 @@ export function MobileSearchModal({
             onClick={onClose}
           />
 
-          <div className="fixed inset-0 z-[61] flex items-end xl:hidden">
+          <div className="pointer-events-none fixed inset-0 z-[61] flex items-end xl:hidden">
             <motion.div
               initial={{ y: "100%", opacity: 0.9 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0.9 }}
               transition={{ type: "spring", stiffness: 340, damping: 38, mass: 0.9 }}
-              className="relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.12] bg-[linear-gradient(180deg,rgba(12,16,26,0.995),rgba(7,9,16,0.995))] shadow-[0_-30px_80px_rgba(2,6,23,0.64)] backdrop-blur-2xl"
+              className="pointer-events-auto relative flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.12] bg-[linear-gradient(180deg,rgba(12,16,26,0.995),rgba(7,9,16,0.995))] shadow-[0_-30px_80px_rgba(2,6,23,0.64)] backdrop-blur-2xl"
               style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
             >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_72%)]" />
@@ -215,7 +215,7 @@ export function MobileSearchModal({
 
               {!hasQuery ? (
                 <p className="px-5 pb-2 pt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  Marcas y categorías
+                  Marcas y formatos
                 </p>
               ) : null}
 

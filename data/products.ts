@@ -1,6 +1,58 @@
 import type { Product } from "@/types/store";
 
-export const products: Product[] = [
+const legacyCategoryToFormatMap = {
+  etb: { slug: "etb", label: "ETB" },
+  sobres: { slug: "booster-packs", label: "Booster Packs" },
+  "sobres-individuales": { slug: "booster-packs", label: "Booster Packs" },
+  "booster-packs": { slug: "booster-packs", label: "Booster Packs" },
+  "booster-normales": { slug: "booster-packs", label: "Booster Packs" },
+  blister: { slug: "blister", label: "Blister" },
+  "blister-3-sobres": { slug: "blister", label: "Blister" },
+  cajas: { slug: "cajas", label: "Cajas" },
+  "ediciones-especiales": { slug: "ediciones-especiales", label: "Ediciones especiales" },
+  "booster-coleccion": {
+    slug: "collector-booster-packs",
+    label: "Collector Booster Packs",
+  },
+  "collector-booster-packs": {
+    slug: "collector-booster-packs",
+    label: "Collector Booster Packs",
+  },
+  "commander-decks": { slug: "commander-decks", label: "Commander Decks" },
+  bundle: { slug: "bundle", label: "Bundle" },
+  "cartas-individuales": { slug: "cartas-individuales", label: "Cartas individuales" },
+  fundas: { slug: "fundas", label: "Fundas" },
+  "deck-boxes": { slug: "deck-boxes", label: "Deck Boxes" },
+  binders: { slug: "binders", label: "Binders" },
+  toploaders: { slug: "toploaders", label: "Toploaders" },
+  "dados-tapetes": { slug: "dados-tapetes", label: "Dados y tapetes" },
+} as const satisfies Record<string, { slug: string; label: string }>;
+
+function humanizeSlug(value: string) {
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function normalizeMockProduct(product: Product): Product {
+  const mappedFormat =
+    legacyCategoryToFormatMap[product.category as keyof typeof legacyCategoryToFormatMap];
+  const formatSlug = product.formatSlug ?? mappedFormat?.slug ?? product.category;
+  const formatLabel =
+    product.format ?? mappedFormat?.label ?? product.categoryLabel ?? humanizeSlug(formatSlug);
+
+  return {
+    ...product,
+    category: formatSlug,
+    categoryLabel: formatLabel,
+    formatSlug,
+    format: formatLabel,
+  };
+}
+
+const rawProducts: Product[] = [
   {
     id: "prod_pokemon_prismatic_etb",
     slug: "pokemon-prismatic-evolutions-etb",
@@ -281,6 +333,8 @@ export const products: Product[] = [
     tags: ["single", "mythic"],
   },
 ];
+
+export const products: Product[] = rawProducts.map(normalizeMockProduct);
 
 const curatedIds = {
   novedades: [

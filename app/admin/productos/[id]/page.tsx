@@ -15,7 +15,7 @@ import { ProductMediaUploader } from "@/components/admin/product-media-uploader"
 import { ProductForm } from "@/components/admin/product-form";
 import { Button } from "@/components/ui/button";
 import { getAdminProductCatalogOptions } from "@/lib/admin/catalog-taxonomy";
-import { getAdminCategories, getAdminProductById } from "@/lib/admin/products";
+import { getAdminProductById } from "@/lib/admin/products";
 
 type ProductEditPageParams = Promise<{
   id: string;
@@ -36,8 +36,7 @@ export default async function AdminEditProductPage({
   searchParams: ProductEditPageSearchParams;
 }) {
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
-  const [categories, catalogOptions, product] = await Promise.all([
-    getAdminCategories(),
+  const [catalogOptions, product] = await Promise.all([
     getAdminProductCatalogOptions(),
     getAdminProductById(id),
   ]);
@@ -97,7 +96,6 @@ export default async function AdminEditProductPage({
       <ProductForm
         mode="edit"
         action={updateAdminProductAction}
-        categories={categories}
         catalogOptions={catalogOptions}
         product={resolvedProduct}
         error={resolvedSearchParams.error}

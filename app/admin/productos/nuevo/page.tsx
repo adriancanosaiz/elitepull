@@ -5,7 +5,6 @@ import { createAdminProductAction } from "@/app/admin/productos/actions";
 import { ProductForm } from "@/components/admin/product-form";
 import { Button } from "@/components/ui/button";
 import { getAdminProductCatalogOptions } from "@/lib/admin/catalog-taxonomy";
-import { getAdminCategories } from "@/lib/admin/products";
 
 type NewProductSearchParams = Promise<{
   error?: string;
@@ -17,10 +16,7 @@ export default async function AdminNewProductPage({
   searchParams: NewProductSearchParams;
 }) {
   const params = await searchParams;
-  const [categories, catalogOptions] = await Promise.all([
-    getAdminCategories(),
-    getAdminProductCatalogOptions(),
-  ]);
+  const catalogOptions = await getAdminProductCatalogOptions();
 
   return (
     <div className="space-y-6">
@@ -51,7 +47,6 @@ export default async function AdminNewProductPage({
       <ProductForm
         mode="create"
         action={createAdminProductAction}
-        categories={categories}
         catalogOptions={catalogOptions}
         error={params.error}
       />

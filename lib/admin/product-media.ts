@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireAdminAccess } from "@/lib/auth/admin";
+import { buildAutomaticProductImageAlt } from "@/lib/product-media-alt";
 import type { Database } from "@/lib/supabase/database.types";
 import {
   PRODUCT_MEDIA_BUCKET,
@@ -43,6 +44,17 @@ type ProductMediaRecord = {
   name: string;
   brand_slug: Database["public"]["Tables"]["products"]["Row"]["brand_slug"];
   main_image_path: string | null;
+};
+
+type ProductGalleryRowRecord = Pick<
+  Database["public"]["Tables"]["product_images"]["Row"],
+  "id" | "storage_path" | "sort_order" | "alt_text"
+>;
+
+type DesiredGalleryRow = {
+  storagePath: string;
+  sortOrder: number;
+  altText: string | null;
 };
 
 export type AdminProductMediaMutationResult = {
@@ -253,6 +265,18 @@ async function removeStoragePaths(
   }
 }
 
+async function removeStoragePathsSafely(
+  client: SupabaseClient<Database>,
+  paths: Iterable<string>,
+) {
+  try {
+    await removeStoragePaths(client, paths);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[admin-product-media] Limpieza compensatoria fallida: ${message}`);
+  }
+}
+
 async function uploadToStorage(
   client: SupabaseClient<Database>,
   destinationPath: string,
@@ -278,7 +302,7 @@ async function uploadToStorage(
 async function updateProductCoverPath(
   client: SupabaseClient<Database>,
   productId: string,
-  coverImagePath: string,
+  coverImagePath: string | null,
 ) {
   const productsTable = client.from("products") as any;
   const { error } = await productsTable
@@ -297,38 +321,145 @@ async function updateProductCoverPath(
 async function replaceProductGalleryRows(
   client: SupabaseClient<Database>,
   productId: string,
-  galleryImagePaths: string[],
+  rows: DesiredGalleryRow[],
 ) {
   const productImagesTable = client.from("product_images") as any;
-  const { error: deleteError } = await productImagesTable.delete().eq("product_id", productId);
 
-  if (deleteError) {
+  const { data: existingRows, error: existingRowsError } = await productImagesTable
+    .select("id, storage_path, sort_order, alt_text")
+    .eq("product_id", productId);
+
+  if (existingRowsError) {
     throw new Error(
-      getProductMediaErrorMessage(deleteError, "No se ha podido resetear la galeria actual."),
+      getProductMediaErrorMessage(
+        existingRowsError,
+        "No se ha podido leer la galeria actual del producto.",
+      ),
     );
   }
 
-  if (galleryImagePaths.length === 0) {
+  const normalizedRows = rows.map((row) => ({
+    product_id: productId,
+    storage_path: row.storagePath,
+    alt_text: row.altText,
+    is_primary: false,
+    sort_order: row.sortOrder,
+  })) satisfies Database["public"]["Tables"]["product_images"]["Insert"][];
+
+  if (normalizedRows.length > 0) {
+    const { error: upsertError } = await productImagesTable.upsert(normalizedRows, {
+      onConflict: "product_id,sort_order",
+    });
+
+    if (upsertError) {
+      throw new Error(
+        getProductMediaErrorMessage(upsertError, "No se ha podido guardar la nueva galeria."),
+      );
+    }
+  }
+
+  const staleRowIds =
+    ((existingRows ?? []) as ProductGalleryRowRecord[])
+      .filter((row) => !rows.some((desiredRow) => desiredRow.sortOrder === row.sort_order))
+      .map((row) => row.id) ?? [];
+
+  if (staleRowIds.length === 0) {
     return;
   }
 
-  const rows: Database["public"]["Tables"]["product_images"]["Insert"][] = galleryImagePaths.map(
-    (storagePath, index) => ({
+  const { error: deleteError } = await productImagesTable.delete().in("id", staleRowIds);
+
+  if (deleteError) {
+    throw new Error(
+      getProductMediaErrorMessage(deleteError, "No se ha podido limpiar la galeria anterior."),
+    );
+  }
+}
+
+async function getNextGallerySortOrder(
+  client: SupabaseClient<Database>,
+  productId: string,
+) {
+  const productImagesTable = client.from("product_images") as any;
+  const { data, error } = await productImagesTable
+    .select("sort_order")
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    throw new Error(
+      getProductMediaErrorMessage(error, "No se ha podido preparar la siguiente imagen de galeria."),
+    );
+  }
+
+  return data && data.length > 0 ? Number(data[0].sort_order) + 1 : 1;
+}
+
+async function appendProductGalleryRows(
+  client: SupabaseClient<Database>,
+  productId: string,
+  rows: DesiredGalleryRow[],
+) {
+  if (rows.length === 0) return;
+
+  const productImagesTable = client.from("product_images") as any;
+  const insertRows: Database["public"]["Tables"]["product_images"]["Insert"][] = rows.map(
+    (row) => ({
       product_id: productId,
-      storage_path: storagePath,
-      alt_text: null,
+      storage_path: row.storagePath,
+      alt_text: row.altText,
       is_primary: false,
-      sort_order: index + 1,
+      sort_order: row.sortOrder,
     }),
   );
 
-  const { error: insertError } = await productImagesTable.insert(rows);
+  const { error: insertError } = await productImagesTable.insert(insertRows);
 
   if (insertError) {
     throw new Error(
-      getProductMediaErrorMessage(insertError, "No se ha podido guardar la nueva galeria."),
+      getProductMediaErrorMessage(insertError, "No se ha podido guardar la imagen en la galeria."),
     );
   }
+}
+
+async function deleteProductGalleryRow(
+  client: SupabaseClient<Database>,
+  productId: string,
+  storagePath: string,
+) {
+  const productImagesTable = client.from("product_images") as any;
+  const normalizedStoragePath = normalizeProductMediaPath(storagePath);
+  const { data: existingRow, error: existingRowError } = await productImagesTable
+    .select("id, storage_path")
+    .eq("product_id", productId)
+    .eq("storage_path", normalizedStoragePath)
+    .maybeSingle();
+
+  if (existingRowError) {
+    throw new Error(
+      getProductMediaErrorMessage(
+        existingRowError,
+        "No se ha podido validar la imagen seleccionada de la galeria.",
+      ),
+    );
+  }
+
+  if (!existingRow) {
+    throw new Error("La imagen seleccionada no pertenece a este producto o ya no existe.");
+  }
+
+  const { error: deleteError } = await productImagesTable
+    .delete()
+    .eq("id", existingRow.id);
+
+  if (deleteError) {
+    throw new Error(
+      getProductMediaErrorMessage(deleteError, "No se ha podido eliminar la imagen de la galeria."),
+    );
+  }
+
+  return normalizedStoragePath;
 }
 
 function buildMediaMutationResult(
@@ -361,13 +492,22 @@ export async function uploadAdminProductCover(
   );
   const productDirectory = getProductMediaDirectory(product.id);
   const existingRootPaths = await listFolderPaths(client, productDirectory);
+  const isNewCoverPath = !existingRootPaths.has(nextCoverPath);
   const staleCoverPaths = [...existingRootPaths].filter(
     (storagePath) =>
       storagePath.startsWith(`${productDirectory}/cover.`) && storagePath !== nextCoverPath,
   );
 
   await uploadToStorage(client, nextCoverPath, uploadedFile);
-  await updateProductCoverPath(client, product.id, nextCoverPath);
+  try {
+    await updateProductCoverPath(client, product.id, nextCoverPath);
+  } catch (error) {
+    if (isNewCoverPath) {
+      await removeStoragePathsSafely(client, [nextCoverPath]);
+    }
+
+    throw error;
+  }
   await removeStoragePaths(client, staleCoverPaths);
 
   return buildMediaMutationResult(product, nextCoverPath, []);
@@ -391,13 +531,16 @@ export async function replaceAdminProductGallery(
   const uploadPlan = await Promise.all(
     files.map(async (file, index) => {
       const uploadedFile = await readUploadFile(file, `la galeria #${index + 1}`);
+      const sortOrder = index + 1;
       const storagePath = normalizeProductMediaPath(
-        getProductGalleryImagePath(product.id, index + 1, uploadedFile.extension),
+        getProductGalleryImagePath(product.id, sortOrder, uploadedFile.extension),
       );
 
       return {
         file: uploadedFile,
         storagePath,
+        sortOrder,
+        altText: buildAutomaticProductImageAlt(product.name, sortOrder),
       };
     }),
   );
@@ -407,12 +550,122 @@ export async function replaceAdminProductGallery(
   }
 
   const galleryImagePaths = uploadPlan.map((item) => item.storagePath);
+  try {
+    await replaceProductGalleryRows(
+      client,
+      product.id,
+      uploadPlan.map((item) => ({
+        storagePath: item.storagePath,
+        sortOrder: item.sortOrder,
+        altText: item.altText,
+      })),
+    );
+  } catch (error) {
+    const newOnlyPaths = uploadPlan
+      .map((item) => item.storagePath)
+      .filter((storagePath) => !existingGalleryPaths.has(storagePath));
+    await removeStoragePathsSafely(client, newOnlyPaths);
+    throw error;
+  }
+
   const staleGalleryPaths = [...existingGalleryPaths].filter(
     (storagePath) => !galleryImagePaths.includes(storagePath),
   );
-
-  await replaceProductGalleryRows(client, product.id, galleryImagePaths);
   await removeStoragePaths(client, staleGalleryPaths);
+
+  return buildMediaMutationResult(
+    product,
+    normalizeProductMediaPath(product.main_image_path) || undefined,
+    galleryImagePaths,
+  );
+}
+
+export async function deleteAdminProductCover(productId: string) {
+  await requireAdminAccess();
+
+  const client = createSupabaseServiceRoleClient();
+  const product = await getProductMediaRecord(client, productId);
+  const currentPath = normalizeProductMediaPath(product.main_image_path) || undefined;
+
+  if (currentPath) {
+    await updateProductCoverPath(client, product.id, null);
+    await removeStoragePaths(client, [currentPath]);
+  }
+
+  // No gallery modifications needed; we return empty array since this just handles the cover
+  return buildMediaMutationResult(product, undefined, []);
+}
+
+export async function deleteAdminProductGalleryImage(productId: string, storagePath: string) {
+  await requireAdminAccess();
+
+  const client = createSupabaseServiceRoleClient();
+  const product = await getProductMediaRecord(client, productId);
+  const normalizedStoragePath = normalizeProductMediaPath(storagePath);
+  const productGalleryDirectory = `${getProductMediaDirectory(product.id)}/gallery/`;
+
+  if (!normalizedStoragePath.startsWith(productGalleryDirectory)) {
+    throw new Error("La imagen seleccionada no pertenece a la galeria de este producto.");
+  }
+
+  const deletedStoragePath = await deleteProductGalleryRow(client, product.id, normalizedStoragePath);
+  await removeStoragePaths(client, [deletedStoragePath]);
+
+  // Just return empty, it's enough for revalidation
+  return buildMediaMutationResult(
+    product,
+    normalizeProductMediaPath(product.main_image_path) || undefined,
+    [],
+  );
+}
+
+export async function appendAdminProductGalleryImages(productId: string, files: File[]) {
+  await requireAdminAccess();
+
+  if (files.length === 0) {
+    throw new Error("Selecciona al menos una imagen para la galeria.");
+  }
+
+  const client = createSupabaseServiceRoleClient();
+  const product = await getProductMediaRecord(client, productId);
+  const nextSortOrder = await getNextGallerySortOrder(client, product.id);
+
+  const uploadPlan = await Promise.all(
+    files.map(async (file, index) => {
+      const uploadedFile = await readUploadFile(file, `nueva imagen de galeria`);
+      const sortOrder = nextSortOrder + index;
+      const storagePath = normalizeProductMediaPath(
+        getProductGalleryImagePath(product.id, sortOrder, uploadedFile.extension),
+      );
+
+      return {
+        file: uploadedFile,
+        storagePath,
+        sortOrder,
+        altText: buildAutomaticProductImageAlt(product.name, sortOrder),
+      };
+    }),
+  );
+
+  for (const item of uploadPlan) {
+    await uploadToStorage(client, item.storagePath, item.file);
+  }
+
+  const galleryImagePaths = uploadPlan.map((item) => item.storagePath);
+  try {
+    await appendProductGalleryRows(
+      client,
+      product.id,
+      uploadPlan.map((item) => ({
+        storagePath: item.storagePath,
+        sortOrder: item.sortOrder,
+        altText: item.altText,
+      })),
+    );
+  } catch (error) {
+    await removeStoragePathsSafely(client, galleryImagePaths);
+    throw error;
+  }
 
   return buildMediaMutationResult(
     product,

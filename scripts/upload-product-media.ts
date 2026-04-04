@@ -16,6 +16,16 @@ import {
   getProductMediaDirectory,
 } from "../lib/supabase/storage.ts";
 
+type ProductMediaExtension = "webp" | "png" | "jpg" | "jpeg" | "avif";
+
+const imageContentTypes: Record<ProductMediaExtension, string> = {
+  avif: "image/avif",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
 const envSchema = z.object({
   supabaseUrl: z.string().trim().url("Missing valid SUPABASE URL"),
   serviceRoleKey: z.string().trim().min(1, "Missing SUPABASE_SERVICE_ROLE_KEY"),
@@ -61,15 +71,32 @@ async function readRequiredFile(filePath: string, label: string) {
   }
 }
 
+function resolveImageExtension(filePath: string): ProductMediaExtension {
+  const extension = path.extname(filePath).replace(/^\./, "").toLowerCase();
+
+  if (
+    extension === "webp" ||
+    extension === "png" ||
+    extension === "jpg" ||
+    extension === "jpeg" ||
+    extension === "avif"
+  ) {
+    return extension;
+  }
+
+  throw new Error(`[upload-product-media] Unsupported image extension for ${filePath}`);
+}
+
 async function uploadFile(
   client: SupabaseClient<Database>,
   bucket: string,
   destinationPath: string,
   fileBuffer: Buffer,
+  contentType: string,
   overwrite: boolean,
 ) {
   const { error } = await client.storage.from(bucket).upload(destinationPath, fileBuffer, {
-    contentType: "image/webp",
+    contentType,
     upsert: overwrite,
   });
 
@@ -176,20 +203,27 @@ async function main() {
     const localProductMediaDir = path.join(process.cwd(), "catalog", "media", product.slug);
     const expectedPaths = new Set<string>();
 
-    const coverStoragePath = getProductCoverPath(product.id);
-    expectedPaths.add(coverStoragePath);
-
     const localCoverPath = path.join(localProductMediaDir, product.media.coverFile);
+    const coverExtension = resolveImageExtension(localCoverPath);
+    const coverStoragePath = getProductCoverPath(product.id, coverExtension);
+    expectedPaths.add(coverStoragePath);
     const coverBuffer = await readRequiredFile(localCoverPath, `cover for ${product.slug}`);
 
-    await uploadFile(client, PRODUCT_MEDIA_BUCKET, coverStoragePath, coverBuffer, overwrite);
+    await uploadFile(
+      client,
+      PRODUCT_MEDIA_BUCKET,
+      coverStoragePath,
+      coverBuffer,
+      imageContentTypes[coverExtension],
+      overwrite,
+    );
     uploadedFiles += 1;
 
     for (const [index, image] of product.media.gallery.entries()) {
-      const galleryStoragePath = getProductGalleryImagePath(product.id, index + 1);
-      expectedPaths.add(galleryStoragePath);
-
       const localGalleryPath = path.join(localProductMediaDir, image.file);
+      const galleryExtension = resolveImageExtension(localGalleryPath);
+      const galleryStoragePath = getProductGalleryImagePath(product.id, index + 1, galleryExtension);
+      expectedPaths.add(galleryStoragePath);
       const galleryBuffer = await readRequiredFile(
         localGalleryPath,
         `gallery image ${image.file} for ${product.slug}`,
@@ -200,6 +234,7 @@ async function main() {
         PRODUCT_MEDIA_BUCKET,
         galleryStoragePath,
         galleryBuffer,
+        imageContentTypes[galleryExtension],
         overwrite,
       );
       uploadedFiles += 1;

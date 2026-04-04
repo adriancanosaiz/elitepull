@@ -25,8 +25,9 @@ export default async function AdminCatalogBrandsPage({
   return (
     <div className="space-y-6">
       <AdminCatalogPageHeader
+        eyebrow="Catálogo → Marcas"
         title="Marcas"
-        description="Alta y edicion ligera de marcas para que el catalogo y el admin no dependan de listas fijas en frontend."
+        description="Las marcas son los juegos que vendéis: Pokémon, One Piece, Magic, Lorcana… Añade aquí una nueva marca si empezáis a vender un juego nuevo. Todas las expansiones y productos dependen de la marca."
       />
 
       {params.error ? <AdminCatalogNotice tone="error">{params.error}</AdminCatalogNotice> : null}
@@ -34,57 +35,71 @@ export default async function AdminCatalogBrandsPage({
         <AdminCatalogNotice tone="success">Marca guardada correctamente.</AdminCatalogNotice>
       ) : null}
 
-      <AdminCatalogSection eyebrow="Nueva marca">
+      <AdminCatalogSection eyebrow="Añadir nueva marca">
+        <p className="mt-2 text-sm text-slate-400">
+          Escribe el nombre del juego tal como quieres que aparezca. El identificador interno se genera solo.
+        </p>
         <form action={saveAdminCatalogBrandAction} className="mt-5 grid gap-4 md:grid-cols-4">
           <AdminCatalogField
-            label="Label"
+            label="Nombre de la marca"
             name="label"
-            placeholder="Pokemon"
-            hint="El slug se genera automaticamente desde este nombre."
+            placeholder="Ej: Pokémon, One Piece, Magic"
+            hint="El identificador interno se genera automáticamente a partir de este nombre."
           />
-          <AdminCatalogField label="Orden" name="sortOrder" type="number" defaultValue="10" />
-          <AdminCatalogCheckboxField label="Activa" name="active" defaultChecked />
+          <AdminCatalogField
+            label="Posición en la lista"
+            name="sortOrder"
+            type="number"
+            defaultValue="10"
+            hint="Número menor = aparece antes. Usa 10, 20, 30… para dejar margen."
+          />
+          <AdminCatalogCheckboxField label="Mostrar en la tienda" name="active" defaultChecked />
           <div className="md:col-span-4">
-            <Button type="submit">Crear marca</Button>
+            <Button type="submit">Añadir marca</Button>
           </div>
         </form>
       </AdminCatalogSection>
 
-      <section className="space-y-4">
-        {brands.map((brand) => (
-          <form
-            key={brand.id}
-            action={saveAdminCatalogBrandAction}
-            className="rounded-[28px] border border-white/10 bg-black/20 p-5"
-          >
-            <input type="hidden" name="id" value={brand.id} />
-            <div className="grid gap-4 md:grid-cols-4">
-              <AdminCatalogField
-                label="Label"
-                name="label"
-                defaultValue={brand.label}
-                hint={`Slug actual: ${brand.slug}`}
-              />
-              <AdminCatalogField
-                label="Orden"
-                name="sortOrder"
-                type="number"
-                defaultValue={String(brand.sortOrder)}
-              />
-              <AdminCatalogCheckboxField
-                label="Activa"
-                name="active"
-                defaultChecked={brand.active}
-              />
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button type="submit" variant="outline">
-                Guardar marca
-              </Button>
-            </div>
-          </form>
-        ))}
-      </section>
+      {brands.length > 0 && (
+        <section className="space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+            Marcas existentes ({brands.length})
+          </p>
+          {brands.map((brand) => (
+            <form
+              key={brand.id}
+              action={saveAdminCatalogBrandAction}
+              className="rounded-[28px] border border-white/10 bg-black/20 p-5"
+            >
+              <input type="hidden" name="id" value={brand.id} />
+              <div className="grid gap-4 md:grid-cols-4">
+                <AdminCatalogField
+                  label="Nombre de la marca"
+                  name="label"
+                  defaultValue={brand.label}
+                  hint={`Identificador interno: ${brand.slug}`}
+                />
+                <AdminCatalogField
+                  label="Posición"
+                  name="sortOrder"
+                  type="number"
+                  defaultValue={String(brand.sortOrder)}
+                />
+                <AdminCatalogCheckboxField
+                  label="Mostrar en la tienda"
+                  name="active"
+                  defaultChecked={brand.active}
+                />
+              </div>
+              <div className="mt-4 flex justify-end">
+                <Button type="submit" variant="outline">
+                  Guardar cambios
+                </Button>
+              </div>
+            </form>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

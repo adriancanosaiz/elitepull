@@ -7,7 +7,11 @@ import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { priceRanges } from "@/lib/catalog";
-import type { CollectionFilterOption, CollectionResponse } from "@/types/contracts";
+import type {
+  CollectionFilterOption,
+  CollectionQuery,
+  CollectionResponse,
+} from "@/types/contracts";
 
 function parseValues(value: string | null) {
   if (!value) {
@@ -17,37 +21,111 @@ function parseValues(value: string | null) {
   return value.split(",").filter(Boolean);
 }
 
+function parseOptionalNumber(value: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function getRangeMax(range: (typeof priceRanges)[number]) {
   return "max" in range ? range.max : undefined;
+}
+
+type MultiFilterKey = "brand" | "category" | "expansion" | "format" | "language";
+type BooleanFilterKey = "inStock" | "isPreorder" | "featured";
+
+function mergeCategoryValues(categoryValues: string[], legacyFormatValues: string[]) {
+  return [...new Set([...categoryValues, ...legacyFormatValues])];
 }
 
 export function FilterSidebar({
   brands,
   categories,
   expansions,
-  formats,
   languages,
   price,
   compact = false,
+  value,
+  onChange,
+  onClear,
+  showClearAction = !compact,
 }: {
   brands: CollectionFilterOption[];
   categories: CollectionFilterOption[];
   expansions: CollectionFilterOption[];
-  formats: CollectionFilterOption[];
   languages: CollectionFilterOption[];
   price: CollectionResponse["filters"]["price"];
   compact?: boolean;
+  value?: CollectionQuery;
+  onChange?: (next: CollectionQuery) => void;
+  onClear?: () => void;
+  showClearAction?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activePriceMin = searchParams.get("priceMin");
-  const activePriceMax = searchParams.get("priceMax");
+  const mergedCategoryFilters = mergeCategoryValues(
+    parseValues(searchParams.get("category")),
+    parseValues(searchParams.get("format")),
+  );
+  const currentQuery: CollectionQuery =
+    value ?? {
+      page: Number(searchParams.get("page") ?? "1") || 1,
+      sort: (searchParams.get("sort") ?? "featured") as CollectionQuery["sort"],
+      brand: parseValues(searchParams.get("brand")),
+      category: mergedCategoryFilters,
+      expansion: parseValues(searchParams.get("expansion")),
+      format: [],
+      language: parseValues(searchParams.get("language")) as CollectionQuery["language"],
+      priceMin: parseOptionalNumber(searchParams.get("priceMin")),
+      priceMax: parseOptionalNumber(searchParams.get("priceMax")),
+      inStock: searchParams.get("inStock") === "1",
+      isPreorder: searchParams.get("isPreorder") === "1",
+      featured: searchParams.get("featured") === "1",
+    };
+  const activePriceMin =
+    typeof currentQuery.priceMin === "number" ? String(currentQuery.priceMin) : null;
+  const activePriceMax =
+    typeof currentQuery.priceMax === "number" ? String(currentQuery.priceMax) : null;
   const visiblePriceRanges = priceRanges.filter((range) => {
     const max = getRangeMax(range) ?? Number.POSITIVE_INFINITY;
 
     return max >= price.min && range.min <= price.max;
   });
+
+  function updateQuery(mutator: (next: CollectionQuery) => void) {
+    if (value && onChange) {
+      const next: CollectionQuery = {
+        ...currentQuery,
+        brand: [...currentQuery.brand],
+        category: [...currentQuery.category],
+        expansion: [...currentQuery.expansion],
+        format: [...currentQuery.format],
+        language: [...currentQuery.language],
+      };
+      mutator(next);
+      next.page = 1;
+      onChange(next);
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    mutator({
+      ...currentQuery,
+      brand: [...currentQuery.brand],
+      category: [...currentQuery.category],
+      expansion: [...currentQuery.expansion],
+      format: [...currentQuery.format],
+      language: [...currentQuery.language],
+    });
+    params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
 
   function updateParams(mutator: (params: URLSearchParams) => void) {
     const params = new URLSearchParams(searchParams.toString());
@@ -57,8 +135,23 @@ export function FilterSidebar({
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
-  function toggleMultiParam(key: string, value: string) {
+  function toggleMultiParam(key: MultiFilterKey, value: string) {
+    if (onChange && value) {
+      updateQuery((next) => {
+        const current = next[key] as string[];
+        const nextValues = current.includes(value)
+          ? current.filter((entry) => entry !== value)
+          : [...current, value];
+        Object.assign(next, { [key]: nextValues });
+      });
+      return;
+    }
+
     updateParams((params) => {
+      if (key === "category") {
+        params.delete("format");
+      }
+
       const current = parseValues(params.get(key));
       const next = current.includes(value)
         ? current.filter((entry) => entry !== value)
@@ -72,7 +165,14 @@ export function FilterSidebar({
     });
   }
 
-  function toggleBooleanParam(key: string) {
+  function toggleBooleanParam(key: BooleanFilterKey) {
+    if (onChange) {
+      updateQuery((next) => {
+        next[key] = !next[key];
+      });
+      return;
+    }
+
     updateParams((params) => {
       if (params.get(key) === "1") {
         params.delete(key);
@@ -83,6 +183,23 @@ export function FilterSidebar({
   }
 
   function setPriceRange(min: number, max?: number) {
+    if (onChange) {
+      updateQuery((next) => {
+        const nextMin = min;
+        const nextMax = max;
+
+        if (next.priceMin === nextMin && next.priceMax === nextMax) {
+          next.priceMin = undefined;
+          next.priceMax = undefined;
+          return;
+        }
+
+        next.priceMin = nextMin;
+        next.priceMax = nextMax;
+      });
+      return;
+    }
+
     updateParams((params) => {
       const nextMin = String(min);
       const nextMax = typeof max === "number" ? String(max) : null;
@@ -103,12 +220,12 @@ export function FilterSidebar({
     });
   }
 
-  function isActive(key: string, value: string) {
-    return parseValues(searchParams.get(key)).includes(value);
+  function isActive(key: MultiFilterKey, value: string) {
+    return (currentQuery[key] as string[]).includes(value);
   }
 
-  function isToggleActive(key: string) {
-    return searchParams.get(key) === "1";
+  function isToggleActive(key: BooleanFilterKey) {
+    return currentQuery[key];
   }
 
   return (
@@ -130,17 +247,26 @@ export function FilterSidebar({
               Refina la coleccion
             </h2>
             <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
-              Ajusta marca, categoria, expansion y disponibilidad sin salir del listing.
+              Ajusta marca, formato, expansion y disponibilidad sin salir del listing.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="relative rounded-full border-white/[0.12] bg-black/[0.16]"
-            onClick={() => router.push(pathname, { scroll: false })}
-          >
-            Limpiar
-          </Button>
+          {showClearAction ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="relative rounded-full border-white/[0.12] bg-black/[0.16]"
+              onClick={() => {
+                if (onClear) {
+                  onClear();
+                  return;
+                }
+
+                router.push(pathname, { scroll: false });
+              }}
+            >
+              Limpiar
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -160,7 +286,7 @@ export function FilterSidebar({
           </PillWrap>
         </FilterBlock>
 
-        <FilterBlock title="Categoria" defaultOpen={true}>
+        <FilterBlock title="Formato" defaultOpen={true}>
           <PillWrap>
             {categories.map((category) => (
               <FilterPill
@@ -186,23 +312,6 @@ export function FilterSidebar({
                   onClick={() => toggleMultiParam("expansion", expansion.value)}
                 >
                   {expansion.label}
-                </FilterPill>
-              ))}
-            </PillWrap>
-          </FilterBlock>
-        ) : null}
-
-        {formats.length > 0 ? (
-          <FilterBlock title="Formato">
-            <PillWrap>
-              {formats.map((format) => (
-                <FilterPill
-                  key={format.value}
-                  active={isActive("format", format.value)}
-                  count={format.count}
-                  onClick={() => toggleMultiParam("format", format.value)}
-                >
-                  {format.label}
                 </FilterPill>
               ))}
             </PillWrap>
@@ -291,7 +400,8 @@ function FilterBlock({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full cursor-pointer items-center justify-between p-3.5 sm:p-4 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex min-h-14 w-full select-none items-center justify-between p-3.5 text-left transition-colors active:bg-white/[0.04] sm:min-h-[60px] sm:p-4"
+        style={{ touchAction: "pan-y" }}
       >
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
           {title}
@@ -342,11 +452,12 @@ function FilterPill({
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      style={{ touchAction: "pan-y" }}
       className={[
-        "inline-flex w-full min-h-10 items-center justify-between gap-2 rounded-[20px] border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-[border-color,background-color,color,box-shadow]",
+        "inline-flex min-h-12 w-full select-none items-center justify-between gap-2 rounded-[20px] border px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition-[border-color,background-color,color,box-shadow]",
         active
           ? "border-primary/35 bg-primary/15 text-primary shadow-[0_8px_18px_rgba(234,179,8,0.12)]"
-          : "border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white",
+          : "border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white active:border-white/[0.22] active:bg-white/[0.1]",
       ].join(" ")}
     >
       <span className="line-clamp-2 text-left leading-[1.25] text-balance whitespace-normal">{children}</span>
