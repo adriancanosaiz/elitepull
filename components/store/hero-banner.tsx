@@ -57,8 +57,8 @@ export function HeroBanner({
   const marqueeLogos = [...heroLogos, ...heroLogos];
 
   return (
-    <section className="app-container pb-4 pt-3 sm:pb-8 sm:pt-8 md:pb-12 md:pt-10">
-      <div className="surface-panel vault-sheen relative overflow-hidden">
+    <section className="app-container pb-0 pt-1.5 sm:pb-8 sm:pt-8 md:pb-12 md:pt-10">
+      <div className="surface-panel vault-sheen relative min-h-[calc(100svh-3.5rem)] overflow-hidden sm:min-h-0 xl:min-h-[540px]">
         <div
           className={cn(
             "absolute inset-0 bg-gradient-to-br opacity-70",
@@ -70,7 +70,7 @@ export function HeroBanner({
         <div className="vault-grid absolute inset-0 opacity-[0.07]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_82%_16%,rgba(124,231,227,0.18),transparent_22%),linear-gradient(115deg,transparent_18%,rgba(255,255,255,0.05)_50%,transparent_82%)]" />
 
-        <div className="relative grid min-h-[calc(100svh-7.25rem)] grid-rows-[auto_1fr] gap-5 px-5 py-5 sm:min-h-0 sm:gap-8 sm:px-8 sm:py-8 lg:grid-cols-[0.92fr_1.08fr] lg:grid-rows-1 lg:items-stretch xl:min-h-[540px]">
+        <div className="relative grid h-full gap-4 px-4 py-5 sm:gap-8 sm:px-8 sm:py-8 lg:grid-cols-[0.92fr_1.08fr] lg:grid-rows-1 lg:items-stretch">
           <motion.div
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -82,7 +82,7 @@ export function HeroBanner({
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(12px)" }}
                 animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ ...heroIntroTransition, delay: 0.08 }}
-                className="mx-auto max-w-[13ch] font-heading text-[2.7rem] font-semibold leading-[0.94] tracking-[-0.045em] text-white sm:mx-0 sm:max-w-[11ch] sm:text-5xl md:text-6xl"
+                className="mx-auto max-w-[14ch] font-heading text-[2.1rem] font-semibold leading-[0.94] tracking-[-0.045em] text-white sm:mx-0 sm:max-w-[11ch] sm:text-5xl md:text-6xl"
               >
                 {banner.title}
               </motion.h1>
@@ -90,7 +90,7 @@ export function HeroBanner({
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(10px)" }}
                 animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ ...heroIntroTransition, delay: 0.18 }}
-                className="mx-auto mt-4 max-w-[30rem] text-balance text-[0.96rem] leading-7 text-slate-100/88 sm:mx-0 sm:mt-5 sm:max-w-xl sm:text-base sm:leading-8"
+                className="mx-auto mt-3 max-w-[30rem] text-balance text-[0.93rem] leading-7 text-slate-100/88 line-clamp-2 sm:line-clamp-none sm:mx-0 sm:mt-5 sm:max-w-xl sm:text-base sm:leading-8"
               >
                 {banner.subtitle}
               </motion.p>
@@ -146,11 +146,11 @@ export function HeroBanner({
             initial={shouldReduceMotion ? false : { opacity: 0, y: 18, scale: 0.992, filter: "blur(12px)" }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             transition={{ ...heroIntroTransition, delay: 0.26 }}
-            className="grid content-end gap-4 pt-1 sm:h-[380px] sm:grid-rows-[1fr_auto] sm:gap-6 sm:pt-3 md:h-[430px] lg:h-full lg:min-h-[430px] lg:pt-0 xl:min-h-[500px]"
+            className="grid grid-rows-[1fr_auto] gap-4 pt-1 h-[calc(100svh-4rem-220px)] sm:h-[380px] sm:grid-rows-[1fr_auto] sm:gap-6 sm:pt-3 md:h-[430px] lg:h-full lg:min-h-[430px] lg:pt-0 xl:min-h-[500px]"
           >
-            <div className="relative mx-auto hidden w-full max-w-[420px] items-center justify-center sm:flex sm:max-w-[580px] md:max-w-[620px] lg:max-w-[660px] xl:max-w-[700px]">
+            <div className="relative mx-auto w-full max-w-[320px] items-center justify-center flex sm:max-w-[580px] md:max-w-[620px] lg:max-w-[660px] xl:max-w-[700px]">
               {heroCards.length === 4 ? (
-                <div className="relative h-[188px] w-full overflow-visible sm:h-[282px] md:h-[330px] lg:h-[346px] xl:h-[382px]">
+                <div className="relative h-[160px] w-full overflow-visible sm:h-[282px] md:h-[330px] lg:h-[346px] xl:h-[382px]">
                   {heroCards.map((card, index) => (
                     <div
                       key={`${card.brand}-${card.src}`}

@@ -9,7 +9,9 @@ import {
   useReducedMotion,
   useSpring,
 } from "framer-motion";
+import { Expand } from "lucide-react";
 
+import { ProductLightbox } from "@/components/store/product-lightbox";
 import { StoreMediaImage } from "@/components/store/store-media-image";
 import {
   storefrontImageTransition,
@@ -29,6 +31,7 @@ export function ProductGallery({
 }) {
   const [activeImage, setActiveImage] = useState(images[0] ?? fallbackSrc);
   const [isTiltEnabled, setIsTiltEnabled] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
@@ -112,9 +115,15 @@ export function ProductGallery({
           <div className="pointer-events-none absolute inset-x-10 top-4 h-24 rounded-full bg-white/[0.06] blur-3xl" />
           <div className="pointer-events-none absolute inset-x-16 bottom-3 h-12 rounded-full bg-primary/12 blur-3xl" />
           <div className="shine-pass" />
-          <div className="pointer-events-none absolute right-3 top-3 hidden rounded-full border border-white/10 bg-black/[0.25] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-300 backdrop-blur-md sm:block">
-            Main visual
-          </div>
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            className="absolute right-3 top-3 z-[5] hidden items-center gap-1.5 rounded-full border border-white/10 bg-black/[0.35] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-300 backdrop-blur-md transition-colors hover:border-primary/20 hover:bg-black/50 hover:text-white sm:inline-flex"
+            aria-label="Ampliar imagen"
+          >
+            <Expand className="h-3 w-3" />
+            Ampliar
+          </button>
           {isTiltEnabled ? (
             <motion.div
               aria-hidden="true"
@@ -131,20 +140,22 @@ export function ProductGallery({
               exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 1.012, y: -4 }}
               transition={storefrontImageTransition}
               className={cn(
-                "relative flex min-h-[320px] items-center justify-center sm:min-h-[420px] md:min-h-[560px]",
+                "relative flex min-h-[320px] cursor-zoom-in items-center justify-center sm:min-h-[420px] md:min-h-[560px]",
                 !isTiltEnabled && !shouldReduceMotion && "media-float",
               )}
             >
-              <StoreMediaImage
-                src={activeImage}
-                fallbackSrc={fallbackSrc}
-                alt={name}
-                width={900}
-                height={1100}
-                sizes="(min-width: 1280px) 560px, (min-width: 768px) 50vw, 92vw"
-                quality={82}
-                className="mx-auto h-[320px] w-auto object-contain drop-shadow-[0_24px_48px_rgba(2,6,16,0.28)] sm:h-[420px] md:h-[560px]"
-              />
+              <div onClick={() => setLightboxOpen(true)}>
+                <StoreMediaImage
+                  src={activeImage}
+                  fallbackSrc={fallbackSrc}
+                  alt={name}
+                  width={900}
+                  height={1100}
+                  sizes="(min-width: 1280px) 560px, (min-width: 768px) 50vw, 92vw"
+                  quality={82}
+                  className="mx-auto h-[320px] w-auto object-contain drop-shadow-[0_24px_48px_rgba(2,6,16,0.28)] sm:h-[420px] md:h-[560px]"
+                />
+              </div>
             </motion.div>
           </AnimatePresence>
         </motion.div>
@@ -191,6 +202,14 @@ export function ProductGallery({
           </motion.button>
         ))}
       </div>
+
+      <ProductLightbox
+        src={activeImage}
+        fallbackSrc={fallbackSrc}
+        alt={name}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }

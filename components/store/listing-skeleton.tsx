@@ -1,6 +1,8 @@
+import { SkeletonCard } from "@/components/store/skeleton-card";
+
 export function ListingSkeleton() {
   return (
-    <section className="app-container animate-pulse pb-8 pt-8 md:pt-10">
+    <section className="app-container pb-8 pt-8 md:pt-10">
       <div className="surface-panel relative overflow-hidden px-6 py-8 sm:px-8 sm:py-10">
         <div className="h-4 w-36 rounded-full bg-white/10" />
         <div className="mt-6 h-4 w-32 rounded-full bg-white/10" />
@@ -42,20 +44,7 @@ export function ListingSkeleton() {
 
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="surface-card overflow-hidden p-5">
-                <div className="h-[280px] rounded-[24px] bg-white/[0.06]" />
-                <div className="mt-5 flex gap-2">
-                  <div className="h-7 w-20 rounded-full bg-white/[0.06]" />
-                  <div className="h-7 w-24 rounded-full bg-white/[0.06]" />
-                </div>
-                <div className="mt-4 h-7 rounded-[14px] bg-white/[0.08]" />
-                <div className="mt-3 h-4 w-3/4 rounded-full bg-white/[0.06]" />
-                <div className="mt-2 h-4 w-1/2 rounded-full bg-white/[0.06]" />
-                <div className="mt-5 flex items-end justify-between gap-4">
-                  <div className="h-8 w-24 rounded-[14px] bg-white/[0.08]" />
-                  <div className="h-10 w-28 rounded-2xl bg-white/[0.08]" />
-                </div>
-              </div>
+              <SkeletonCard key={index} />
             ))}
           </div>
         </div>

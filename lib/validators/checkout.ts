@@ -48,12 +48,11 @@ export const checkoutCartItemSchema = z.object({
   ),
 });
 
-export const checkoutRequestSchema = z
-  .object({
-    customerEmail: z
-      .string()
-      .trim()
-      .email("Introduce un email valido para continuar con el checkout."),
+export const checkoutRequestSchema = z.object({
+    customerEmail: z.preprocess(
+      normalizeOptionalString,
+      z.string().email("Introduce un email valido para continuar con el checkout.").optional(),
+    ),
     customerName: z.preprocess(
       normalizeOptionalString,
       z.string().min(1).max(120).optional(),

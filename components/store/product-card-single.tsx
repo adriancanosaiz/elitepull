@@ -5,8 +5,10 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { ProductCardBadgeRow } from "@/components/store/product-card-badge-row";
+import { SpotlightCard } from "@/components/store/spotlight-card";
 import { StoreMediaImage } from "@/components/store/store-media-image";
 import { formatPrice } from "@/lib/catalog";
+import { cn } from "@/lib/utils";
 import {
   storefrontCardHoverOffset,
   storefrontCardTransition,
@@ -25,99 +27,122 @@ export function ProductCardSingle({ product }: { product: ProductCardItem }) {
       viewport={{ once: true, margin: "-60px" }}
       transition={storefrontCardTransition}
       whileHover={shouldReduceMotion ? undefined : { y: storefrontCardHoverOffset }}
-      className="surface-card group vault-sheen flex h-full flex-col overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,27,0.98),rgba(10,14,23,0.88))] shadow-[0_14px_36px_rgba(4,8,18,0.18)] transition-[border-color,box-shadow,background-color] duration-300 hover:border-white/[0.16] hover:shadow-[0_22px_50px_rgba(4,8,18,0.28)]"
+      className="surface-card group vault-sheen flex h-full flex-col overflow-hidden border border-white/[0.08] bg-[linear-gradient(180deg,rgba(12,16,27,0.98),rgba(10,14,23,0.88))] shadow-[0_14px_36px_rgba(4,8,18,0.18)] transition-[border-color,box-shadow,background-color] duration-300 hover:border-white/[0.16] hover:shadow-[0_22px_50px_rgba(4,8,18,0.28)] rounded-[24px]"
     >
-      <div className="shine-pass" />
-      <Link href={product.href} className="block p-4 pb-0">
-        <div className="relative flex h-[320px] items-center justify-center overflow-hidden rounded-[26px] border border-white/[0.08] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_38%),linear-gradient(180deg,rgba(9,12,19,0.92),rgba(16,20,30,0.44))] p-5">
-          <div className="collector-vignette absolute inset-0 opacity-60" />
-          <div className="absolute inset-0 bg-[linear-gradient(132deg,transparent_18%,rgba(128,226,221,0.07)_46%,rgba(255,255,255,0.05)_58%,transparent_84%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
-          <div className="absolute inset-x-10 top-4 h-24 rounded-full bg-white/[0.05] blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-          <div className="absolute inset-x-8 bottom-3 h-8 rounded-full bg-primary/10 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
-          <div className="shine-pass" />
-          <StoreMediaImage
-            src={product.image}
-            fallbackSrc="/mock/products/single-charizard.svg"
-            alt={product.name}
-            width={750}
-            height={1050}
-            sizes="(min-width: 1280px) 320px, (min-width: 768px) 42vw, 88vw"
-            quality={78}
-            className="relative h-[250px] w-full rounded-[20px] object-contain transition-[transform,filter] duration-500 group-hover:scale-[1.03] group-hover:-translate-y-1 group-hover:brightness-110 group-hover:saturate-110"
-          />
-        </div>
-      </Link>
-
-      <div className="flex flex-1 flex-col p-5">
-        <ProductCardBadgeRow
-          items={[
-            ...(product.badge
-              ? [
-                  {
-                    label: product.badge,
-                    variant: "default" as const,
-                    className: "border-accent/24 bg-accent/10 text-accent",
-                  },
-                ]
-              : []),
-            ...(product.rarity
-              ? [
-                  {
-                    label: product.rarity,
-                    variant: "secondary" as const,
-                    className: "border-primary/16 bg-white/[0.05]",
-                  },
-                ]
-              : []),
-          ]}
-        />
-
-        <Link href={product.href} className="mt-4 block min-h-[4rem]">
-          <h3 className="line-clamp-2 font-heading text-[1.35rem] font-semibold leading-tight text-white transition-colors hover:text-primary">
-            {product.name}
-          </h3>
+      <SpotlightCard className="flex h-full flex-col rounded-[inherit]">
+        <div aria-hidden="true" className="shine-pass" />
+        <Link href={product.href} className="block p-4 pb-0 z-10">
+          <div className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-[20px] border border-white/[0.08] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_38%),linear-gradient(180deg,rgba(9,12,19,0.92),rgba(16,20,30,0.44))] p-5">
+            <div aria-hidden="true" className="collector-vignette absolute inset-0 opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(132deg,transparent_18%,rgba(128,226,221,0.07)_46%,rgba(255,255,255,0.05)_58%,transparent_84%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+            <div aria-hidden="true" className="absolute inset-x-10 top-4 h-24 rounded-full bg-white/[0.05] blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+            <div aria-hidden="true" className="absolute inset-x-8 bottom-3 h-8 rounded-full bg-primary/10 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+            <div aria-hidden="true" className="shine-pass" />
+            {isDisabled ? (
+              <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-[inherit] bg-black/40 backdrop-blur-[2px]">
+                <span className="rounded-full border border-destructive/30 bg-destructive/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-destructive">
+                  Agotado
+                </span>
+              </div>
+            ) : null}
+            <StoreMediaImage
+              src={product.image}
+              fallbackSrc="/mock/products/single-charizard.svg"
+              alt={product.name}
+              width={750}
+              height={1050}
+              sizes="(min-width: 1280px) 320px, (min-width: 768px) 42vw, 88vw"
+              quality={78}
+              className={cn(
+                "relative mx-auto h-[85%] w-full object-contain transition-[transform,filter] duration-500 group-hover:scale-[1.03] group-hover:-translate-y-1 group-hover:brightness-110 group-hover:saturate-110",
+                isDisabled && "saturate-[0.35] opacity-60",
+              )}
+            />
+          </div>
         </Link>
 
-        <p className="mt-3 line-clamp-2 min-h-[3.4rem] text-sm leading-7 text-slate-300">
-          {product.description}
-        </p>
-
-        <div className="mt-4 grid min-h-[4.5rem] grid-cols-2 gap-2 rounded-[20px] border border-white/[0.08] bg-white/[0.02] p-3 text-sm text-slate-300">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-            {product.expansion ?? "Single premium"}
-          </p>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-            {product.condition ?? "NM"}
-          </p>
-        </div>
-
-        <div className="mt-auto flex items-end justify-between gap-4 border-t border-white/[0.08] pt-5">
-          <span className="font-heading text-2xl font-semibold text-white">
-            {formatPrice(product.price)}
-          </span>
-
-          <AddToCartButton
-            productId={product.id}
-            quantity={1}
-            snapshot={{
-              slug: product.slug,
-              href: product.href,
-              name: product.name,
-              description: product.description,
-              image: product.image,
-              brandLabel: product.brand.label,
-              expansion: product.expansion,
-              unitPrice: product.price,
-              stock: product.stock,
-              isPreorder: product.isPreorder,
-            }}
-            disabled={isDisabled}
-            idleLabel={product.isPreorder ? "Reservar" : "Añadir"}
-            addedLabel={product.isPreorder ? "Reservado" : "Añadido"}
-            className="rounded-full bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] text-slate-950 shadow-[0_10px_26px_rgba(214,186,131,0.2)] transition-[transform,box-shadow,filter] duration-300 hover:scale-[1.01] hover:shadow-[0_14px_28px_rgba(214,186,131,0.24)]"
+        <div className="flex flex-1 flex-col p-5 z-10">
+          <ProductCardBadgeRow
+            items={[
+              ...(isDisabled
+                ? [
+                    {
+                      label: "Agotado",
+                      variant: "destructive" as const,
+                      className: "border-destructive/24 bg-destructive/10 text-destructive",
+                    },
+                  ]
+                : []),
+              ...(product.badge
+                ? [
+                    {
+                      label: product.badge,
+                      variant: "default" as const,
+                      className: "border-accent/24 bg-accent/10 text-accent",
+                    },
+                  ]
+                : []),
+              ...(product.rarity
+                ? [
+                    {
+                      label: product.rarity,
+                      variant: "secondary" as const,
+                      className: "border-primary/16 bg-white/[0.05]",
+                    },
+                  ]
+                : []),
+            ]}
           />
+
+          <Link href={product.href} className="mt-3 block min-h-[3.5rem]">
+            <h3 className="line-clamp-2 font-heading text-[1.35rem] font-semibold leading-tight text-white transition-colors hover:text-primary">
+              {product.name}
+            </h3>
+          </Link>
+
+          <p className="mt-2 line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-300">
+            {product.description}
+          </p>
+
+          <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-[16px] border border-white/[0.08] bg-white/[0.02] p-2.5 text-sm text-slate-300">
+            {product.expansion ? (
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                {product.expansion}
+              </p>
+            ) : null}
+            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+              {product.condition ?? "NM"}
+            </p>
+          </div>
+
+          <div className="mt-auto flex items-end justify-between gap-4 border-t border-white/[0.08] pt-5">
+            <span className="font-heading text-2xl font-semibold text-white">
+              {formatPrice(product.price)}
+            </span>
+
+            <AddToCartButton
+              productId={product.id}
+              quantity={1}
+              snapshot={{
+                slug: product.slug,
+                href: product.href,
+                name: product.name,
+                description: product.description,
+                image: product.image,
+                brandLabel: product.brand.label,
+                expansion: product.expansion,
+                unitPrice: product.price,
+                stock: product.stock,
+                isPreorder: product.isPreorder,
+              }}
+              disabled={isDisabled}
+              idleLabel={product.isPreorder ? "Reservar" : "Añadir"}
+              addedLabel={product.isPreorder ? "Reservado" : "Añadido"}
+              className="rounded-full bg-[linear-gradient(180deg,rgba(236,212,171,1),rgba(208,170,103,1))] text-slate-950 shadow-[0_10px_26px_rgba(214,186,131,0.2)] transition-[transform,box-shadow,filter] duration-300 hover:scale-[1.01] hover:shadow-[0_14px_28px_rgba(214,186,131,0.24)]"
+            />
+          </div>
         </div>
-      </div>
+      </SpotlightCard>
     </motion.article>
   );
 }

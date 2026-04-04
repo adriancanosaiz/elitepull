@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type ProductCardBadgeItem = {
   label: string;
-  variant?: "default" | "secondary" | "outline";
+  variant?: "default" | "secondary" | "outline" | "destructive";
   className?: string;
 };
 
@@ -18,12 +18,13 @@ export function ProductCardBadgeRow({
   const overflowCount = Math.max(items.length - visibleItems.length, 0);
 
   return (
-    <div className="flex h-11 items-start gap-2 overflow-hidden">
+    <div className="flex w-full items-start gap-2 overflow-hidden">
       {visibleItems.map((item) => (
         <Badge
           key={`${item.label}-${item.variant ?? "default"}`}
           variant={item.variant}
-          className={cn("max-w-[9.5rem] shrink-0 truncate", item.className)}
+          className={cn("flex-1 justify-center text-center line-clamp-2 leading-[1.15] text-balance whitespace-normal", item.className)}
+          title={item.label}
         >
           {item.label}
         </Badge>

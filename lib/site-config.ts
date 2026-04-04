@@ -4,21 +4,21 @@ const DEFAULT_SITE_URL = "http://localhost:3000";
 
 export const siteConfig = {
   name: "ElitePull",
-  title: "ElitePull | Tienda TCG premium",
+  title: "ElitePull | Tienda Especializada TCG: Pokémon, One Piece y Magic",
   description:
-    "Tienda online de Pokemon, One Piece, Magic, Riftbound y accesorios para coleccionistas y jugadores. Sellado, singles, preventas y proteccion premium.",
+    "Compra cartas coleccionables, cajas selladas y singles de Pokémon TCG, One Piece, Lorcana y Magic. Envíos rápidos, protección premium y stock garantizado en ElitePull.",
   locale: "es_ES",
   contactEmail: "hola@elitepull.com",
   defaultKeywords: [
     "tienda tcg",
-    "pokemon tcg",
-    "one piece tcg",
-    "magic the gathering",
-    "riftbound",
+    "comprar cartas pokemon",
+    "pokemon tcg españa",
+    "one piece tcg españa",
+    "comprar cartas magic",
     "cartas coleccionables",
-    "sellado tcg",
+    "cajas pokemon",
     "singles tcg",
-    "accesorios tcg",
+    "comprar lorcana españa",
   ],
 } as const;
 

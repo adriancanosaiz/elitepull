@@ -19,7 +19,7 @@ export function CartCheckoutButton({
   disabled = false,
 }: {
   rawItems: StoredCartItem[];
-  customerEmail: string;
+  customerEmail?: string;
   disabled?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -69,7 +69,7 @@ export function CartCheckoutButton({
         onClick={handleCheckout}
         disabled={disabled || isPending}
       >
-        {isPending ? "Redirigiendo a Stripe..." : "Pagar con Stripe"}
+        {isPending ? "Procesando..." : "Pagar"}
       </Button>
 
       {error ? (

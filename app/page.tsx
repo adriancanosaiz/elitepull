@@ -37,42 +37,47 @@ export const metadata = buildPageMetadata({
 export default async function HomePage() {
   return (
     <>
+      {/* Hero: full screen on mobile */}
       <HeroBanner banner={homeHeroBanner} />
 
-      <section className="app-container scroll-defer py-10 md:py-12">
+      {/* Brands section: snap per brand on mobile */}
+      <section className="app-container scroll-defer py-6 md:py-12">
         <StoreReveal>
           <SectionHeading
-            eyebrow="Universos TCG"
-            title="Universos con identidad propia, reunidos en una sola entrada"
-            description="Cada marca entra como un mundo distinto dentro de ElitePull: sellado, singles y producto de colección presentados con una lectura clara, visual y muy centrada en el coleccionista."
+            eyebrow="Catálogo Oficial"
+            title="Explora nuestras franquicias TCG"
+            description="Seleccionamos meticulosamente material sellado y cartas sueltas para que encuentres exactamente lo que tu baraja o vitrina necesita."
           />
         </StoreReveal>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-5 space-y-0 md:mt-8 md:space-y-6">
           {primaryBrands.map((brand, index) => (
             <StoreViewportMount
               key={brand.id}
               from={index % 2 === 0 ? "left" : "right"}
-              placeholderClassName="min-h-[540px] sm:min-h-[580px] lg:min-h-[520px]"
+              placeholderClassName="min-h-[100svh] sm:min-h-[540px] lg:min-h-[520px]"
             >
-              <BrandCard
-                brand={brand}
-                imageSide={index % 2 === 0 ? "left" : "right"}
-              />
+              {/* Each brand card fills screen on mobile */}
+              <div className="flex min-h-[calc(100svh-56px)] items-center py-4 sm:min-h-0 sm:py-0">
+                <BrandCard
+                  brand={brand}
+                  imageSide={index % 2 === 0 ? "left" : "right"}
+                />
+              </div>
             </StoreViewportMount>
           ))}
         </div>
 
-        <div className="mt-10">
+        <div className="mt-6 md:mt-10">
           <StoreReveal>
             <SectionHeading
-              eyebrow="Complementos"
-              title="Accesorios y preventa para cerrar bien cada compra"
-              description="Protección, archivo y próximos lanzamientos con una navegación rápida, limpia y pensada para seguir ampliando colección."
+              eyebrow="Complementos Premium"
+              title="Accesorios y preventas seguras"
+              description="Asegura la protección archivística de tus grails más valiosos o reserva las colecciones del próximo trimestre antes de que se agoten."
             />
           </StoreReveal>
 
-          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <div className="mt-5 grid gap-4 md:mt-6 md:gap-5 lg:grid-cols-2">
             {supportBrands.map((brand) => (
               <StoreViewportMount
                 key={brand.id}

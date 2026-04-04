@@ -126,7 +126,7 @@ export type ResolvedCheckoutItem = {
 };
 
 export type ResolvedCheckoutCart = {
-  customerEmail: string;
+  customerEmail?: string;
   customerName?: string;
   notes?: string;
   source: CheckoutRequestInput["source"];
@@ -515,7 +515,7 @@ async function createPendingOrder(
   const { data, error } = await ordersTable
     .insert({
       status: "pending_checkout",
-      customer_email: resolvedCart.customerEmail,
+      customer_email: resolvedCart.customerEmail ?? "checkout-pending@elitepull.com",
       customer_name: resolvedCart.customerName ?? null,
       amount_total: resolvedCart.amountTotal,
       currency: resolvedCart.currency,

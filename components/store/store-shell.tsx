@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { BottomNav } from "@/components/store/bottom-nav";
 import { Footer } from "@/components/store/footer";
 import { Header } from "@/components/store/header";
 
@@ -18,8 +19,12 @@ export function StoreShell({ children }: { children: ReactNode }) {
       </div>
 
       <Header />
-      <main className="relative z-10">{children}</main>
-      <Footer />
+      <main className="relative z-10 pb-[76px] xl:pb-0">
+        {children}
+        <Footer />
+      </main>
+      <BottomNav />
     </div>
   );
 }
+

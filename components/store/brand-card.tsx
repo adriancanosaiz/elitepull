@@ -330,13 +330,14 @@ export function BrandCard({
           <h3 className="mt-3 font-heading text-[2.35rem] font-semibold tracking-tight text-white sm:text-5xl">
             {brand.name}
           </h3>
-          <p className="mt-4 text-[15px] leading-7 text-slate-100/88 sm:mt-5 sm:text-base sm:leading-8">
+          <p className="mt-3 text-sm leading-7 text-slate-100/88 sm:text-[15px] sm:mt-4 sm:leading-7">
             {brand.tagline}
           </p>
-          <p className="mt-3 text-sm leading-7 text-slate-300 sm:mt-4">{brand.description}</p>
+          {/* Description hidden on mobile — too much text */}
+          <p className="mt-3 hidden text-sm leading-7 text-slate-300 sm:mt-4 sm:block">{brand.description}</p>
 
           <div
-            className="mt-5 rounded-[22px] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:mt-6 sm:rounded-[24px] sm:p-5"
+            className="mt-4 hidden rounded-[22px] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:mt-6 sm:block sm:rounded-[24px] sm:p-5"
             style={{
               border: `1px solid ${palette.spotlightBorder}`,
               background: palette.spotlightBackground,

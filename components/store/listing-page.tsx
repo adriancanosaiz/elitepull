@@ -46,8 +46,8 @@ export function ListingPage({
   return (
     <section
       className={cn(
-        "app-container pb-8 pt-8 md:pt-10",
-        showLogoOnlyHero && "pb-6 pt-5 md:pt-6",
+        "app-container pb-8 pt-6 md:pt-10",
+        showLogoOnlyHero && "pb-6 pt-4 md:pt-6",
       )}
     >
       <StoreReveal>
@@ -55,7 +55,7 @@ export function ListingPage({
           className={cn(
             showLogoOnlyHero
               ? "relative px-2 py-0 sm:px-4 sm:py-0"
-              : "surface-panel relative overflow-hidden px-6 py-8 sm:px-8 sm:py-10",
+              : "surface-panel relative overflow-hidden px-4 py-5 sm:px-8 sm:py-8",
             !showLogoOnlyHero && brand?.theme.glow,
           )}
         >
@@ -108,15 +108,15 @@ export function ListingPage({
             ) : null}
             <h1
               className={cn(
-                "font-heading text-4xl font-semibold tracking-tight text-white md:text-5xl",
-                brandLogoSrc ? "mt-5" : eyebrow ? "mt-5" : "mt-6",
+                "font-heading text-2xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl",
+                brandLogoSrc ? "mt-4 sm:mt-5" : eyebrow ? "mt-4 sm:mt-5" : "mt-4 sm:mt-6",
                 hideVisualTitle && "sr-only",
               )}
             >
               {title}
             </h1>
             {!showLogoOnlyHero ? (
-              <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">{description}</p>
+              <p className="mt-3 hidden max-w-3xl text-base leading-8 text-slate-300 sm:block">{description}</p>
             ) : null}
           </div>
         </div>

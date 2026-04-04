@@ -2,10 +2,10 @@ import type { PromoBanner } from "@/types/store";
 
 export const homeHeroBanner: PromoBanner = {
   id: "hero-home",
-  title: "Cartas, sellado y accesorios para coleccionistas exigentes",
-  subtitle: "Pokemon, One Piece, Magic y Riftbound en una tienda cuidada para comprar con confianza.",
+  title: "Tu colección llevada al siguiente nivel",
+  subtitle: "Encuentra desde Elite Trainer Boxes (ETB) hasta los singles más buscados con disponibilidad inmediata.",
   description:
-    "Explora producto seleccionado, preventas destacadas y accesorios para proteger tu colección con una experiencia de compra clara y premium.",
+    "El inventario definitivo de Pokémon, One Piece y Magic. Explora nuestro catálogo oficial con stock garantizado y protección premium.",
   ctaLabel: "Explorar catalogo",
   href: "/catalogo",
   image: "/mock/banners/hero-tcg.svg",
@@ -20,10 +20,10 @@ export const homeHeroBanner: PromoBanner = {
 export const promoBanners: PromoBanner[] = [
   {
     id: "banner-preventa",
-    title: "Preventa prioritaria",
-    subtitle: "Reservas de próximos lanzamientos con información clara y acceso rápido.",
+    title: "Preventa Prioritaria",
+    subtitle: "Asegura los lanzamientos más esperados antes que nadie.",
     description:
-      "Asegura tus próximos productos antes de su salida y consulta las referencias más esperadas del calendario.",
+      "Reserva cajas de expansión, decks y colecciones especiales. Stock garantizado en la fecha de salida oficial.",
     ctaLabel: "Ver preventa",
     href: "/preventa",
     image: "/mock/banners/preorder-drop.svg",
@@ -36,10 +36,10 @@ export const promoBanners: PromoBanner[] = [
   },
   {
     id: "banner-sealed",
-    title: "Sellado protagonista",
-    subtitle: "ETB, cajas y collector boosters con estética de escaparate.",
+    title: "Producto Sellado",
+    subtitle: "Las cajas de expansión y ETBs más valoradas.",
     description:
-      "Descubre producto sellado con presencia de vitrina, perfecto para abrir, regalar o guardar en colección.",
+      "Descubre material fresco perfecto para draftear, abrir por pura emoción o guardar a largo plazo en tu colección privada.",
     ctaLabel: "Ver sellado",
     href: "/catalogo",
     image: "/mock/banners/sealed-showcase.svg",

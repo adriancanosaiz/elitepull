@@ -54,8 +54,18 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
-        heading: ["Space Grotesk", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      keyframes: {
+        shimmer: {
+          "100%": {
+            transform: "translateX(100%)",
+          },
+        },
+      },
+      animation: {
+        shimmer: "shimmer 2s infinite",
       },
       boxShadow: {
         halo: "0 0 0 1px rgba(255,255,255,0.08), 0 24px 80px rgba(15, 23, 42, 0.48)",

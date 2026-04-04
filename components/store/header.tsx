@@ -2,25 +2,19 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
-import { Menu, ShoppingBag, User2 } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
+import { usePathname } from "next/navigation";
 
-import { BrandGlyph } from "@/components/store/brand-glyph";
-import { brands } from "@/data/brands";
+import { CartDrawer } from "@/components/store/cart-drawer";
 import { mainNavigation } from "@/data/site";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { MegaMenu } from "@/components/store/mega-menu";
 import { useCart } from "@/components/store/cart-provider";
 import { SiteLogo } from "@/components/store/site-logo";
 import { storefrontMotionEase } from "@/lib/storefront-motion";
+import { cn } from "@/lib/utils";
 
 const SearchBar = dynamic(
   () => import("@/components/store/search-bar").then((module) => module.SearchBar),
@@ -37,6 +31,21 @@ export function Header() {
   const shouldReduceMotion = useReducedMotion();
   const cartIconControls = useAnimationControls();
   const cartBadgeControls = useAnimationControls();
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 20);
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  function isActive(href: string) {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  }
 
   useEffect(() => {
     if (shouldReduceMotion || cartPulseKey < 1) {
@@ -57,33 +66,39 @@ export function Header() {
   }, [cartBadgeControls, cartIconControls, cartPulseKey, shouldReduceMotion]);
 
   return (
-    <header className="sticky top-0 z-50 pt-2 sm:pt-3 md:pt-4">
+    <header className="sticky top-0 z-50 pt-1.5 sm:pt-3 md:pt-4">
       <div className="app-container">
+        {/* Top info bar — desktop only */}
         <div className="mb-3 hidden items-center justify-between rounded-[22px] border border-primary/15 bg-[linear-gradient(90deg,rgba(13,16,25,0.96),rgba(19,24,34,0.8),rgba(13,16,25,0.96))] px-4 py-2.5 text-[10px] uppercase tracking-[0.28em] text-slate-400 shadow-[0_12px_34px_rgba(2,6,23,0.18)] backdrop-blur-md md:flex">
           <span className="inline-flex items-center gap-3">
-            <span className="pulse-signal h-1.5 w-1.5 rounded-full bg-primary/80" />
-            ElitePull collector vault abierto
+            <span aria-hidden="true" className="pulse-signal h-1.5 w-1.5 rounded-full bg-primary/80" />
+            Envío en 24-48h laborables
           </span>
           <div className="flex items-center gap-5">
             <span className="inline-flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent/80" />
-              Stock real
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent/80" />
+              Stock en tiempo real
             </span>
             <span className="inline-flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-300/80" />
-              Envio cuidado
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-amber-300/80" />
+              Pago seguro con Stripe
             </span>
             <span className="inline-flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-              Preventa activa
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-white/70" />
+              Preventas abiertas
             </span>
           </div>
         </div>
 
-        <div className="surface-panel vault-sheen overflow-visible border-primary/20 px-3 py-2.5 sm:px-5 sm:py-3">
-          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
-          <div className="flex items-center gap-2.5 sm:gap-3 xl:gap-4">
+        {/* Main header bar */}
+        <div className={cn(
+            "surface-panel vault-sheen flex items-center overflow-visible border-primary/20 px-3 sm:px-5",
+            scrolled ? "h-12 sm:h-14 xl:h-20" : "h-12 sm:h-16 xl:h-20",
+            "transition-[height] duration-300",
+          )}>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div aria-hidden="true" className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
+          <div className="flex w-full items-center gap-2.5 sm:gap-3 xl:gap-4">
             <Link href="/" className="min-w-0 shrink-0">
               <SiteLogo compact className="max-w-[152px] sm:max-w-none" />
             </Link>
@@ -95,7 +110,13 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-full border border-transparent px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
+                  className={cn(
+                    "rounded-full border border-transparent px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] transition-all duration-300 hover:-translate-y-0.5 hover:border-white/10 hover:bg-white/[0.04] hover:text-white",
+                    isActive(item.href)
+                      ? "border-primary/20 bg-primary/[0.08] text-primary"
+                      : "text-slate-300",
+                  )}
+                  aria-current={isActive(item.href) ? "page" : undefined}
                 >
                   {item.label}
                 </Link>
@@ -107,116 +128,28 @@ export function Header() {
             </div>
 
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-              <Button
-                asChild
-                variant="outline"
-                size="icon"
-                className="relative rounded-[16px] border-primary/15 bg-black/20 sm:rounded-[18px]"
-              >
-                <Link href="/carrito">
-                  <motion.span animate={cartIconControls} className="inline-flex">
-                    <ShoppingBag className="h-4 w-4" />
-                  </motion.span>
-                  <span className="sr-only">Carrito</span>
-                  <motion.span
-                    animate={cartBadgeControls}
-                    className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(232,204,151,1),rgba(206,165,96,1))] px-1 text-[10px] font-bold text-slate-950 shadow-[0_8px_18px_rgba(221,184,120,0.28)]"
-                  >
-                    {totalItems}
-                  </motion.span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                className="hidden rounded-[18px] border-primary/15 bg-black/20 md:inline-flex"
-              >
-                <User2 className="h-4 w-4" />
-                <span className="sr-only">Usuario</span>
-              </Button>
-
-              <Sheet>
-                <SheetTrigger asChild>
+              {/* Cart button — desktop only; mobile uses BottomNav */}
+              <div className="hidden xl:flex">
+                <CartDrawer>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-[16px] border-primary/15 bg-black/20 sm:rounded-[18px] xl:hidden"
+                    className="relative rounded-[20px] border-primary/15 bg-black/20"
                   >
-                    <Menu className="h-4 w-4" />
-                    <span className="sr-only">Abrir menu</span>
-                  </Button>
-                </SheetTrigger>
-
-                <SheetContent
-                  side="left"
-                  className="overflow-y-auto border-white/10 bg-[radial-gradient(circle_at_top,rgba(124,231,227,0.08),transparent_24%),linear-gradient(180deg,rgba(14,18,28,0.98),rgba(7,10,17,0.98))]"
-                >
-                  <SheetHeader>
-                    <SheetTitle>Navegacion ElitePull</SheetTitle>
-                  </SheetHeader>
-
-                  <div className="mt-5">
-                    <SearchBar compact />
-                  </div>
-
-                  <div className="mt-6">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Catalogo
-                    </p>
-                    <Link
-                      href="/catalogo"
-                      className="block rounded-[20px] border border-primary/12 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                    <motion.span animate={cartIconControls} className="inline-flex">
+                      <ShoppingBag className="h-4 w-4" />
+                    </motion.span>
+                    <span className="sr-only">Carrito</span>
+                    <motion.span
+                      animate={cartBadgeControls}
+                      className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(232,204,151,1),rgba(206,165,96,1))] px-1 text-[10px] font-bold text-slate-950 shadow-[0_8px_18px_rgba(221,184,120,0.28)]"
                     >
-                      Ver catalogo completo
-                    </Link>
-                  </div>
+                      {totalItems}
+                    </motion.span>
+                  </Button>
+                </CartDrawer>
+              </div>
 
-                  <div className="mt-6">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Marcas
-                    </p>
-                    <details className="rounded-[22px] border border-primary/12 bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                      <summary className="cursor-pointer list-none text-base font-semibold text-white">
-                        Ver marcas
-                      </summary>
-                      <div className="mt-4 grid gap-2">
-                        {brands
-                          .filter((brand) => !["accesorios", "preventa"].includes(brand.slug))
-                          .map((brand) => (
-                            <Link
-                              key={brand.id}
-                              href={brand.href}
-                              className="flex min-w-0 items-center gap-3 rounded-[18px] border border-white/[0.08] bg-black/10 px-3 py-3 text-sm text-slate-100"
-                            >
-                              <BrandGlyph brand={brand.slug} size="sm" />
-                              <span className="truncate">{brand.name}</span>
-                            </Link>
-                          ))}
-                      </div>
-                    </details>
-                  </div>
-
-                  <div className="mt-6">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Otros
-                    </p>
-                    <div className="space-y-2">
-                      {mainNavigation
-                        .filter((item) => item.href !== "/catalogo")
-                        .map((item) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            className="block rounded-[20px] border border-primary/12 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
             </div>
           </div>
         </div>

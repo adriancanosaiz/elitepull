@@ -12,15 +12,15 @@
     --card-foreground: 210 40% 96%;
     --popover: 224 28% 9%;
     --popover-foreground: 210 40% 96%;
-    --primary: 39 52% 67%;
+    --primary: 39 85% 65%;
     --primary-foreground: 222 47% 8%;
     --secondary: 220 24% 15%;
     --secondary-foreground: 210 40% 96%;
     --muted: 223 21% 14%;
     --muted-foreground: 215 19% 72%;
-    --accent: 182 61% 67%;
+    --accent: 182 85% 65%;
     --accent-foreground: 222 47% 8%;
-    --destructive: 0 72% 55%;
+    --destructive: 0 85% 65%;
     --destructive-foreground: 210 40% 96%;
     --border: 220 20% 19%;
     --input: 220 20% 16%;
@@ -44,11 +44,11 @@
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
     background-image:
-      radial-gradient(circle at 12% 0%, rgba(255, 133, 72, 0.14), transparent 24%),
-      radial-gradient(circle at 82% 6%, rgba(221, 184, 120, 0.14), transparent 18%),
-      radial-gradient(circle at 72% 16%, rgba(124, 231, 227, 0.12), transparent 18%),
-      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05), transparent 24%),
-      linear-gradient(180deg, rgba(13, 17, 27, 0.98), rgba(6, 9, 16, 1));
+      radial-gradient(circle at 12% 0%, rgba(255, 172, 85, 0.12), transparent 28%),
+      radial-gradient(circle at 82% 6%, rgba(255, 215, 120, 0.12), transparent 22%),
+      radial-gradient(circle at 72% 16%, rgba(135, 245, 240, 0.1), transparent 22%),
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04), transparent 28%),
+      linear-gradient(180deg, rgba(8, 11, 16, 0.98), rgba(6, 9, 14, 1));
     background-attachment: scroll;
   }
 
@@ -96,5 +96,44 @@
 @media (min-width: 1024px) {
   body {
     background-attachment: fixed;
+  }
+}
+
+/* ─── Native mobile feel ──────────────────────────────── */
+@layer base {
+  /* Remove blue flash on tap (Android) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+
+  /* Momentum scrolling for inner containers */
+  .overflow-y-auto,
+  .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Native-feeling press on interactive elements */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  button:active,
+  a:active,
+  [role="button"]:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease;
+  }
+
+  /* Safe area bottom padding for notch phones */
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
   }
 }

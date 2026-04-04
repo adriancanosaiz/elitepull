@@ -5,6 +5,8 @@ import { Check, ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { useCart } from "@/components/store/cart-provider";
+import { MagneticButton } from "@/components/store/magnetic-button";
+import { useToast } from "@/components/store/toast-provider";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { storefrontMotionEase } from "@/lib/storefront-motion";
 import type { StoredCartItemSnapshot } from "@/types/store";
@@ -31,6 +33,7 @@ export function AddToCartButton({
   size = "sm",
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
+  const { showCartToast } = useToast();
   const shouldReduceMotion = useReducedMotion();
   const buttonControls = useAnimationControls();
   const timeoutRef = useRef<number | null>(null);
@@ -51,6 +54,7 @@ export function AddToCartButton({
 
     addItem(productId, quantity, snapshot);
     setIsAdded(true);
+    showCartToast(`${snapshot.name} añadido al carrito`);
 
     if (!shouldReduceMotion) {
       void buttonControls.start({
@@ -71,27 +75,29 @@ export function AddToCartButton({
   }
 
   return (
-    <motion.div animate={buttonControls}>
-      <Button
-        size={size}
-        onClick={handleClick}
-        disabled={disabled}
-        className={className}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={isAdded ? "added" : "idle"}
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.22, ease: storefrontMotionEase }}
-            className="inline-flex items-center gap-2"
-          >
-            {isAdded ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
-            <span>{isAdded ? addedLabel : idleLabel}</span>
-          </motion.span>
-        </AnimatePresence>
-      </Button>
-    </motion.div>
+    <MagneticButton strength={8}>
+      <motion.div animate={buttonControls}>
+        <Button
+          size={size}
+          onClick={handleClick}
+          disabled={disabled}
+          className={className}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={isAdded ? "added" : "idle"}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: storefrontMotionEase }}
+              className="inline-flex items-center gap-2"
+            >
+              {isAdded ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+              <span>{isAdded ? addedLabel : idleLabel}</span>
+            </motion.span>
+          </AnimatePresence>
+        </Button>
+      </motion.div>
+    </MagneticButton>
   );
 }

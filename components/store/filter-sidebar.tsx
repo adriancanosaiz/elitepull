@@ -1,7 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { priceRanges } from "@/lib/catalog";
@@ -140,7 +142,7 @@ export function FilterSidebar({
       </div>
 
       <div className="relative mt-5 space-y-3.5 sm:mt-6 sm:space-y-4">
-        <FilterBlock title="Marca">
+        <FilterBlock title="Marca" defaultOpen={true}>
           <PillWrap>
             {brands.map((brand) => (
               <FilterPill
@@ -155,7 +157,7 @@ export function FilterSidebar({
           </PillWrap>
         </FilterBlock>
 
-        <FilterBlock title="Categoria">
+        <FilterBlock title="Categoria" defaultOpen={true}>
           <PillWrap>
             {categories.map((category) => (
               <FilterPill
@@ -273,22 +275,52 @@ export function FilterSidebar({
 function FilterBlock({
   title,
   children,
+  defaultOpen = false,
 }: {
   title: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <div className="rounded-[20px] border border-white/[0.08] bg-black/[0.16] p-3.5 sm:rounded-[22px] sm:p-4">
-      <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-        {title}
-      </p>
-      {children}
+    <div className="rounded-[20px] border border-white/[0.08] bg-black/[0.16] sm:rounded-[22px] overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full cursor-pointer items-center justify-between p-3.5 sm:p-4 text-left transition-colors hover:bg-white/[0.02]"
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+          {title}
+        </p>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="h-4 w-4 text-slate-500" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="p-3.5 pt-0 sm:p-4 sm:pt-0">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function PillWrap({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-2">{children}</div>;
+  return <div className="grid grid-cols-1 gap-2">{children}</div>;
 }
 
 function FilterPill({
@@ -306,14 +338,15 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={[
-        "inline-flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-[border-color,background-color,color,box-shadow]",
+        "inline-flex w-full min-h-10 items-center justify-between gap-2 rounded-[20px] border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-[border-color,background-color,color,box-shadow]",
         active
           ? "border-primary/35 bg-primary/15 text-primary shadow-[0_8px_18px_rgba(234,179,8,0.12)]"
           : "border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white",
       ].join(" ")}
     >
-      <span>{children}</span>
+      <span className="line-clamp-2 text-left leading-[1.25] text-balance whitespace-normal">{children}</span>
       {typeof count === "number" ? (
         <span
           className={[

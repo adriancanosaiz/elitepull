@@ -100,10 +100,10 @@ export default async function ProductPage({
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
                 Ficha rapida
               </p>
-              <h2 className="mt-3 font-heading text-2xl font-semibold text-white">
-                Contexto de pieza y lectura inmediata
+              <h2 className="mt-3 font-heading text-xl font-semibold text-white">
+                Detalles del producto
               </h2>
-              <div className="mt-6 grid gap-4 text-sm leading-7 text-slate-300">
+              <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3.5 text-sm leading-7 text-slate-300">
                 <p>
                   Marca: <span className="text-white">{product.brand.label}</span>
                 </p>
@@ -138,7 +138,7 @@ export default async function ProductPage({
           </StoreReveal>
 
           <StoreReveal delay={0.08}>
-            <div className="surface-card p-6">
+            <div className="hidden surface-card p-6 sm:block">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
                 Compra segura
               </p>

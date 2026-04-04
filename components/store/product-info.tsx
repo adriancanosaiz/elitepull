@@ -52,7 +52,7 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
         ) : null}
 
         <div>
-          <h1 className="font-heading text-[2.35rem] font-semibold leading-[0.98] tracking-[-0.045em] text-white md:text-[3.35rem] md:leading-[1.02]">
+          <h1 className="font-heading text-[1.9rem] font-semibold leading-[0.98] tracking-[-0.045em] text-white sm:text-[2.35rem] md:text-[3.35rem] md:leading-[1.02]">
             {product.name}
           </h1>
           <p className="mt-3 max-w-[62ch] text-[15px] leading-7 text-slate-300 md:mt-4 md:text-base md:leading-8">
@@ -78,9 +78,9 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
         transition={{ ...revealProps.transition, delay: 0.16 }}
         className="surface-panel border-primary/16 p-5 md:p-6"
       >
-        <div className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
-        <div className="pointer-events-none absolute inset-x-[18%] top-0 h-24 rounded-full bg-white/[0.06] blur-3xl" />
-        <div className="pointer-events-none absolute bottom-4 left-[14%] h-16 w-[42%] rounded-full bg-primary/14 blur-3xl" />
+        <div aria-hidden="true" className="collector-constellation pointer-events-none absolute inset-0 opacity-35" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[18%] top-0 h-24 rounded-full bg-white/[0.06] blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-4 left-[14%] h-16 w-[42%] rounded-full bg-primary/14 blur-3xl" />
 
         <div className="relative">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -105,9 +105,9 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
               </p>
             </div>
 
-            <div className="rounded-[22px] border border-white/10 bg-black/[0.25] px-4 py-3 text-sm text-slate-200">
+            <div className="hidden rounded-[22px] border border-white/10 bg-black/[0.25] px-4 py-3 text-sm text-slate-200 sm:block">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Preparado para coleccion
+                Preparado para colección
               </p>
               <p className="mt-2 leading-6">
                 Visual claro, checkout seguro y lectura rápida de expansión, formato e idioma.
@@ -116,21 +116,23 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
           </div>
 
           <div className="mt-6 grid gap-3 sm:gap-4 lg:grid-cols-[auto_1fr] lg:items-center">
-            <div className="mx-auto flex items-center rounded-full border border-white/10 bg-black/20 lg:mx-0">
+            <div className="mx-auto flex items-center rounded-full border border-white/10 bg-black/20 lg:mx-0" role="group" aria-label="Selector de cantidad">
               <button
                 type="button"
                 onClick={() => setQuantity((current) => Math.max(1, current - 1))}
                 className="px-4 py-3 text-slate-200 transition-colors hover:text-white"
+                aria-label="Reducir cantidad"
               >
                 <Minus className="h-4 w-4" />
               </button>
-              <span className="min-w-10 text-center text-sm font-semibold text-white">
+              <span className="min-w-10 text-center text-sm font-semibold text-white" aria-live="polite" aria-atomic="true">
                 {quantity}
               </span>
               <button
                 type="button"
                 onClick={() => setQuantity((current) => current + 1)}
                 className="px-4 py-3 text-slate-200 transition-colors hover:text-white"
+                aria-label="Aumentar cantidad"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -175,10 +177,10 @@ export function ProductInfo({ product }: { product: ProductDetail }) {
       <motion.div
         {...revealProps}
         transition={{ ...revealProps.transition, delay: 0.22 }}
-        className="grid gap-4 rounded-[26px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300 md:p-5"
+        className="grid gap-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300 md:p-5"
       >
         <div>
-          <h2 className="font-heading text-xl font-semibold text-white">Lectura rápida</h2>
+          <h2 className="font-heading text-lg font-semibold text-white sm:text-xl">Sobre la pieza</h2>
           <p className="mt-3">
             Todo lo importante del producto está visible de un vistazo: expansión, formato,
             idioma, variante, precio y disponibilidad.

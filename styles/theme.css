@@ -3,7 +3,7 @@
 }
 
 .surface-panel {
-  @apply relative overflow-hidden rounded-[30px] border backdrop-blur-xl;
+  @apply relative overflow-hidden rounded-[24px] border backdrop-blur-xl;
   border-color: rgba(214, 186, 131, 0.16);
   background:
     radial-gradient(circle at 14% 0%, rgba(240, 138, 72, 0.16), transparent 28%),
@@ -17,7 +17,7 @@
 }
 
 .surface-card {
-  @apply relative overflow-hidden rounded-[26px] border backdrop-blur-lg;
+  @apply relative overflow-hidden rounded-[24px] border backdrop-blur-lg;
   border-color: rgba(214, 186, 131, 0.14);
   background:
     radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.055), transparent 30%),
@@ -30,7 +30,7 @@
 }
 
 .surface-soft {
-  @apply relative overflow-hidden rounded-[24px] border backdrop-blur-md;
+  @apply relative overflow-hidden rounded-[20px] border backdrop-blur-md;
   border-color: rgba(255, 255, 255, 0.09);
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 40%),
